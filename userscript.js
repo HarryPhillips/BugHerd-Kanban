@@ -17,7 +17,7 @@ var KBS_GLOBAL_SET = true,
     KBS_SRC_DIR = "kanban/";
 
 (function (window) {
-	'use strict';
+    'use strict';
 
     // check for document body
     if (!window.document.body) {
