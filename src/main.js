@@ -15,6 +15,10 @@
     ];
 
     window.define(deps, function (config, events, util, gui) {
+        if (!config.enabled) {
+            return;
+        }
+        
         // declarations
         var kanban,
 
@@ -36,7 +40,7 @@
             gui.init();
 
             // create nodes
-            csWrap = gui.createNode("div", "kbs-console");
+            gui.createChild("div", "kbs-console");
 
             gui.refresh();
         }
