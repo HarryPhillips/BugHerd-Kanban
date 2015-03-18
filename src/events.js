@@ -4,7 +4,7 @@
 *   @auth Harry Phillips
 */
 
-window.define(['./util'], function (util) {
+window.define(['config', './util'], function (config, util) {
     'use strict';
     
     util.log("events.js initialised...");
@@ -27,7 +27,11 @@ window.define(['./util'], function (util) {
     // publish event with data
     Events.prototype.publish = function (event, data) {
         if (!this.topics[event]) {
-            throw new Error("Event '" + event + "' does not exist!");
+            if (!config.events.silent) {
+                throw new Error("Event '" + event + "' does not exist!");
+            }
+            util.log("Event '" + event + "' does not exist");
+            return;
         }
         
         // publish data to all event handlers

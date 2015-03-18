@@ -8,8 +8,13 @@
 // @grant       none
 // ==/UserScript==
 
-var KBS_START_TIME = new Date().getTime(),
-    KBS_END_TIME;
+var KBS_GLOBAL_SET = true,
+
+    KBS_START_TIME = new Date().getTime(),
+    KBS_END_TIME,
+    
+    KBS_BASE_URL = "http://localhost/GitHub/",
+    KBS_SRC_DIR = "kanban/";
 
 (function (window) {
 	'use strict';
@@ -22,8 +27,8 @@ var KBS_START_TIME = new Date().getTime(),
     // declarations
     var
         // configuration urls
-        baseUrl = "http://localhost/GitHub/",
-        srcDir = "kanban/",
+        baseUrl = KBS_BASE_URL,
+        srcDir = KBS_SRC_DIR,
         reqUrl = "https://cdnjs.cloudflare.com/" +
         "ajax/libs/require.js/2.1.16/require.min.js",
         
@@ -42,5 +47,5 @@ var KBS_START_TIME = new Date().getTime(),
     rqs.setAttribute("data-main", baseUrl + srcDir + "kanban.js");
     
     // write out
-    document.body.appendChild(rqs);
+    document.head.appendChild(rqs);
 }(window));

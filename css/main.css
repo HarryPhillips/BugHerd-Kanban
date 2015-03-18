@@ -4,13 +4,15 @@
 *   @auth Harry Phillips
 */
 
-html, body {
-    min-height: 100%;
-    height: 100%;
-    margin: 0; padding: 0;
+#kbs-gui-wrapper {}
+
+.kbs-gui-console {
+    background: #000;
+    position: fixed;
+    top: 0; right: 0;
+    width: 500px;
+    height: 300px;
+    z-index: 2147483647;
 }
 
-body {
-    background: #1a1a1a;
-    color: #fff;
-}
+.kbs-gui-console-out {}

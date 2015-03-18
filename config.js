@@ -13,6 +13,10 @@ window.define({
         filter: false
     },
     gui: {
-        enabled: true
+        enabled: true,
+        autorefresh: true
+    },
+    events: {
+        silent: true
     }
 });
