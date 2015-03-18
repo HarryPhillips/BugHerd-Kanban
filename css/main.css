@@ -6,7 +6,7 @@
 
 #kbs-gui-wrapper {}
 
-.kbs-gui-console {
+.kbs-console {
     background: #000;
     position: fixed;
     top: 0; right: 0;
@@ -15,4 +15,4 @@
     z-index: 2147483647;
 }
 
-.kbs-gui-console-out {}
+.kbs-console-out {}
