@@ -20,11 +20,7 @@
         }
         
         // declarations
-        var kanban,
-
-        // gui components
-            csWrap,
-            csOut;
+        var kanban;
 
         // kbs data object
         kanban = {
@@ -38,11 +34,6 @@
         // initialise gui
         if (config.gui.enabled) {
             gui.init();
-
-            // create nodes
-            gui.createChild("div", "kbs-console");
-
-            gui.refresh();
         }
 
         // get performance delta

@@ -6,10 +6,12 @@
 
 // check if globals are set
 if (!window.KBS_GLOBAL_SET) {
-    var KBS_START_TIME = new Date().getTime(),
+    var KBS_GLOBAL_SET = true,
+        
+        KBS_START_TIME = new Date().getTime(),
         KBS_END_TIME,
 
-        KBS_BASE_URL = "http://localhost/GitHub/",
+        KBS_BASE_URL = "http://localhost/proj/",
         KBS_SRC_DIR = "kanban/";
 }
 
