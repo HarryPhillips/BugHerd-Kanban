@@ -8,7 +8,7 @@ window.define(['config', './events'], function (config, events) {
     'use strict';
     
     var util = {};
-
+    
     // amend zeros to a number until a length is met
     util.zerofy = function (num, len) {
         while (num.toString().length < (len || 2)) {
@@ -98,7 +98,8 @@ window.define(['config', './events'], function (config, events) {
             output = [],
             str = "",
             object = false,
-            guistr = "";
+            guistr = "",
+            objstr = "";
         
         // process arguments into an actual array
         for (param in arguments) {
@@ -159,12 +160,13 @@ window.define(['config', './events'], function (config, events) {
         // log to gui if enabled
         if (config.logs.gui) {
             // convert obj to a json string for gui logging
-            if (object && msg === "") {
-                guistr = str + JSON.stringify(object);
-            } else {
-                guistr = str;
+            if (object) {
+                objstr = "[object]:: " + JSON.stringify(object, null, 3);
             }
-            events.publish("gui/log", {msg: guistr, type: type});
+            
+            guistr = str;
+            
+            events.publish("gui/log", {msg: guistr, type: type, obj: objstr});
         }
         
         // validate the type only after filter application
@@ -186,7 +188,7 @@ window.define(['config', './events'], function (config, events) {
         }
     };
     
-    util.log("util.js initialised...");
+    util.log("+ util.js loaded");
 
     return util;
 });

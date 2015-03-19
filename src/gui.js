@@ -17,7 +17,7 @@
 window.define(['config', './util', './events'], function (config, util, events) {
     'use strict';
     
-    util.log("gui.js initialised...");
+    util.log("+ gui.js loaded");
 
     // points to the gui instance
     // used inside functions called externally
@@ -53,14 +53,17 @@ window.define(['config', './util', './events'], function (config, util, events) 
     // build gui node tree
     GUI.prototype.buildNodeTree = function () {
         // create tree and nodes
-        var tree = {};
+        var tree = {}, main;
 
         // create nodes
-        tree.main = new Node("div", "kbs-gui");
-        tree.main.cons = tree.main.createChild("div", "kbs-cons");
-        tree.main.cons.out = tree.main.cons.createChild("p", "kbs-cons-out");
+        tree.main = main = new Node("div", "kbs-gui");
+        main.overlay = tree.main.createChild("div", "kbs-overlay");
+        
+        if (config.logs.gui) {
+            main.cons = tree.main.createChild("div", "kbs-cons");
+            main.cons.out = tree.main.cons.createChild("p", "kbs-cons-out");
+        }
 
-        // return the tree
         return tree;
     };
     
@@ -75,20 +78,33 @@ window.define(['config', './util', './events'], function (config, util, events) 
         link.rel = "stylesheet";
         link.href = url;
 
+        link.onload = function () {
+            util.log("+ main.css loaded");
+            
+            // attach gui when styles have loaded
+            document.body.appendChild(self.node.main.element);
+            
+            // set the initialised flag
+            this.inited = true;
+            
+            // gui is last to load - publish loaded event
+            events.publish("kbs/loaded");
+        };
+        
         // write out to document
         document.head.appendChild(link);
-        document.body.appendChild(this.node.main.element);
 
-        // autorefresh
-        if (config.gui.autorefresh) {
-            events.subscribe("gui/update", this.refresh);
-        }
-
-        // set the initialised flag
-        this.inited = true;
-        
         // events setup
-        events.subscribe("gui/log", this.writeLog);
+        if (config.gui.enabled) {
+            if (config.gui.autorefresh) {
+                // auto refresh
+                events.subscribe("gui/update", this.refresh);
+            }
+            if (config.logs.gui) {
+                // gui logging
+                events.subscribe("gui/log", this.writeLog);
+            }
+        }
     };
     
     // write a log to console out
@@ -96,52 +112,41 @@ window.define(['config', './util', './events'], function (config, util, events) 
         // get nodes using the self pointer!
         var out = self.node.main.cons.out.element,
             logwrap = document.createElement("div"),
+            logfrag = document.createDocumentFragment(),
             log = document.createTextNode(args.msg),
             newline = document.createElement("br");
 
         // create the log element
         logwrap.className = "kbs-log-node kbs-" + args.type;
-        logwrap.appendChild(log);
+        logfrag.appendChild(log);
+        
+        // check if passed an obj string
+        if (args.obj) {
+            logfrag.appendChild(newline);
+            logfrag.appendChild(document.createTextNode(args.obj));
+        }
+        
+        // add fragment to wrap
+        logwrap.appendChild(logfrag);
 
         // write
         out.appendChild(logwrap);
-        //out.appendChild(newline);
     };
     
     // add a child node to the gui
     GUI.prototype.addChild = function (node) {
-        this.childNodes.push(node);
-        events.publish("gui/update");
+        this.node.main.element.appendChild(node);
     };
     
     // create a child and add to the gui
     GUI.prototype.createChild = function (type, classes, id) {
         var node = new Node(type, classes, id);
-        this.childNodes.push(node);
+        this.node.main.element.appendChild(node);
         return node;
     };
     
     // refresh the gui and its child nodes
-    GUI.prototype.refresh = function () {
-        var element = this.node.main.element,
-            i = 0;
-        // unattach gui
-        document.body.removeChild(element);
-
-        // remove all nodes from gui
-        while (element.firstChild) {
-            element.removeChild(element.firstChild);
-        }
-
-        // reattach all existing child nodes
-        while (i < this.childNodes.length) {
-            element.appendChild(this.childNodes[i].element);
-            i += 1;
-        }
-
-        // reattach gui
-        document.body.appendChild(element);
-    };
+    GUI.prototype.refresh = function () {};
     
     self = new GUI();
     

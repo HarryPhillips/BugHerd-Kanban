@@ -4,15 +4,21 @@
 *   @auth Harry Phillips
 */
 
-#kbs-gui-wrapper {}
+.kbs-gui {}
+
+.kbs-overlay {
+    background-color: rgba(0, 0, 0, 0.3);
+    position: fixed;
+    top: 0; bottom: 0; left: 0; right: 0;
+    z-index: 2147483646;
+}
 
 .kbs-cons {
     background: #1b1b1b;
     color: #fff;
     position: fixed;
     top: 0; right: 0;
-    width: 500px;
-    height: 300px;
+    width: 500px; height: 300px;
     border: solid #405662 3px;
     border-top: 0;
     border-right: 0;
@@ -23,25 +29,43 @@
     overflow-y: scroll;
 }
 
+.kbs-cons-toggle {
+    position: relative;
+    top: 0; right: -10px;
+    width: 100px; height: 100px;
+}
+
 .kbs-cons-out {
     margin: 10px;
     padding: 0;
     font-size: 12px;
 }
 
+/* kbs logging styles */
 .kbs-log-node {
     padding: 0 3px;
+    padding: 3px 3px;
 }
 
 .kbs-log {
     background-color: transparent;
     color: #fff;
+    padding: 0 3px;
 }
 
 .kbs-debug {
     background-color: #1b5773;
     color: #fff;
-    padding: 3px 3px;
+}
+
+.kbs-okay {
+    background-color: #2d8444;
+    color: #fff;
+}
+
+.kbs-warn {
+    background-color: #d97330;
+    color: #fff;
 }
 
 .kbs-error {
