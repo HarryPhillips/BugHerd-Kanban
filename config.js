@@ -10,6 +10,7 @@ window.define({
     mode: "dev",
     logs: {
         enabled: true,
+        gui: true,
         filter: false
     },
     gui: {

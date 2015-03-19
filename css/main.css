@@ -7,14 +7,45 @@
 #kbs-gui-wrapper {}
 
 .kbs-cons {
-    background: #000;
+    background: #1b1b1b;
+    color: #fff;
     position: fixed;
     top: 0; right: 0;
     width: 500px;
     height: 300px;
+    border: solid #405662 3px;
+    border-top: 0;
+    border-right: 0;
+    border-radius: 0 0 0 10px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    font-family: Courier New;
     z-index: 2147483647;
+    overflow-y: scroll;
 }
 
 .kbs-cons-out {
-    position: relative;
+    margin: 10px;
+    padding: 0;
+    font-size: 12px;
+}
+
+.kbs-log-node {
+    padding: 0 3px;
+}
+
+.kbs-log {
+    background-color: transparent;
+    color: #fff;
+}
+
+.kbs-debug {
+    background-color: #1b5773;
+    color: #fff;
+    padding: 3px 3px;
+}
+
+.kbs-error {
+    background-color: #af3535;
+    color: #fff;
+    padding: 3px 3px;
 }

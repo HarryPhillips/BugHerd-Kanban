@@ -4,7 +4,7 @@
 *   @auth Harry Phillips
 */
 
-window.define(['config'], function (config) {
+window.define(['config', './events'], function (config, events) {
     'use strict';
     
     var util = {};
@@ -25,7 +25,7 @@ window.define(['config'], function (config) {
             hours = util.zerofy(time.getHours()),
             minutes = util.zerofy(time.getMinutes()),
             seconds = util.zerofy(time.getSeconds()),
-            millis = util.zerofy(time.getMilliseconds());
+            millis = util.zerofy(time.getMilliseconds(), 3);
 
         return hours + ":" + minutes + ":" + seconds + "." + millis;
     };
@@ -97,7 +97,8 @@ window.define(['config'], function (config) {
             filter = config.logs.filter,
             output = [],
             str = "",
-            object = false; // log object flag
+            object = false,
+            guistr = "";
         
         // process arguments into an actual array
         for (param in arguments) {
@@ -154,6 +155,17 @@ window.define(['config'], function (config) {
         str += " [" + type + "]:> ";
         str += msg;
         output.push(str);
+        
+        // log to gui if enabled
+        if (config.logs.gui) {
+            // convert obj to a json string for gui logging
+            if (object && msg === "") {
+                guistr = str + JSON.stringify(object);
+            } else {
+                guistr = str;
+            }
+            events.publish("gui/log", {msg: guistr, type: type});
+        }
         
         // validate the type only after filter application
         // and str build to allow filtering of

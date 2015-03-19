@@ -4,13 +4,13 @@
 *   @auth Harry Phillips
 */
 
-window.define(['config', './util'], function (config, util) {
+/*jslint devel: true */
+
+window.define(['config'], function (config) {
     'use strict';
     
-    util.log("events.js initialised...");
-    
     function Events() {
-        this.topics = [];
+        this.topics = {};
     }
     
     // subscribe/create event topic
@@ -30,7 +30,6 @@ window.define(['config', './util'], function (config, util) {
             if (!config.events.silent) {
                 throw new Error("Event '" + event + "' does not exist!");
             }
-            util.log("Event '" + event + "' does not exist");
             return;
         }
         
@@ -47,9 +46,6 @@ window.define(['config', './util'], function (config, util) {
                 "data": data
             };
         }
-        
-        // write log
-        util.log(data, "publishing event: '" + event + "' with data:");
     };
     
     return new Events();

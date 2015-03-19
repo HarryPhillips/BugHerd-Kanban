@@ -24,7 +24,7 @@
 
         // kbs data object
         kanban = {
-            version: 0.2,
+            version: 0.4,
             config: config,
             events: events,
             util: util,
