@@ -11,7 +11,7 @@ if (!window.KBS_GLOBAL_SET) {
         KBS_START_TIME = new Date().getTime(),
         KBS_END_TIME,
 
-        KBS_BASE_URL = "http://localhost/proj/",
+        KBS_BASE_URL = "http://localhost/GitHub/",
         KBS_SRC_DIR = "kanban/";
 }
 

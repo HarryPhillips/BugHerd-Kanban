@@ -4,72 +4,194 @@
 *   @auth Harry Phillips
 */
 
-.kbs-gui {}
+/* set transitions
+------------------------------------------------------------------------------*/
+.kbs-cons-box, .kbs-cons {
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    -o-transition: all 0.3s;
+    transition: all 0.3s;
+}
 
+/* main gui wrapper 
+------------------------------------------------------------------------------*/
+.kbs-gui * {
+    box-sizing: border-box;
+}
+
+/* gui overlay 
+------------------------------------------------------------------------------*/
 .kbs-overlay {
     background-color: rgba(0, 0, 0, 0.3);
     position: fixed;
     top: 0; bottom: 0; left: 0; right: 0;
-    z-index: 2147483646;
+    z-index: 2147483645;
 }
 
-.kbs-cons {
+/* gui console wrapper 
+------------------------------------------------------------------------------*/
+.kbs-cons-box {
     background: #1b1b1b;
     color: #fff;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    font-family: Courier New;
+    z-index: 2147483646;
+    overflow: hidden;
+}
+
+/* console states */
+.kbs-cons-box.kbs-pinned {
     position: fixed;
     top: 0; right: 0;
-    width: 500px; height: 300px;
+    width: 50%; height: 40%;
+    min-width: 450px; min-height: 300px;
     border: solid #405662 3px;
     border-top: 0;
     border-right: 0;
     border-radius: 0 0 0 10px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4), inset 2px 2px 24px #000;
-    font-family: Courier New;
-    z-index: 2147483647;
-    overflow-y: scroll;
 }
 
-.kbs-cons-toggle {
+.kbs-cons-box.kbs-full {
+    width: 100%; height: 100%;
+    border: solid #405662 0px;
+    border-radius: 0px;
+}
+
+/* console toolbar 
+------------------------------------------------------------------------------*/
+.kbs-cons-toolbar {
+    background-color: #405662;
     position: relative;
-    top: 0; right: -10px;
-    width: 100px; height: 100px;
+    text-align: right;
+    z-index: 2147483647;
 }
 
+/* console tool btn */
+.kbs-tool {
+    display: inline-block;
+    width: 30px; height: 30px;
+    margin: 0; padding: 0;
+    font-size: 19px;
+    line-height: 1.6em;
+    text-align: center;
+    cursor: pointer;
+    
+    -webkit-transition: background-color 0.3s, color 0.3s;
+    -moz-transition: background-color 0.3s, color 0.3s;
+    -o-transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.kbs-minimax {
+    background-color: #91d467;
+    color: #fff;
+}
+
+.kbs-minimax:hover {
+    background-color: #488424;
+}
+
+.kbs-clear {
+    background-color: #9049ce;
+    color: #fff;
+}
+
+.kbs-clear:hover {
+    background-color: #5f2691;
+}
+
+.kbs-destroy {
+    background-color: #cc4141;
+    color: #fff;
+}
+
+.kbs-destroy:hover {
+    background-color: #892323;
+}
+
+.kbs-example {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.kbs-example:hover {
+    background-color: #fff;
+    color: #1a1a1a;
+}
+
+/* console output wrapper 
+------------------------------------------------------------------------------*/
+.kbs-cons {
+    position: absolute;
+    top: 30px; bottom: 0;
+    left: 0; right: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* console out content */
 .kbs-cons-out {
-    margin: 10px;
+    position: relative;
     padding: 0;
     font-size: 12px;
 }
 
-/* kbs logging styles */
+/* console log nodes
+------------------------------------------------------------------------------*/
+/* individual log node */
 .kbs-log-node {
-    padding: 0 3px;
-    padding: 3px 3px;
+    padding: 6px;
+    word-break: break-all;
+    white-space: normal;
 }
 
-.kbs-log {
-    background-color: transparent;
+/* object log node */
+.kbs-object {
+    background-color: #2a2a2a;
     color: #fff;
-    padding: 0 3px;
+    max-height: 150px;
+    margin: 0;
+    margin: 3px;
+    padding: 10px;
+    font-family: Courier New;
+    font-size: 1em;
+    letter-spacing: 1px;
+    line-height: 1.3em;
+    overflow: scroll;
 }
 
+/* type: 'log' */
+.kbs-log {
+    background-color: #000;
+    color: #fff;
+}
+
+/* type: 'info' */
+.kbs-info {
+    background-color: #eee;
+    color: #1a1a1a;
+}
+
+/* type: 'debug' */
 .kbs-debug {
     background-color: #1b5773;
     color: #fff;
 }
 
+/* type: 'okay' */
 .kbs-okay {
     background-color: #2d8444;
     color: #fff;
 }
 
+/* type: 'warn' */
 .kbs-warn {
     background-color: #d97330;
     color: #fff;
 }
 
+/* type: 'error' */
 .kbs-error {
     background-color: #af3535;
     color: #fff;
-    padding: 3px 3px;
 }

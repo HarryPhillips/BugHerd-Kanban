@@ -15,9 +15,24 @@ window.define({
     },
     gui: {
         enabled: true,
-        autorefresh: true
+        autorefresh: true,
+        console: {
+            state: "kbs-pinned",
+            autoscroll: true,
+            icons: {
+                clear: "trash",
+                minimax: "caret-square-o-up",
+                destroy: "times",
+                example: "plus-circle"
+            }
+        }
     },
     events: {
         silent: true
+    },
+    tooltips: {
+        clear: "Clear all logs from the console.",
+        destroy: "Close the console.",
+        minimax: "Minimse / Maximise the console."
     }
 });

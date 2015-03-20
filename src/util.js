@@ -17,6 +17,19 @@ window.define(['config', './events'], function (config, events) {
 
         return num;
     };
+    
+    // amend spaces to a string/number until a length is met
+    util.spacify = function (str, len) {
+        if (typeof str !== "string") {
+            str = str.toString();
+        }
+        
+        while (str.length < len) {
+            str = " " + str;
+        }
+        
+        return str;
+    };
 
     // returns current time as formatted string
     util.ftime = function () {
@@ -153,7 +166,7 @@ window.define(['config', './events'], function (config, events) {
         // format and push output
         str += "[" + config.appName + "] ";
         str += util.ftime();
-        str += " [" + type + "]:> ";
+        str += util.spacify("[" + type + "]", 8) + ":> ";
         str += msg;
         output.push(str);
         
@@ -164,7 +177,7 @@ window.define(['config', './events'], function (config, events) {
                 objstr = "Object " + JSON.stringify(object, null, 4);
             }
             
-            guistr = str;
+            guistr = str.replace(/\s/g, "&nbsp;");
             
             events.publish("gui/log", {
                 msg: guistr,

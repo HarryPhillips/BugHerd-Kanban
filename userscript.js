@@ -8,16 +8,15 @@
 // @grant       none
 // ==/UserScript==
 
-var KBS_GLOBAL_SET = true,
-
-    KBS_START_TIME = new Date().getTime(),
-    KBS_END_TIME,
-    
-    KBS_BASE_URL = "http://localhost/GitHub/",
-    KBS_SRC_DIR = "kanban/";
-
 (function (window) {
     'use strict';
+    
+    // set globals
+    window.KBS_GLOBAL_SET = true;
+    window.KBS_START_TIME = new Date().getTime();
+    window.KBS_END_TIME = "";
+    window.KBS_BASE_URL = "http://localhost/GitHub/";
+    window.KBS_SRC_DIR = "kanban/";
 
     // check for document body
     if (!window.document.body) {
@@ -27,8 +26,8 @@ var KBS_GLOBAL_SET = true,
     // declarations
     var
         // configuration urls
-        baseUrl = KBS_BASE_URL,
-        srcDir = KBS_SRC_DIR,
+        baseUrl = window.KBS_BASE_URL,
+        srcDir = window.KBS_SRC_DIR,
         reqUrl = "https://cdnjs.cloudflare.com/" +
         "ajax/libs/require.js/2.1.16/require.min.js",
         
