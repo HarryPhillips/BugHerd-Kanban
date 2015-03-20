@@ -161,12 +161,16 @@ window.define(['config', './events'], function (config, events) {
         if (config.logs.gui) {
             // convert obj to a json string for gui logging
             if (object) {
-                objstr = "[object]:: " + JSON.stringify(object, null, 3);
+                objstr = "Object " + JSON.stringify(object, null, 4);
             }
             
             guistr = str;
             
-            events.publish("gui/log", {msg: guistr, type: type, obj: objstr});
+            events.publish("gui/log", {
+                msg: guistr,
+                type: type,
+                obj: objstr
+            });
         }
         
         // validate the type only after filter application

@@ -111,26 +111,18 @@ window.define(['config', './util', './events'], function (config, util, events) 
     GUI.prototype.writeLog = function (args) {
         // get nodes using the self pointer!
         var out = self.node.main.cons.out.element,
-            logwrap = document.createElement("div"),
-            logfrag = document.createDocumentFragment(),
-            log = document.createTextNode(args.msg),
-            newline = document.createElement("br");
-
-        // create the log element
-        logwrap.className = "kbs-log-node kbs-" + args.type;
-        logfrag.appendChild(log);
+            log = new Node("div", "kbs-log-node kbs-" + args.type),
+            content = args.msg;
         
-        // check if passed an obj string
         if (args.obj) {
-            logfrag.appendChild(newline);
-            logfrag.appendChild(document.createTextNode(args.obj));
+            content += "<pre><br /><br />";
+            content += args.obj + "</pre>";
         }
         
-        // add fragment to wrap
-        logwrap.appendChild(logfrag);
-
+        log.element.innerHTML = content;
+        
         // write
-        out.appendChild(logwrap);
+        out.appendChild(log.element);
     };
     
     // add a child node to the gui

@@ -42,7 +42,7 @@
 
         // log on loaded
         events.subscribe("kbs/loaded", function () {
-            util.log(kanban, "Kanban initialised in " +
+            util.log("okay", kanban, "Kanban initialised in " +
                 window.KBS_END_TIME);
         });
         
