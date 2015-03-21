@@ -111,7 +111,7 @@ window.define(['config', './util', './events'], function (config, util, events) 
             
             // clear tool
             createTool("clear").element.onclick = function () {
-                
+                self.clearLogs();
             };
             
             // destroy tool
@@ -200,6 +200,29 @@ window.define(['config', './util', './events'], function (config, util, events) 
         }
     };
     
+    // optimsed
+    GUI.prototype.generateLogs = function () {
+        var cons = this.tree.main.conswrap.cons.element,
+            out = this.tree.main.conswrap.cons.out.element,
+            start = new Date().getTime(),
+            end,
+            i = 0;
+        
+        // detach
+        cons.removeChild(out);
+        
+        while (i < 10000) {
+            util.log("debug", "log #" + i);
+            i += 1;
+        }
+        
+        // reattach
+        cons.appendChild(out);
+        
+        end = new Date().getTime() - start;
+        util.log("debug", "opt: " + end + "ms");
+    };
+    
     // write a log to console out
     GUI.prototype.writeLog = function (args) {
         // get nodes using the self pointer!
@@ -220,6 +243,29 @@ window.define(['config', './util', './events'], function (config, util, events) 
         
         // refresh
         self.refresh();
+    };
+    
+    // clear logs from consout out
+    GUI.prototype.clearLogs = function () {
+        var cons = this.tree.main.conswrap.cons.element,
+            out = this.tree.main.conswrap.cons.out.element,
+            start = new Date().getTime(),
+            end;
+        
+        // detach
+        cons.removeChild(out);
+        
+        // remove all logs
+        while (out.firstChild) {
+            out.removeChild(out.firstChild);
+        }
+        
+        // reattach
+        cons.appendChild(out);
+        
+        // bench
+        end = new Date().getTime() - start;
+        util.log("okay", "cleared all logs in " + end + " ms");
     };
     
     // add a child node to the gui
