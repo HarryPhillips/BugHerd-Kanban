@@ -5,13 +5,13 @@
 */
 
 /*
-*	TODO:
-*	+ add the ability for sub logs (possibly gui console only)
-*	  to allow log nodes inside of other log nodes.
+*    TODO:
+*    + add the ability for sub logs (possibly gui console only)
+*      to allow log nodes inside of other log nodes.
 *
-*	+ possibly think about adding 'log contexts' to support the
-	  above by allowing logs to be written inside a new context,
-	  other than the console out element.
+*    + possibly think about adding 'log contexts' to support the
+      above by allowing logs to be written inside a new context,
+      other than the console out element.
 */
 
 window.define(['config', './events'], function (config, events) {
@@ -172,7 +172,7 @@ window.define(['config', './events'], function (config, events) {
                 return;
             }
         }
-		
+        
         // format and push output
         str += "[" + config.appName + "] ";
         str += util.ftime();
@@ -182,18 +182,18 @@ window.define(['config', './events'], function (config, events) {
         
         // log to gui if enabled
         if (config.logs.gui) {
-			// convert obj to a json string for gui logging
-			if (object) {
-				objstr = "Object " + JSON.stringify(object, null, 4);
-			}
+            // convert obj to a json string for gui logging
+            if (object) {
+                objstr = "Object " + JSON.stringify(object, null, 4);
+            }
 
-			guistr = str.replace(/\s/g, "&nbsp;");
+            guistr = str.replace(/\s/g, "&nbsp;");
 
-			events.publish("gui/log", {
-				msg: guistr,
-				type: type,
-				obj: objstr
-			});
+            events.publish("gui/log", {
+                msg: guistr,
+                type: type,
+                obj: objstr
+            });
         }
         
         // validate the type only after filter application

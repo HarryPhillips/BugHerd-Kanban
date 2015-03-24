@@ -12,7 +12,7 @@
         'src/events',
         'src/util',
         'src/gui',
-		'src/test/main.test.js'
+        'src/test/main.test.js'
     ];
 
     window.define(deps, function (config, events, util, gui, tests) {
@@ -54,8 +54,8 @@
             
             // tests
             if (config.test) {
-				tests.exec(['util']);
-			}
+                tests.exec(['util']);
+            }
         };
         
         // wait for kbs loaded event
