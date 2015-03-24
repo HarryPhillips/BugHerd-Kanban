@@ -30,21 +30,18 @@ window.define(['config', './util', './events'], function (config, util, events) 
         this.element = document.createElement(type);
         this.element.className = classes || "";
         this.element.id = id || "";
-        this.children = [];
     }
     
     // add a child to node
     Node.prototype.addChild = function (node) {
         // add child to node
         this.element.appendChild(node);
-        this.children.push(node);
     };
     
     // create and add child to node
     Node.prototype.createChild = function (type, classes, id) {
         var node = new Node(type, classes, id);
         this.addChild(node.element);
-        this.children.push(node.element);
         return node;
     };
     
@@ -59,72 +56,15 @@ window.define(['config', './util', './events'], function (config, util, events) 
     // build gui node tree
     GUI.prototype.buildNodeTree = function () {
         // create tree and nodes
-        var tree = {}, main,
-            conswrap, cons, consout,
-            constools, consicon, getIcon, createTool,
-            consminimax, consclear, consdestroy,
-            consclass;
+        var tree = {}, main;
 
         // create nodes
         tree.main = main = new Node("div", "kbs-gui");
         main.overlay = tree.main.createChild("div", "kbs-overlay");
         
-        // get icon from config
-        getIcon = function (index) {
-            return config.gui.console.icons[index];
-        };
-        
-        // creates a tool widget
-        createTool = function (tname) {
-            consicon = getIcon(tname);
-            constools[tname] = constools.createChild(
-                "i",
-                "fa fa-" + consicon + " kbs-tool " +
-                    "kbs-" + tname
-            );
-            constools[tname].element.title = config.tooltips[tname] || "";
-            
-            return constools[tname];
-        };
-        
         // gui console
         if (config.logs.gui) {
-            // console wrapper
-            consclass = "kbs-cons-box " + config.gui.console.state;
-            conswrap = main.conswrap = main.createChild("div", consclass);
-            
-            // console toolbar
-            constools = conswrap.constools =
-                conswrap.createChild("div", "kbs-cons-toolbar");
-            
-            // toggle tool
-            createTool("minimax").element.onclick = function () {
-                var classes = conswrap.element.className;
-                
-                if (classes.indexOf("kbs-full") === -1) {
-                    conswrap.element.className += " kbs-full";
-                } else {
-                    conswrap.element.className =
-                        conswrap.element.className.replace("kbs-full", "");
-                }
-            };
-            
-            // clear tool
-            createTool("clear").element.onclick = function () {
-                self.clearLogs();
-            };
-            
-            // destroy tool
-            createTool("destroy").element.onclick = function () {
-                
-            };
-            
-            // console
-            conswrap.cons = cons =
-                conswrap.createChild("div", "kbs-cons");
-            
-            // console output
-            consout = cons.out = cons.createChild("div", "kbs-cons-out");
+            this.console = new GUI.Console(main);
         }
 
         return tree;
@@ -159,26 +99,26 @@ window.define(['config', './util', './events'], function (config, util, events) 
         falink.href = faurl;
         
         mainlink.onload = function () {
-            util.log("info", "+ main.css loaded");
+            util.log("okay", "+ main.css loaded");
         };
         
         themelink.onload = function () {
-            util.log("info", "+ theme.css loaded");
+            util.log("okay", "+ theme.css loaded");
         };
         
         // this will be last to load - attach the exec fn
         falink.onload = function () {
-            util.log("info", "+ font-awesome.css loaded");
+            util.log("okay", "+ font-awesome.css loaded");
             
             // attach gui when styles have loaded
             document.body.appendChild(self.tree.main.element);
-            util.log("info", "+ attached gui tree");
+            util.log("debug", "+ attached gui tree");
             
             // set the initialised flag
             this.inited = true;
             
             // gui is last to load - publish loaded event
-            util.log("info", "+ publishing 'kbs/loaded'");
+            util.log("debug", "+ publishing 'kbs/loaded'");
             events.publish("kbs/loaded");
         };
         
@@ -200,8 +140,8 @@ window.define(['config', './util', './events'], function (config, util, events) 
         }
     };
     
-    // optimsed
-    GUI.prototype.generateLogs = function () {
+    // benchmarks the generation of 10000 log nodes
+    GUI.prototype.benchmark = function () {
         var cons = this.tree.main.conswrap.cons.element,
             out = this.tree.main.conswrap.cons.out.element,
             start = new Date().getTime(),
@@ -291,16 +231,106 @@ window.define(['config', './util', './events'], function (config, util, events) 
         }
     };
     
-    /* gui console constructor
-    --------------------------------------------------------------------------*/
-    GUI.Console = function () {
-        this.tree = this.buildNodeTree();
-        this.children = [];
+    // destory console instance
+    GUI.prototype.destroyConsole = function () {
+        // unattach the instance
+        var main = this.tree.main.conswrap.element,
+            console = this.tree.main.conswrap.cons.out.element;
+        
+        // 
+        main.removeChild(console);
     };
     
-    // expose / return gui module
+    /* gui console constructor
+    --------------------------------------------------------------------------*/
+    GUI.Console = function (gui) {
+        this.tree = this.buildNodeTree(gui);
+    };
     
+    // create a new console tool
+    GUI.Console.prototype.createTool = function (toolbar, tool) {
+        if (typeof toolbar === "undefined") {
+            throw new Error("No toolbar passed to " +
+                            "GUI.Console.createTool()");
+        }
+        
+        var icon;
+        
+        icon = this.getIcon(tool);
+        toolbar[tool] = toolbar.createChild(
+            "i",
+            "fa fa-" + icon + " kbs-tool " +
+                "kbs-" + tool
+        );
+        toolbar[tool].element.title = config.tooltips[tool] || "";
+
+        return toolbar[tool];
+    };
+    
+    // returns icon config setting for a given tool
+    GUI.Console.prototype.getIcon = function (tool) {
+        return config.gui.console.icons[tool] || "plus";
+    };
+    
+    // build console node tree and return
+    GUI.Console.prototype.buildNodeTree = function (gui) {
+        // check we were given a parent
+        if (typeof gui === "undefined") {
+            throw new Error("No parent given to GUI.Console constructor");
+        }
+        
+        // declarations
+        var
+            // console nodes
+            wrapper,
+            consclass,
+            constools,
+            cons,
+            consout,
+            consicon;
+        
+        // console wrapper
+        consclass = "kbs-cons-box " + config.gui.console.state;
+        wrapper = gui.conswrap = gui.createChild("div", consclass);
+
+        // console toolbar
+        constools = wrapper.constools =
+            wrapper.createChild("div", "kbs-cons-toolbar");
+
+        // toggle tool
+        this.createTool(constools, "minimax").element.onclick = function () {
+            var classes = wrapper.element.className;
+
+            if (classes.indexOf("kbs-full") === -1) {
+                wrapper.element.className += " kbs-full";
+            } else {
+                wrapper.element.className =
+                    wrapper.element.className.replace("kbs-full", "");
+            }
+        };
+
+        // clear tool
+        this.createTool(constools, "clear").element.onclick = function () {
+            self.clearLogs();
+        };
+
+        // destroy tool
+        this.createTool(constools, "destroy").element.onclick = function () {
+            self.destroyConsole();
+        };
+
+        // console
+        wrapper.cons = cons =
+            wrapper.createChild("div", "kbs-cons");
+
+        // console output
+        consout = cons.out = cons.createChild("div", "kbs-cons-out");
+        
+        // return wrapper element
+        return wrapper;
+    };
+    
+    // expose / return gui instance
     self = new GUI();
-    
     return self;
 });

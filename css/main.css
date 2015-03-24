@@ -43,7 +43,7 @@
 .kbs-cons-box.kbs-pinned {
     position: fixed;
     top: 0; right: 0;
-    width: 50%; height: 40%;
+    width: 50%; height: 50%;
     min-width: 450px; min-height: 300px;
     border: solid #405662 3px;
     border-top: 0;
@@ -72,6 +72,8 @@
 
 /* console tool btn */
 .kbs-tool {
+    background-color: #fff;
+    color: #1a1a1a;
     display: inline-block;
     width: 30px; height: 30px;
     margin: 0; padding: 0;
@@ -84,6 +86,11 @@
     -moz-transition: background-color 0.3s, color 0.3s;
     -o-transition: background-color 0.3s, color 0.3s;
     transition: background-color 0.3s, color 0.3s;
+}
+
+.kbs-tool:hover {
+    background-color: #1a1a1a;
+    color: #fff;
 }
 
 .kbs-minimax {
@@ -123,7 +130,7 @@
     color: #1a1a1a;
 }
 
-/* console output wrapper 
+/* console output wrapper
 ------------------------------------------------------------------------------*/
 .kbs-cons {
     background: #000;
