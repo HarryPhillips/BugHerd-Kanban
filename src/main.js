@@ -12,7 +12,7 @@
         'src/events',
         'src/util',
         'src/gui',
-        'test/main.test.js'
+        'test/main.test'
     ];
 
     window.define(deps, function (config, events, util, gui, tests) {

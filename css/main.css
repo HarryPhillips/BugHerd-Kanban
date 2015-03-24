@@ -26,6 +26,7 @@
     position: fixed;
     top: 0; bottom: 0; left: 0; right: 0;
     z-index: 2147483645;
+    display: none;
 }
 
 /* gui console wrapper 
@@ -106,7 +107,8 @@
 }
 
 .kbs-toggle:hover {
-    background-color: #488424;
+    background-color: #fff;
+    color: #91d467;
 }
 
 .kbs-clear {
@@ -115,7 +117,8 @@
 }
 
 .kbs-clear:hover {
-    background-color: #5f2691;
+    background-color: #fff;
+    color: #9049ce;
 }
 
 .kbs-close {
@@ -124,7 +127,18 @@
 }
 
 .kbs-close:hover {
-    background-color: #892323;
+    background-color: #fff;
+    color: #cc4141;
+}
+
+.kbs-destroy {
+    background-color: #b82c2c;
+    color: #fff;
+}
+
+.kbs-destroy:hover {
+    background-color: #fff;
+    color: #b82c2c;
 }
 
 .kbs-example {

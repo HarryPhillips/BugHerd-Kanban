@@ -355,13 +355,18 @@ window.define(['config', './util', './events'], function (config, util, events) 
                     wrapper.element.className.replace(" kbs-close", "");
             }
         };
+        
+        // destroy tool
+        this.createTool(constools, "destroy").element.onclick = function () {
+            self.console.destroy();
+        };
 
         // clear tool
         this.createTool(constools, "clear").element.onclick = function () {
             self.console.clear();
         };
 
-        // destroy tool
+        // close tool
         this.createTool(constools, "close").element.onclick = function () {
             self.console.close();
         };

@@ -23,8 +23,9 @@ window.define({
             autoscroll: true,
             icons: {
                 clear: "trash",
-                toggle: "caret-square-o-up",
+                toggle: "terminal",
                 close: "times",
+                destroy: "exclamation-triangle",
                 example: "plus-circle"
             }
         }
@@ -34,7 +35,8 @@ window.define({
     },
     tooltips: {
         clear: "Clear all logs",
+        toggle: "Minimise / Maximise",
         close: "Close the console",
-        toggle: "Minimise / Maximise"
+        destroy: "Destroy this console instance"
     }
 });
