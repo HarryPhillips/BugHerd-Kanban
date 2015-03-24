@@ -8,8 +8,8 @@ window.define({
     appName: "kbs",
     enabled: true,
     mode: "dev",
-	offline: false,
-	test: true,
+    offline: false,
+    test: false,
     logs: {
         enabled: true,
         gui: true,

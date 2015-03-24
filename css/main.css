@@ -58,10 +58,10 @@
 }
 
 .kbs-cons-box.kbs-close {
-	width: 30px; height: 30px;
-	min-width: 30px; min-height: 30px;
-	border: solid #405662 0px;
-	border-radius: 0px;
+    width: 30px; height: 30px;
+    min-width: 30px; min-height: 30px;
+    border: solid #405662 0px;
+    border-radius: 0px;
 }
 
 .kbs-full .kbs-cons-out {
@@ -222,6 +222,6 @@
 
 /* type: 'test' */
 .kbs-test {
-	background-color: #e8df68;
-	color: #1a1a1a;
+    background-color: #e8df68;
+    color: #1a1a1a;
 }
