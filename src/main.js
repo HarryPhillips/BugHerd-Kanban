@@ -1,7 +1,7 @@
 /*
 *   @type javascript
 *   @name main.js
-*   @auth Harry Phillips
+*   @copy Copyright 2015 Harry Phillips
 */
 
 (function (window) {
@@ -11,10 +11,11 @@
         'config',
         'src/events',
         'src/util',
-        'src/gui'
+        'src/gui',
+		'src/test/main.test.js'
     ];
 
-    window.define(deps, function (config, events, util, gui) {
+    window.define(deps, function (config, events, util, gui, tests) {
         if (!config.enabled) {
             return;
         }
@@ -24,7 +25,7 @@
 
         // kbs data object
         kanban = {
-            version: 0.5,
+            version: 0.6,
             config: config,
             events: events,
             util: util,
@@ -51,18 +52,10 @@
                 window[config.appName] = kanban;
             }
             
-            // test util.log
-            util.log("info", "beginning log tests...");
-            util.log();
-            util.log("test #1");
-            util.log("info", "test #2");
-            util.log("debug", "test #3");
-            util.log("warn", "test #4");
-            util.log("error", "test #5");
-            util.log("okay", "test #6");
-            util.log({test: "#7"});
-            util.log({test: "#8"}, "test #8");
-            util.log("error", {test: "#9"}, "test #9");
+            // tests
+            if (config.test) {
+				tests.exec(['util']);
+			}
         };
         
         // wait for kbs loaded event

@@ -1,13 +1,15 @@
 /*
 *   @type javascript
 *   @name config.js
-*   @auth Harry Phillips
+*   @copy Copyright 2015 Harry Phillips
 */
 
 window.define({
     appName: "kbs",
     enabled: true,
     mode: "dev",
+	offline: false,
+	test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -21,8 +23,8 @@ window.define({
             autoscroll: true,
             icons: {
                 clear: "trash",
-                minimax: "caret-square-o-up",
-                destroy: "times",
+                toggle: "caret-square-o-up",
+                close: "times",
                 example: "plus-circle"
             }
         }
@@ -31,8 +33,8 @@ window.define({
         silent: true
     },
     tooltips: {
-        clear: "Clear all logs from the console.",
-        destroy: "Close the console.",
-        minimax: "Minimse / Maximise the console."
+        clear: "Clear all logs",
+        close: "Close the console",
+        toggle: "Minimise / Maximise"
     }
 });

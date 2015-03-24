@@ -1,7 +1,7 @@
 /*
 *   @type javascript
 *   @name gui.js
-*   @auth Harry Phillips
+*   @copy Copyright 2015 Harry Phillips
 */
 
 /*jslint devel: true */
@@ -87,7 +87,21 @@ window.define(['config', './util', './events'], function (config, util, events) 
             
             faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
             "4.3.0" +
-            "/css/font-awesome.min.css";
+            "/css/font-awesome.min.css",
+			
+			// attach gui element and publish loaded event
+			publish = function () {
+				// attach gui when styles have loaded
+				document.body.appendChild(self.tree.main.element);
+				util.log("debug", "+ attached gui tree");
+
+				// set the initialised flag
+				self.inited = true;
+
+				// gui is always last to load - publish loaded event
+				util.log("debug", "+ publishing 'kbs/loaded'");
+				events.publish("kbs/loaded");
+			};
 
         // props
         mainlink.rel = "stylesheet";
@@ -104,26 +118,25 @@ window.define(['config', './util', './events'], function (config, util, events) 
         
         themelink.onload = function () {
             util.log("okay", "+ theme.css loaded");
+			
+			if (config.offline) {
+				publish();
+			}
         };
         
         // this will be last to load - attach the exec fn
         falink.onload = function () {
             util.log("okay", "+ font-awesome.css loaded");
-            
-            // attach gui when styles have loaded
-            document.body.appendChild(self.tree.main.element);
-            util.log("debug", "+ attached gui tree");
-            
-            // set the initialised flag
-            this.inited = true;
-            
-            // gui is last to load - publish loaded event
-            util.log("debug", "+ publishing 'kbs/loaded'");
-            events.publish("kbs/loaded");
+			
+			if (!config.offline) {
+				publish();
+			}
         };
         
         // write out to document
-        document.head.appendChild(falink);
+		if (!config.offline) {
+			document.head.appendChild(falink);
+		}
         document.head.appendChild(mainlink);
         document.head.appendChild(themelink);
 
@@ -135,7 +148,7 @@ window.define(['config', './util', './events'], function (config, util, events) 
             }
             if (config.logs.gui) {
                 // gui logging
-                events.subscribe("gui/log", this.writeLog);
+                events.subscribe("gui/log", this.console.write);
             }
         }
     };
@@ -163,51 +176,6 @@ window.define(['config', './util', './events'], function (config, util, events) 
         util.log("debug", "opt: " + end + "ms");
     };
     
-    // write a log to console out
-    GUI.prototype.writeLog = function (args) {
-        // get nodes using the self pointer!
-        var out = self.tree.main.conswrap.cons.out.element,
-            log = new Node("div", "kbs-log-node kbs-" + args.type),
-            content = args.msg;
-        
-        if (args.obj) {
-            args.obj.replace();
-            content += "<pre class='kbs-object'>";
-            content += args.obj + "</pre>";
-        }
-        
-        log.element.innerHTML = content;
-        
-        // write
-        out.appendChild(log.element);
-        
-        // refresh
-        self.refresh();
-    };
-    
-    // clear logs from consout out
-    GUI.prototype.clearLogs = function () {
-        var cons = this.tree.main.conswrap.cons.element,
-            out = this.tree.main.conswrap.cons.out.element,
-            start = new Date().getTime(),
-            end;
-        
-        // detach
-        cons.removeChild(out);
-        
-        // remove all logs
-        while (out.firstChild) {
-            out.removeChild(out.firstChild);
-        }
-        
-        // reattach
-        cons.appendChild(out);
-        
-        // bench
-        end = new Date().getTime() - start;
-        util.log("okay", "cleared all logs in " + end + " ms");
-    };
-    
     // add a child node to the gui
     GUI.prototype.addChild = function (node) {
         this.tree.main.element.appendChild(node);
@@ -231,21 +199,85 @@ window.define(['config', './util', './events'], function (config, util, events) 
         }
     };
     
-    // destory console instance
-    GUI.prototype.destroyConsole = function () {
-        // unattach the instance
-        var main = this.tree.main.conswrap.element,
-            console = this.tree.main.conswrap.cons.out.element;
-        
-        // 
-        main.removeChild(console);
-    };
-    
     /* gui console constructor
     --------------------------------------------------------------------------*/
     GUI.Console = function (gui) {
         this.tree = this.buildNodeTree(gui);
     };
+	
+	// write log to console
+	GUI.Console.prototype.write = function (args) {
+        // get nodes using the self pointer!
+        var out = self.tree.main.conswrap.cons.out.element,
+            log = new Node("div", "kbs-log-node kbs-" + args.type),
+            content = args.msg,
+			i = 0;
+		
+		// object node
+        if (args.obj) {
+            content += "<pre class='kbs-object'>";
+            content += args.obj + "</pre>";
+        }
+        
+        log.element.innerHTML = content;
+        
+        // write
+        out.appendChild(log.element);
+        
+        // refresh
+        self.refresh();
+	};
+	
+	// clear console
+	GUI.Console.prototype.clear = function () {
+        var cons = this.tree.cons.element,
+            out = this.tree.cons.out.element,
+            start = new Date().getTime(),
+            end;
+        
+        // detach
+        cons.removeChild(out);
+        
+        // remove all logs
+        while (out.firstChild) {
+            out.removeChild(out.firstChild);
+        }
+        
+        // reattach
+        cons.appendChild(out);
+        
+        // bench
+        end = new Date().getTime() - start;
+        util.log("okay", "cleared all logs in " + end + " ms");
+	};
+	
+	// close console
+	GUI.Console.prototype.close = function () {
+		var element = this.tree.element,
+			classes = element.className;
+		
+		element.className = classes += " kbs-close";
+	};
+	
+	// open console
+	GUI.Console.prototype.open = function () {
+		var element = this.tree.element,
+			classes = element.className;
+		
+		element.className = classes.replace(" kbs-close", "");
+	};
+	
+	// destroy the console instance
+	GUI.Console.prototype.destroy = function () {
+		var confirm = window.prompt("Are you sure you want to destroy the " +
+						"console instance? You will have to refresh the page " +
+									"to recover it.",
+					  "Click OK or CANCEL - input not needed");
+		
+		if (confirm) {
+			self.tree.main.element.removeChild(self.tree.main.conswrap.element);
+		}
+	};
     
     // create a new console tool
     GUI.Console.prototype.createTool = function (toolbar, tool) {
@@ -298,25 +330,40 @@ window.define(['config', './util', './events'], function (config, util, events) 
             wrapper.createChild("div", "kbs-cons-toolbar");
 
         // toggle tool
-        this.createTool(constools, "minimax").element.onclick = function () {
-            var classes = wrapper.element.className;
+        this.createTool(constools, "toggle").element.onclick = function () {
+            var classes = wrapper.element.className,
+				closed = classes.indexOf("kbs-close") !== -1,
+				full = classes.indexOf("kbs-full") !== -1;
 
-            if (classes.indexOf("kbs-full") === -1) {
+			// if not closed and not full screen
+            if (!closed && !full) {
+				// make full screen
                 wrapper.element.className += " kbs-full";
-            } else {
-                wrapper.element.className =
-                    wrapper.element.className.replace("kbs-full", "");
             }
+			
+			// if in full screen
+			if (full) {
+				// shrink
+				wrapper.element.className =
+					wrapper.element.className.replace(" kbs-full", "");
+			}
+			
+			// if closed
+			if (closed) {
+				// open
+				wrapper.element.className =
+					wrapper.element.className.replace(" kbs-close", "");
+			}
         };
 
         // clear tool
         this.createTool(constools, "clear").element.onclick = function () {
-            self.clearLogs();
+            self.console.clear();
         };
 
         // destroy tool
-        this.createTool(constools, "destroy").element.onclick = function () {
-            self.destroyConsole();
+        this.createTool(constools, "close").element.onclick = function () {
+            self.console.close();
         };
 
         // console

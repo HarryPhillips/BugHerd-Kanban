@@ -1,7 +1,7 @@
 /*
 *   @type css
 *   @name main.css
-*   @auth Harry Phillips
+*   @copy Copyright 2015 Harry Phillips
 */
 
 /* set transitions
@@ -57,8 +57,15 @@
     border-radius: 0px;
 }
 
+.kbs-cons-box.kbs-close {
+	width: 30px; height: 30px;
+	min-width: 30px; min-height: 30px;
+	border: solid #405662 0px;
+	border-radius: 0px;
+}
+
 .kbs-full .kbs-cons-out {
-    font-size: 24px;
+    font-size: 16px;
 }
 
 /* console toolbar 
@@ -93,12 +100,12 @@
     color: #fff;
 }
 
-.kbs-minimax {
+.kbs-toggle {
     background-color: #91d467;
     color: #fff;
 }
 
-.kbs-minimax:hover {
+.kbs-toggle:hover {
     background-color: #488424;
 }
 
@@ -111,12 +118,12 @@
     background-color: #5f2691;
 }
 
-.kbs-destroy {
+.kbs-close {
     background-color: #cc4141;
     color: #fff;
 }
 
-.kbs-destroy:hover {
+.kbs-close:hover {
     background-color: #892323;
 }
 
@@ -211,4 +218,10 @@
 .kbs-error {
     background-color: #af3535;
     color: #fff;
+}
+
+/* type: 'test' */
+.kbs-test {
+	background-color: #e8df68;
+	color: #1a1a1a;
 }

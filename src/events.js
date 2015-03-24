@@ -1,7 +1,7 @@
 /*
 *   @type javascript
 *   @name events.js
-*   @auth Harry Phillips
+*   @copy Copyright 2015 Harry Phillips
 */
 
 /*jslint devel: true */
