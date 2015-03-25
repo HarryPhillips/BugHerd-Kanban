@@ -23,6 +23,7 @@ window.define({
             state: "kbs-pinned",
             autoscroll: true,
             icons: {
+                save: "file-text",
                 clear: "trash",
                 toggle: "terminal",
                 close: "times",
@@ -35,6 +36,7 @@ window.define({
         silent: false
     },
     tooltips: {
+        save: "Save the output buffer to text file",
         clear: "Clear all logs",
         toggle: "Minimise / Maximise",
         close: "Close the console",

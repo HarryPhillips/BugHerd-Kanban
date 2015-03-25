@@ -185,7 +185,12 @@ window.define(
 
             titlenode = document.createTextNode("Kanban v" + config.version);
             constitle.element.appendChild(titlenode);
-
+            
+            // save tool
+            this.createTool(constools, "save").element.onclick = function () {
+                self.save();
+            };
+            
             // toggle tool
             this.createTool(constools, "toggle").element.onclick = function () {
                 var classes = wrapper.element.className,

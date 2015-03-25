@@ -117,6 +117,16 @@
     border-bottom: solid #000 30px;
 }
 
+.kbs-save {
+    background-color: #429e7e;
+    color: #fff;
+}
+
+.kbs-save:hover {
+    background-color: #fff;
+    color: #429e7e;
+}
+
 .kbs-toggle {
     background-color: #91d467;
     color: #fff;
