@@ -1,3 +1,5 @@
+@import url("http://fonts.googleapis.com/css?family=Open+Sans:400,300,700");
+
 /*
 *   @type css
 *   @name main.css
@@ -6,7 +8,7 @@
 
 /* set transitions
 ------------------------------------------------------------------------------*/
-.kbs-cons-box, .kbs-cons {
+.kbs-cons-box, .kbs-cons, .kbs-object, .kbs-object-expand {
     -webkit-transition: all 0.3s;
     -moz-transition: all 0.3s;
     -o-transition: all 0.3s;
@@ -17,6 +19,11 @@
 ------------------------------------------------------------------------------*/
 .kbs-gui * {
     box-sizing: border-box;
+}
+
+.kbs-gui {
+    font-family: Open Sans;
+    font-size: 18px;
 }
 
 /* gui overlay 
@@ -35,12 +42,11 @@
     background: #1b1b1b;
     color: #fff;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-    font-family: Courier New;
     z-index: 2147483646;
     overflow: hidden;
 }
 
-/* console states */
+/* console status */
 .kbs-cons-box.kbs-pinned {
     position: fixed;
     top: 0; right: 0;
@@ -74,6 +80,7 @@
 .kbs-cons-toolbar {
     background-color: #405662;
     position: relative;
+    box-shadow: 0 0 4px rgba(0,0,0, 0.4);
     text-align: right;
     z-index: 2147483647;
 }
@@ -81,6 +88,7 @@
 /* console title */
 .kbs-cons-title {
     color: #fff;
+    margin-top: 3px;
     text-align: left;
     float: left;
 }
@@ -93,7 +101,6 @@
     width: 30px; height: 30px;
     margin: 0; padding: 0;
     border-bottom: solid transparent 0px;
-    font-size: 19px;
     line-height: 1.6em;
     text-align: center;
     cursor: pointer;
@@ -175,6 +182,7 @@
 .kbs-cons-out {
     position: relative;
     padding: 0;
+    font-family: Courier New;
     font-size: 12px;
     -webkit-transition: font-size 0.3s;
     -moz-transition: font-size 0.3s;
@@ -193,9 +201,10 @@
 
 /* object log node */
 .kbs-object {
+    position: relative;
     background-color: #2a2a2a;
     color: #fff;
-    max-height: 150px;
+    height: 150px;
     margin: 0;
     margin: 3px;
     padding: 10px;
@@ -204,6 +213,27 @@
     letter-spacing: 1px;
     line-height: 1.3em;
     overflow-y: scroll;
+}
+
+.kbs-object-expand {
+    position: relative;
+    top: 2px;
+    margin-right: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.kbs-object-expand.kbs-rotate {
+    color: #dd2b2b;
+    top: 3px;
+}
+
+.kbs-object-expand:hover {
+    color: #96e64b;
+}
+
+.kbs-object-expand.kbs-rotate:hover {
+    color: #ab1b1b;
 }
 
 /* type: 'log' */
@@ -246,4 +276,13 @@
 .kbs-test {
     background-color: #e8df68;
     color: #1a1a1a;
+}
+
+/* misc classes
+------------------------------------------------------------------------------*/
+.kbs-rotate {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
 }

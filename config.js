@@ -6,7 +6,7 @@
 
 window.define({
     appName: "kbs",
-    version: 0.6,
+    version: 0.7,
     enabled: true,
     mode: "dev",
     offline: false,
@@ -32,7 +32,7 @@ window.define({
         }
     },
     events: {
-        silent: true
+        silent: false
     },
     tooltips: {
         clear: "Clear all logs",

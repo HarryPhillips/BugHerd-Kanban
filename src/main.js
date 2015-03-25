@@ -11,29 +11,27 @@
         'config',
         'src/events',
         'src/util',
+        'src/status',
         'src/gui',
         'test/main.test'
     ];
 
-    window.define(deps, function (config, events, util, gui, tests) {
+    window.define(deps, function (config, events, util, status, GUI, tests) {
         if (!config.enabled) {
             return;
         }
         
         // declarations
-        var kanban, exec;
-
-        // kbs data object
-        kanban = {
-            version: config.version,
-            config: config,
-            events: events,
-            util: util,
-            gui: gui
-        };
+        var kanban, exec, gui;
+        
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
+        });
 
         // initialise gui
         if (config.gui.enabled) {
+            gui = new GUI();
             gui.init();
         }
         
@@ -52,10 +50,26 @@
                 window[config.appName] = kanban;
             }
             
+            // update app status
+            events.publish("kbs/status", {
+                component: "app",
+                status: true
+            });
+            
             // tests
             if (config.test) {
                 tests.exec(['util']);
             }
+        };
+
+        // kbs data object
+        kanban = {
+            version: config.version,
+            status: status,
+            config: config,
+            events: events,
+            util: util,
+            gui: gui
         };
         
         // wait for kbs loaded event

@@ -14,7 +14,7 @@
       other than the console out element.
 */
 
-window.define(['config', './events'], function (config, events) {
+window.define(['config', './events', './status'], function (config, events, status) {
     'use strict';
     
     var util = {};
@@ -181,13 +181,13 @@ window.define(['config', './events'], function (config, events) {
         output.push(str);
         
         // log to gui if enabled
-        if (config.logs.gui) {
+        if (config.logs.gui && status.console) {
             // convert obj to a json string for gui logging
             if (object) {
                 objstr = "Object " + JSON.stringify(object, null, 4);
             }
 
-            guistr = str.replace(/\s/g, "&nbsp;");
+            guistr = str.replace(/\s/g, " ");
 
             events.publish("gui/log", {
                 msg: guistr,
