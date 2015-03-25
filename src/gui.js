@@ -146,6 +146,7 @@ window.define(['config', './util', './events'], function (config, util, events) 
                 // auto refresh
                 events.subscribe("gui/update", this.refresh);
             }
+            
             if (config.logs.gui) {
                 // gui logging
                 events.subscribe("gui/log", this.console.write);
@@ -256,7 +257,13 @@ window.define(['config', './util', './events'], function (config, util, events) 
         var element = this.tree.element,
             classes = element.className;
         
+        util.log(this.tree);
+        
         element.className = classes += " kbs-close";
+
+        util.log(this.tree);
+        
+        this.tree.constools.constitle.element.style.display = "none";
     };
     
     // open console
@@ -265,6 +272,9 @@ window.define(['config', './util', './events'], function (config, util, events) 
             classes = element.className;
         
         element.className = classes.replace(" kbs-close", "");
+        
+        console.log(this.tree.constools.constitle.element);
+        this.tree.constools.constitle.element.style.display = "block";
     };
     
     // destroy the console instance
@@ -317,6 +327,8 @@ window.define(['config', './util', './events'], function (config, util, events) 
             wrapper,
             consclass,
             constools,
+            constitle,
+            titlenode,
             cons,
             consout,
             consicon;
@@ -328,6 +340,13 @@ window.define(['config', './util', './events'], function (config, util, events) 
         // console toolbar
         constools = wrapper.constools =
             wrapper.createChild("div", "kbs-cons-toolbar");
+        
+        // add a title to the toolbar
+        constitle = constools.constitle =
+            constools.createChild("div", "kbs-cons-title");
+        
+        titlenode = document.createTextNode("Kanban v" + config.version);
+        constitle.element.appendChild(titlenode);
 
         // toggle tool
         this.createTool(constools, "toggle").element.onclick = function () {
@@ -351,8 +370,7 @@ window.define(['config', './util', './events'], function (config, util, events) 
             // if closed
             if (closed) {
                 // open
-                wrapper.element.className =
-                    wrapper.element.className.replace(" kbs-close", "");
+                self.console.open();
             }
         };
         

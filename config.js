@@ -6,6 +6,7 @@
 
 window.define({
     appName: "kbs",
+    version: 0.6,
     enabled: true,
     mode: "dev",
     offline: false,
