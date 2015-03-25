@@ -20,7 +20,7 @@ window.define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-pinned",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -28,7 +28,8 @@ window.define({
                 toggle: "terminal",
                 close: "times",
                 destroy: "exclamation-triangle",
-                example: "plus-circle"
+                example: "plus-circle",
+                expand: "caret-square-o-right"
             }
         }
     },

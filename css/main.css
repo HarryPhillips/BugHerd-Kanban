@@ -41,15 +41,15 @@
 .kbs-cons-box {
     background: #1b1b1b;
     color: #fff;
+    position: fixed;
+    top: 0; right: 0;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     z-index: 2147483646;
     overflow: hidden;
 }
 
 /* console status */
-.kbs-cons-box.kbs-pinned {
-    position: fixed;
-    top: 0; right: 0;
+.kbs-cons-box.kbs-open {
     width: 50%; height: 50%;
     min-width: 450px; min-height: 300px;
     border: solid #405662 3px;
@@ -64,15 +64,15 @@
     border-radius: 0px;
 }
 
+.kbs-full .kbs-cons-out {
+    font-size: 16px;
+}
+
 .kbs-cons-box.kbs-close {
     width: 30px; height: 30px;
     min-width: 30px; min-height: 30px;
     border: solid #405662 0px;
     border-radius: 0px;
-}
-
-.kbs-full .kbs-cons-out {
-    font-size: 16px;
 }
 
 /* console toolbar 
@@ -91,6 +91,10 @@
     margin-top: 3px;
     text-align: left;
     float: left;
+}
+
+.kbs-cons-box.kbs-close .kbs-cons-title {
+    display: none;
 }
 
 /* console tool btn */
@@ -291,8 +295,8 @@
 /* misc classes
 ------------------------------------------------------------------------------*/
 .kbs-rotate {
-    -webkit-transform: rotate(45deg);
-    -moz-transform: rotate(45deg);
-    -o-transform: rotate(45deg);
-    transform: rotate(45deg);
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
 }

@@ -45,7 +45,9 @@ window.define(
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
                 objwrap = new Node("pre", "kbs-object"),
-                objexp = new Node("i", "fa fa-plus kbs-object-expand"),
+                objexp = new Node("i", "fa fa-" +
+                      config.gui.console.icons.expand +
+                      " kbs-object-expand"),
                 objtxt,
                 i = 0;
 
@@ -55,7 +57,8 @@ window.define(
             // write object to log node
             if (args.obj) {
                 objtxt = document.createTextNode(args.obj);
-                objexp.element.setAttribute("onclick", "kbsExpandObjectNode(this)");
+                objexp.element.setAttribute("onclick",
+                                            "kbsExpandObjectNode(this)");
                 objwrap.addChild(objexp.element);
                 objwrap.addChild(objtxt);
                 log.addChild(objwrap.element);
@@ -66,29 +69,6 @@ window.define(
 
             // refresh
             self.refresh();
-        };
-        
-        // clear output
-        Console.prototype.clear = function () {
-            var cons = this.wrapper.cons.element,
-                out = this.wrapper.cons.out.element,
-                start = new Date().getTime(),
-                end;
-
-            // detach
-            cons.removeChild(out);
-
-            // remove all logs
-            while (out.firstChild) {
-                out.removeChild(out.firstChild);
-            }
-
-            // reattach
-            cons.appendChild(out);
-
-            // bench
-            end = new Date().getTime() - start;
-            util.log("okay", "cleared all logs in " + end + " ms");
         };
         
         // create toolbar widget
@@ -121,9 +101,7 @@ window.define(
             var element = this.wrapper.element,
                 classes = element.className;
 
-            element.className = classes.replace(" kbs-close", "");
-
-            this.wrapper.constools.constitle.element.style.display = "block";
+            element.className = classes.replace(" kbs-close", " kbs-open");
         };
         
         // close console
@@ -131,9 +109,7 @@ window.define(
             var element = this.wrapper.element,
                 classes = element.className;
 
-            element.className = classes += " kbs-close";
-
-            this.wrapper.constools.constitle.element.style.display = "none";
+            element.className = classes.replace(" kbs-open", " kbs-close");
         };
         
         // shrink console
@@ -144,6 +120,34 @@ window.define(
         
         // refresh console
         Console.prototype.refresh = function () {};
+         
+        // clear output
+        Console.prototype.clear = function () {
+            var cons = this.wrapper.cons.element,
+                out = this.wrapper.cons.out.element,
+                start = new Date().getTime(),
+                end;
+
+            // detach
+            cons.removeChild(out);
+
+            // remove all logs
+            while (out.firstChild) {
+                out.removeChild(out.firstChild);
+            }
+
+            // reattach
+            cons.appendChild(out);
+
+            // bench
+            end = new Date().getTime() - start;
+            util.log("okay", "cleared all logs in " + end + " ms");
+        };
+        
+        // save the output buffer to a text file on the local system
+        Console.prototype.save = function (filename) {
+            
+        };
         
         // destroy console instance (irreversible)
         Console.prototype.destroy = function () {
@@ -186,11 +190,6 @@ window.define(
             titlenode = document.createTextNode("Kanban v" + config.version);
             constitle.element.appendChild(titlenode);
             
-            // save tool
-            this.createTool(constools, "save").element.onclick = function () {
-                self.save();
-            };
-            
             // toggle tool
             this.createTool(constools, "toggle").element.onclick = function () {
                 var classes = wrapper.element.className,
@@ -215,6 +214,11 @@ window.define(
                     // open
                     self.open();
                 }
+            };
+            
+            // save tool
+            this.createTool(constools, "save").element.onclick = function () {
+                self.save();
             };
 
             // destroy tool
