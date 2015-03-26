@@ -4,7 +4,9 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-window.define({
+/*global define: true */
+
+define({
     appName: "kbs",
     version: 0.7,
     enabled: true,

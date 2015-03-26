@@ -20,6 +20,13 @@ if (!window.KBS_GLOBAL_SET) {
     
     var require = window.require;
     
+    require.config({
+        paths: {
+            src: "src",
+            test: "test"
+        }
+    });
+    
     require(['src/main']);
 }(window));
 

@@ -4,9 +4,11 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-window.define(
-    ['config', './util', './events', './status', './node'],
-    function (config, util, events, status, Node) {
+/*global define: true */
+
+define(
+    ['config', './util', './events', './http', './status', './node'],
+    function (config, util, events, Http, status, Node) {
         'use strict';
         
         // instance pointers
@@ -119,7 +121,11 @@ window.define(
         Console.prototype.full = function () {};
         
         // refresh console
-        Console.prototype.refresh = function () {};
+        Console.prototype.refresh = function () {
+            // scroll to bottom of console
+            var cons = self.wrapper.cons.element;
+            cons.scrollTop = cons.scrollHeight;
+        };
          
         // clear output
         Console.prototype.clear = function () {
@@ -146,7 +152,24 @@ window.define(
         
         // save the output buffer to a text file on the local system
         Console.prototype.save = function (filename) {
+            // declarations
+            var time = util.ftime(),
+                date = util.fdate(),
+                file = "log_" + date + "_" + time;
             
+            // setup request
+            var req = new Http({
+                url: "http://localhost/GitHub/Kanban/temp.php",
+                send: true,
+                data: {
+                    date: date,
+                    time: time,
+                    file: file
+                },
+                success: function (response) {
+                    alert(response);
+                }
+            });
         };
         
         // destroy console instance (irreversible)

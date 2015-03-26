@@ -14,7 +14,9 @@
       other than the console out element.
 */
 
-window.define(['config', './events', './status'], function (config, events, status) {
+/*global define: true */
+
+define(['config', './events', './status'], function (config, events, status) {
     'use strict';
     
     var util = {};
@@ -51,6 +53,17 @@ window.define(['config', './events', './status'], function (config, events, stat
             millis = util.zerofy(time.getMilliseconds(), 3);
 
         return hours + ":" + minutes + ":" + seconds + "." + millis;
+    };
+    
+    // returns current date as formatted string
+    util.fdate = function () {
+        var time = new Date(),
+            
+            year = util.zerofy(time.getFullYear(), 4),
+            month = util.zerofy(time.getMonth(), 2),
+            date = util.zerofy(time.getDate(), 2);
+        
+        return year + "-" + month + "-" + date;
     };
     
     // escapes regex meta characters from a string

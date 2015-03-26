@@ -6,7 +6,9 @@
 
 /*jslint devel: true */
 
-window.define(['config'], function (config) {
+/*global define: true */
+
+define(['config'], function (config) {
     'use strict';
     
     function Events() {

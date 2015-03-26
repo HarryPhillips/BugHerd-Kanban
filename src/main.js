@@ -4,26 +4,29 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-(function (window) {
-    'use strict';
+/*global define: true */
 
-    var deps = [
+define(
+    [
         'config',
-        'src/events',
-        'src/util',
-        'src/status',
-        'src/gui',
+        './events',
+        './util',
+        './status',
+        './http',
+        './gui',
         'test/main.test'
-    ];
-
-    window.define(deps, function (config, events, util, status, GUI, tests) {
-        if (!config.enabled) {
-            return;
-        }
+    ],
+    function (config, events, util, status, http, GUI, tests) {
+        'use strict';
         
         // declarations
         var kanban, exec, gui;
-        
+
+        // return if kanban is disabled
+        if (!config.enabled) {
+            return;
+        }
+
         // subscribe to status updates
         events.subscribe("kbs/status", function (data) {
             status[data.component] = data.status;
@@ -34,28 +37,28 @@
             gui = new GUI();
             gui.init();
         }
-        
+
         // execute kanban
         exec = function () {
             // get performance delta
             window.KBS_END_TIME =
                 (new Date().getTime() - window.KBS_START_TIME) + "ms";
-            
+
             // log
             util.log("okay", kanban, "Kanban initialised in " +
                 window.KBS_END_TIME);
-        
+
             // expose the api if in dev mode
             if (config.mode === "dev") {
                 window[config.appName] = kanban;
             }
-            
+
             // update app status
             events.publish("kbs/status", {
                 component: "app",
                 status: true
             });
-            
+
             // tests
             if (config.test) {
                 tests.exec(['util']);
@@ -68,11 +71,12 @@
             status: status,
             config: config,
             events: events,
+            http: http,
             util: util,
             gui: gui
         };
-        
+
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", exec);
-    });
-}(window));
+    }
+);

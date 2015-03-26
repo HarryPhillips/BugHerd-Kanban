@@ -4,7 +4,9 @@
 *    @copy Harry Phillips
 */
 
-window.define(['src/util'], function (util) {
+/*global define: true */
+
+define(['src/util'], function (util) {
     'use strict';
     
     // undefined value

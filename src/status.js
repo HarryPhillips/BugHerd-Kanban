@@ -4,7 +4,9 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-window.define({
+/*global define: true */
+
+define({
     app: false,
     gui: false,
     console: false

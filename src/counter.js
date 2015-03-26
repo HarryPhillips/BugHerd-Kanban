@@ -4,7 +4,9 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-window.define(function () {
+/*global define: true */
+
+define(function () {
     'use strict';
     
     function Counter(target, callback) {

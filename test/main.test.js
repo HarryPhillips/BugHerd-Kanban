@@ -4,7 +4,9 @@
 *    @copy Copyright 2015 Harry Phillips
 */
 
-window.define(['require', 'src/util'], function (require, util) {
+/*global define: true */
+
+define(['require', 'src/util'], function (require, util) {
     'use strict';
     
     return {
