@@ -73,7 +73,7 @@ define(
             events: events,
             http: http,
             util: util,
-            gui: gui
+            gui: GUI
         };
 
         // wait for kbs loaded event

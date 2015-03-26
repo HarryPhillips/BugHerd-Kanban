@@ -27,6 +27,7 @@ define(function (require) {
         Node = require('src/node'),
         Counter = require('src/counter'),
         Console = require('src/console'),
+        Modal = require('src/modal'),
         
         // instance pointer
         self;
@@ -40,6 +41,9 @@ define(function (require) {
 
         this.tree = this.buildNodeTree();
         this.console = new Console(this);
+        this.modal = new Modal(this, {
+            message: "test message"
+        });
 
         // update gui status
         events.publish("kbs/status", {

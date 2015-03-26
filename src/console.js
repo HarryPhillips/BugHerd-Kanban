@@ -7,8 +7,8 @@
 /*global define: true */
 
 define(
-    ['config', './util', './events', './http', './status', './node', './modal'],
-    function (config, util, events, Http, status, Node, Modal) {
+    ['config', './util', './events', './http', './status', './node'],
+    function (config, util, events, Http, status, Node) {
         'use strict';
         
         // instance pointers
@@ -174,10 +174,6 @@ define(
         
         // destroy console instance (irreversible)
         Console.prototype.destroy = function () {
-            var modal = new Modal();
-            
-            util.log(modal);
-            
             var confirm = false;
 
             if (confirm) {
