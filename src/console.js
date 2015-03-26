@@ -7,8 +7,8 @@
 /*global define: true */
 
 define(
-    ['config', './util', './events', './http', './status', './node'],
-    function (config, util, events, Http, status, Node) {
+    ['config', './util', './events', './http', './status', './node', './modal'],
+    function (config, util, events, Http, status, Node, Modal) {
         'use strict';
         
         // instance pointers
@@ -155,30 +155,32 @@ define(
             // declarations
             var time = util.ftime(),
                 date = util.fdate(),
-                file = "log_" + date + "_" + time;
-            
-            // setup request
-            var req = new Http({
-                url: "http://localhost/GitHub/Kanban/temp.php",
-                send: true,
-                data: {
-                    date: date,
-                    time: time,
-                    file: file
-                },
-                success: function (response) {
-                    alert(response);
-                }
-            });
+                file = "log_" + date + "_" + time,
+                
+                // setup request
+                req = new Http({
+                    url: "http://localhost/GitHub/Kanban/temp.php",
+                    send: true,
+                    data: {
+                        date: date,
+                        time: time,
+                        file: file
+                    },
+                    success: function (response) {
+                        util.log("okay", response, "Save Response:");
+                    }
+                });
         };
         
         // destroy console instance (irreversible)
         Console.prototype.destroy = function () {
-            var confirm = false;
-
-            if (confirm) {
-                this.wrapper.element.parentNode.removeChild(this.wrapper.element);
-            }
+            var modal = new Modal(gui, {
+                init: true,
+                title: "Are you sure?",
+                message: "Are you sure you want to destroy " +
+                    "the console instance? This cannot be reversed until " +
+                    "you refresh the page."
+            });
         };
         
         // build the console

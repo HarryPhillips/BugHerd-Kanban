@@ -42,7 +42,9 @@ define(function (require) {
         this.tree = this.buildNodeTree();
         this.console = new Console(this);
         this.modal = new Modal(this, {
-            message: "test message"
+            init: false,
+            title: "Test Modal - Title",
+            message: "Test paragraph / modal content."
         });
 
         // update gui status

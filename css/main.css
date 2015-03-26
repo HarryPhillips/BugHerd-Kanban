@@ -40,9 +40,29 @@
 .kbs-modal {
     position: fixed;
     top: 50%; left: 50%;
+    background-color: #435C70;
+    color: #fff;
     width: 600px; height: 400px;
     margin-left: -300px;
     margin-top: -400px;
+    border: solid #fff 3px;
+    padding: 10px;
+    z-index: 2147483646;
+}
+
+.kbs-modal-title {
+}
+
+.kbs-modal-msg {
+    background-color: #fff;
+    color: #1a1a1a;
+    padding: 10px;
+}
+
+.kbs-modal-close {
+    position: absolute;
+    top: 10px; right: 10px;
+    cursor: pointer;
 }
 
 /* gui console wrapper 
@@ -53,7 +73,7 @@
     position: fixed;
     top: 0; right: 0;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-    z-index: 2147483646;
+    z-index: 2147483647;
     overflow: hidden;
 }
 
