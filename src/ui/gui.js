@@ -23,11 +23,11 @@ define(function (require) {
     var
         config = require('config'),
         util = require('src/util'),
-        events = require('src/events'),
-        Node = require('src/node'),
-        Counter = require('src/counter'),
-        Console = require('src/console'),
-        Modal = require('src/modal'),
+        events = require('src/components/events'),
+        Node = require('./node'),
+        Counter = require('src/components/counter'),
+        Console = require('./console'),
+        Modal = require('./modal'),
         
         // instance pointer
         self;

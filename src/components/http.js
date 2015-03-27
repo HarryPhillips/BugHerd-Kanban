@@ -6,7 +6,7 @@
 
 /*global define: true */
 
-define(['./util', './counter'], function (util, Counter) {
+define(['src/util', './counter'], function (util, Counter) {
     'use strict';
     
     // instance pointer
@@ -46,11 +46,11 @@ define(['./util', './counter'], function (util, Counter) {
             if (this.readyState === 4) {
                 if (this.status === 200 && this.status < 400) {
                     // success
-                    util.log("okay", "HTTP 200: " + this.url);
+                    util.log("debug", "HTTP 200: " + self.url);
                     self.callbacks.success(this.responseText);
                 } else {
                     // failure
-                    util.log("error", "HTTP " + this.status + ": " + self.url);
+                    util.log("debug", "HTTP " + this.status + ": " + self.url);
                     self.callbacks.fail(this.responseText);
                 }
             }
@@ -59,7 +59,6 @@ define(['./util', './counter'], function (util, Counter) {
         //xml.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         
         // send
-        console.log(self.data);
         xml.send(self.data);
         
         // nullify

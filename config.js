@@ -8,7 +8,7 @@
 
 define({
     appName: "kbs",
-    version: 0.7,
+    version: 0.8,
     enabled: true,
     mode: "dev",
     offline: false,
@@ -22,14 +22,14 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
                 clear: "trash",
                 toggle: "terminal",
                 close: "times",
-                destroy: "exclamation-triangle",
+                destroy: "unlink",
                 example: "plus-circle",
                 expand: "caret-square-o-right"
             }
@@ -41,7 +41,7 @@ define({
     tooltips: {
         save: "Save the output buffer to text file",
         clear: "Clear all logs",
-        toggle: "Minimise / Maximise",
+        toggle: "GUI Console State",
         close: "Close the console",
         destroy: "Destroy this console instance"
     }

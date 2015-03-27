@@ -9,11 +9,11 @@
 define(
     [
         'config',
-        './events',
+        './components/events',
         './util',
-        './status',
-        './http',
-        './gui',
+        './components/status',
+        './components/http',
+        './ui/gui',
         'test/main.test'
     ],
     function (config, events, util, status, http, GUI, tests) {
@@ -73,7 +73,7 @@ define(
             events: events,
             http: http,
             util: util,
-            gui: GUI
+            gui: gui
         };
 
         // wait for kbs loaded event

@@ -7,7 +7,15 @@
 /*global define: true */
 
 define(
-    ['config', './util', './events', './http', './status', './node', './modal'],
+    [
+        'config',
+        'src/util',
+        'src/components/events',
+        'src/components/http',
+        'src/components/status',
+        'src/ui/node',
+        'src/ui/modal'
+    ],
     function (config, util, events, Http, status, Node, Modal) {
         'use strict';
         
@@ -174,13 +182,29 @@ define(
         
         // destroy console instance (irreversible)
         Console.prototype.destroy = function () {
-            var modal = new Modal(gui, {
-                init: true,
-                title: "Are you sure?",
-                message: "Are you sure you want to destroy " +
-                    "the console instance? This cannot be reversed until " +
-                    "you refresh the page."
-            });
+            var
+                modalTitle = "Destroy the Console instance?",
+                
+                modalMsg = "Confirm destruction of the GUI Console " +
+                "(irreversible).",
+                
+                modal = new Modal("prompt", gui, {
+                    init: true,
+                    title: modalTitle,
+                    message: modalMsg,
+                    confirm: function () {
+                        var parent = self.wrapper.element.parentNode,
+                            child = self.wrapper.element;
+                        
+                        // destroy console node
+                        parent.removeChild(child);
+                        
+                        modal.close();
+                    },
+                    cancel: function () {
+                        modal.close();
+                    }
+                });
         };
         
         // build the console
