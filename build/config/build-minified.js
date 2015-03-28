@@ -1,13 +1,16 @@
 ({
-    baseUrl: "../",
+    baseUrl: "../../",
     paths: {
         src: "src",
         test: "test"
     },
     name: "kanban",
-    out: "dist/kanban.js",
+    out: "../dist/kanban.min.js",
     wrap: false,
     removeCombined: true,
     findNestedDependencies: true,
-    optimize: "none"
+    uglify2: {
+        mangle: true
+    },
+    optimize: "uglify2"
 })

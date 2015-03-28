@@ -38,6 +38,11 @@ define('config',{
     events: {
         silent: false
     },
+    routes: {
+        console: {
+            save: "kanban/endpoint/console/save.php"
+        }
+    },
     tooltips: {
         save: "Save the output buffer to text file",
         clear: "Clear all logs",
@@ -425,6 +430,21 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
         }
     }
     
+    // build encoded data string
+    Http.prototype.encodeData = function (data) {
+        var encodedString = "",
+            i;
+            
+        for (i in data) {
+            if (data.hasOwnProperty(i)) {
+                util.log(i);
+                encodedString += i + "=" + data[i] + "& ";
+            }
+        }
+        
+        return encodedString;
+    };
+    
     // send request
     Http.prototype.send = function () {
         // new request
@@ -432,6 +452,10 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
         
         // open
         xml.open(this.method, this.url, this.async);
+        
+        // set content type
+        xml.setRequestHeader("Content-Type",
+                             "application/x-www-form-urlencoded");
         
         xml.onreadystatechange = function () {
             if (this.readyState === 4) {
@@ -447,10 +471,8 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
             }
         };
         
-        //xml.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        
         // send
-        xml.send(self.data);
+        xml.send(self.encodeData(self.data));
         
         // nullify
         xml = null;
@@ -529,6 +551,24 @@ define(
         return Node;
     }
 );
+/*
+*   @type javascript
+*   @name router.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('src/components/router',['config'], function (config) {
+    
+    
+    return {
+        // return a route to a component controller
+        getRoute: function (component, fn) {
+            return window.KBS_BASE_URL + config.routes[component][fn];
+        }
+    };
+});
 /*
 *   @type javascript
 *   @name modal.js
@@ -663,10 +703,11 @@ define(
         'src/components/events',
         'src/components/http',
         'src/components/status',
+        'src/components/router',
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, Node, Modal) {
+    function (config, util, events, Http, status, router, Node, Modal) {
         
         
         // instance pointers
@@ -817,7 +858,8 @@ define(
                 
                 // setup request
                 req = new Http({
-                    url: "http://localhost/GitHub/Kanban/temp.php",
+                    url: router.getRoute("console", "save"),
+                    method: "POST",
                     send: true,
                     data: {
                         date: date,
@@ -1053,15 +1095,30 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
             util.log("debug", "+ main.css loaded");
             loader.count += 1;
         };
+        
+        mainlink.onerror = function () {
+            loader.count += 1;
+            throw new Error("main.css failed to load!");
+        };
 
         themelink.onload = function () {
             util.log("debug", "+ theme.css loaded");
             loader.count += 1;
         };
+        
+        themelink.onerror = function () {
+            loader.count += 1;
+            throw new Error("theme.css failed to load!");
+        };
 
         falink.onload = function () {
             util.log("debug", "+ font-awesome.css loaded");
             loader.count += 1;
+        };
+        
+        falink.onerror = function () {
+            loader.count += 1;
+            throw new Error("font-awesome.css failed to load!");
         };
 
         // write out to document
@@ -1070,7 +1127,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         }
         document.head.appendChild(mainlink);
         document.head.appendChild(themelink);
-
+        
         // events setup
         if (config.gui.enabled) {
             if (config.gui.autorefresh) {
@@ -1261,7 +1318,7 @@ if (!window.KBS_GLOBAL_SET) {
         KBS_START_TIME = new Date().getTime(),
         KBS_END_TIME,
 
-        KBS_BASE_URL = "http://localhost/GitHub/",
+        KBS_BASE_URL = "http://localhost/proj/",
         KBS_SRC_DIR = "kanban/";
 }
 

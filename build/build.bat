@@ -1,12 +1,15 @@
 @echo off
 
-echo Building...
-start /min "BUILDING_MAX" max.bat
+echo Building Kanban...
+START /WAIT "BUILDING" r.js.cmd -o config/build.js
+echo Compilation complete.
 
-echo Building minified...
-start /min "BUILDING_MIN" min.bat
+echo.
 
-timeout 5
+echo Building minified Kanban...
+START /WAIT "BUILDING_MIN" r.js.cmd -o config/build-minified.js
+echo Compilation complete.
 
-taskkill /fi "WINDOWTITLE eq BUILDING_MAX"
-taskkill /fi "WINDOWTITLE eq BUILDING_MIN"
+echo.
+
+echo Project build finished.

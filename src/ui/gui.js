@@ -105,15 +105,30 @@ define(function (require) {
             util.log("debug", "+ main.css loaded");
             loader.count += 1;
         };
+        
+        mainlink.onerror = function () {
+            loader.count += 1;
+            throw new Error("main.css failed to load!");
+        };
 
         themelink.onload = function () {
             util.log("debug", "+ theme.css loaded");
             loader.count += 1;
         };
+        
+        themelink.onerror = function () {
+            loader.count += 1;
+            throw new Error("theme.css failed to load!");
+        };
 
         falink.onload = function () {
             util.log("debug", "+ font-awesome.css loaded");
             loader.count += 1;
+        };
+        
+        falink.onerror = function () {
+            loader.count += 1;
+            throw new Error("font-awesome.css failed to load!");
         };
 
         // write out to document
@@ -122,7 +137,7 @@ define(function (require) {
         }
         document.head.appendChild(mainlink);
         document.head.appendChild(themelink);
-
+        
         // events setup
         if (config.gui.enabled) {
             if (config.gui.autorefresh) {

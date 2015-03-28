@@ -38,6 +38,11 @@ define({
     events: {
         silent: false
     },
+    routes: {
+        console: {
+            save: "kanban/endpoint/console/save.php"
+        }
+    },
     tooltips: {
         save: "Save the output buffer to text file",
         clear: "Clear all logs",

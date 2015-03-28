@@ -13,10 +13,11 @@ define(
         'src/components/events',
         'src/components/http',
         'src/components/status',
+        'src/components/router',
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, Node, Modal) {
+    function (config, util, events, Http, status, router, Node, Modal) {
         'use strict';
         
         // instance pointers
@@ -167,7 +168,8 @@ define(
                 
                 // setup request
                 req = new Http({
-                    url: "http://localhost/GitHub/Kanban/temp.php",
+                    url: router.getRoute("console", "save"),
+                    method: "POST",
                     send: true,
                     data: {
                         date: date,

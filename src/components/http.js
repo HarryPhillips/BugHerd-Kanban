@@ -18,7 +18,7 @@ define(['src/util', './counter'], function (util, Counter) {
         this.url = params.url;
         this.method = params.method || "GET";
         this.async = params.async || true;
-        this.data = JSON.stringify(params.data) || "nodata";
+        this.data = params.data;
         
         // handlers
         this.callbacks = {};
@@ -34,6 +34,21 @@ define(['src/util', './counter'], function (util, Counter) {
         }
     }
     
+    // build encoded data string
+    Http.prototype.encodeData = function (data) {
+        var encodedString = "",
+            i;
+            
+        for (i in data) {
+            if (data.hasOwnProperty(i)) {
+                util.log(data[i]);
+                encodedString += i + "=" + data[i] + "& ";
+            }
+        }
+        
+        return encodedString;
+    };
+    
     // send request
     Http.prototype.send = function () {
         // new request
@@ -41,6 +56,10 @@ define(['src/util', './counter'], function (util, Counter) {
         
         // open
         xml.open(this.method, this.url, this.async);
+        
+        // set content type
+        xml.setRequestHeader("Content-Type",
+                             "application/x-www-form-urlencoded");
         
         xml.onreadystatechange = function () {
             if (this.readyState === 4) {
@@ -56,10 +75,8 @@ define(['src/util', './counter'], function (util, Counter) {
             }
         };
         
-        //xml.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        
         // send
-        xml.send(self.data);
+        xml.send(self.encodeData(self.data));
         
         // nullify
         xml = null;
