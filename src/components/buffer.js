@@ -60,6 +60,11 @@ define(function () {
         return outs[this.index];
     };
     
+    // return the global buffer
+    Buffer.prototype.getGlobalBuffer = function () {
+        return outs;
+    };
+    
     // clear the buffer
     Buffer.prototype.clearBuffer = function () {
         var i = this.index;

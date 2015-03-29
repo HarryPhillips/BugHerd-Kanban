@@ -11,6 +11,7 @@ define(['./buffer'], function (Buffer) {
     
     // cache object
     var cache = {
+        kbs: new Buffer(),
         console: new Buffer()
     };
     
