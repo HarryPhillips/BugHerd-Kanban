@@ -121,6 +121,96 @@ define('src/components/status',{
 });
 /*
 *   @type javascript
+*   @name buffer.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('src/components/buffer',[],function () {
+    
+    
+    var outs = [];
+    
+    // buffer constructor
+    function Buffer(predef) {
+        // push to Buffer global 'outs'
+        outs.push(predef || "");
+        
+        // set the index of our buffer
+        this.index = outs.length - 1;
+    }
+    
+    // write a value to buffer
+    Buffer.prototype.writeToBuffer = function (value) {
+        // get index
+        var i = this.index;
+        
+        // add to string buffer
+        if (typeof outs[i] === "string") {
+            outs[i] += value;
+            return;
+        }
+        
+        // add to array buffer
+        if (outs[i] instanceof Array) {
+            outs[i].push(value);
+            return;
+        }
+    };
+    
+    // remove a value from buffer
+    Buffer.prototype.removeFromBuffer = function (value) {
+        var i = this.index;
+        
+        // string buffer
+        if (typeof outs[i] === "string") {
+            outs[i] = outs[i].replace(value, "");
+            return;
+        }
+        
+        // array buffer
+        if (outs[i] instanceof Array) {
+            outs[i].splice(outs[i].indexOf(value), 1);
+            return;
+        }
+    };
+    
+    // return the buffer
+    Buffer.prototype.getBuffer = function () {
+        return outs[this.index];
+    };
+    
+    // clear the buffer
+    Buffer.prototype.clearBuffer = function () {
+        var i = this.index;
+        
+        // splice our buffer index from global buffer
+        outs.splice(i, 1);
+    };
+    
+    return Buffer;
+});
+/*
+*   @type javascript
+*   @name cache.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('src/components/cache',['./buffer'], function (Buffer) {
+    
+    
+    // cache object
+    var cache = {
+        console: new Buffer()
+    };
+    
+    return cache;
+});
+/*
+*   @type javascript
 *   @name util.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -141,9 +231,10 @@ define(
     'src/util',[
         'config',
         './components/events',
-        './components/status'
+        './components/status',
+        './components/cache'
     ],
-    function (config, events, status) {
+    function (config, events, status, cache) {
         
 
         var util = {};
@@ -262,7 +353,8 @@ define(
                 str = "",
                 object = false,
                 guistr = "",
-                objstr = "";
+                objstr = "",
+                bffstr = "";
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -320,15 +412,23 @@ define(
             str += msg;
             output.push(str);
 
+            // create stringified object
+            if (object) {
+                objstr = "Object " + JSON.stringify(object, null, 4);   
+            }
+            
+            // write to buffer
+            bffstr = str.replace(/\s/g, " ");
+            bffstr = encodeURIComponent(bffstr);
+            bffstr += (objstr !== "") ? "\n" + objstr : "";
+            bffstr += "\n";
+            cache.console.writeToBuffer(bffstr);
+            
             // log to gui if enabled
             if (config.logs.gui && status.console) {
-                // convert obj to a json string for gui logging
-                if (object) {
-                    objstr = "Object " + JSON.stringify(object, null, 4);
-                }
-
                 guistr = str.replace(/\s/g, " ");
-
+                
+                // publish the log event with str data
                 events.publish("gui/log", {
                     msg: guistr,
                     type: type,
@@ -414,7 +514,7 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
         this.url = params.url;
         this.method = params.method || "GET";
         this.async = params.async || true;
-        this.data = JSON.stringify(params.data) || "nodata";
+        this.data = params.data;
         
         // handlers
         this.callbacks = {};
@@ -437,7 +537,6 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
             
         for (i in data) {
             if (data.hasOwnProperty(i)) {
-                util.log(i);
                 encodedString += i + "=" + data[i] + "& ";
             }
         }
@@ -704,10 +803,11 @@ define(
         'src/components/http',
         'src/components/status',
         'src/components/router',
+        'src/components/cache',
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, router, Node, Modal) {
+    function (config, util, events, Http, status, router, cache, Node, Modal) {
         
         
         // instance pointers
@@ -854,7 +954,7 @@ define(
             // declarations
             var time = util.ftime(),
                 date = util.fdate(),
-                file = "log_" + date + "_" + time,
+                buffer = cache.console.getBuffer(),
                 
                 // setup request
                 req = new Http({
@@ -863,11 +963,10 @@ define(
                     send: true,
                     data: {
                         date: date,
-                        time: time,
-                        file: file
+                        buffer: buffer
                     },
                     success: function (response) {
-                        util.log("okay", response, "Save Response:");
+                        util.log("okay", response);
                     }
                 });
         };
@@ -1237,10 +1336,11 @@ define(
         './util',
         './components/status',
         './components/http',
+        './components/cache',
         './ui/gui',
         'test/main.test'
     ],
-    function (config, events, util, status, http, GUI, tests) {
+    function (config, events, util, status, http, cache, GUI, tests) {
         
         
         // declarations
@@ -1293,6 +1393,7 @@ define(
         kanban = {
             version: config.version,
             status: status,
+            cache: cache,
             config: config,
             events: events,
             http: http,

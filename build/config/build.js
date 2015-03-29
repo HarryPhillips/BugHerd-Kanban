@@ -5,7 +5,7 @@
         test: "test"
     },
     name: "kanban",
-    out: "../dist/kanban.js",
+    out: "../../dist/kanban.js",
     wrap: false,
     removeCombined: true,
     findNestedDependencies: true,

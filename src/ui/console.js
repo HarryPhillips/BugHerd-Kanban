@@ -14,10 +14,11 @@ define(
         'src/components/http',
         'src/components/status',
         'src/components/router',
+        'src/components/cache',
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, router, Node, Modal) {
+    function (config, util, events, Http, status, router, cache, Node, Modal) {
         'use strict';
         
         // instance pointers
@@ -164,7 +165,7 @@ define(
             // declarations
             var time = util.ftime(),
                 date = util.fdate(),
-                file = "log_" + date + "_" + time,
+                buffer = cache.console.getBuffer(),
                 
                 // setup request
                 req = new Http({
@@ -173,11 +174,10 @@ define(
                     send: true,
                     data: {
                         date: date,
-                        time: time,
-                        file: file
+                        buffer: buffer
                     },
                     success: function (response) {
-                        util.log("okay", response, "Save Response:");
+                        util.log("okay", response);
                     }
                 });
         };

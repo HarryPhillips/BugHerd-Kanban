@@ -13,10 +13,11 @@ define(
         './util',
         './components/status',
         './components/http',
+        './components/cache',
         './ui/gui',
         'test/main.test'
     ],
-    function (config, events, util, status, http, GUI, tests) {
+    function (config, events, util, status, http, cache, GUI, tests) {
         'use strict';
         
         // declarations
@@ -69,6 +70,7 @@ define(
         kanban = {
             version: config.version,
             status: status,
+            cache: cache,
             config: config,
             events: events,
             http: http,

@@ -20,9 +20,10 @@ define(
     [
         'config',
         './components/events',
-        './components/status'
+        './components/status',
+        './components/cache'
     ],
-    function (config, events, status) {
+    function (config, events, status, cache) {
         'use strict';
 
         var util = {};
@@ -141,7 +142,8 @@ define(
                 str = "",
                 object = false,
                 guistr = "",
-                objstr = "";
+                objstr = "",
+                bffstr = "";
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -199,15 +201,23 @@ define(
             str += msg;
             output.push(str);
 
+            // create stringified object
+            if (object) {
+                objstr = "Object " + JSON.stringify(object, null, 4);   
+            }
+            
+            // write to buffer
+            bffstr = str.replace(/\s/g, " ");
+            bffstr = encodeURIComponent(bffstr);
+            bffstr += (objstr !== "") ? "\n" + objstr : "";
+            bffstr += "\n";
+            cache.console.writeToBuffer(bffstr);
+            
             // log to gui if enabled
             if (config.logs.gui && status.console) {
-                // convert obj to a json string for gui logging
-                if (object) {
-                    objstr = "Object " + JSON.stringify(object, null, 4);
-                }
-
                 guistr = str.replace(/\s/g, " ");
-
+                
+                // publish the log event with str data
                 events.publish("gui/log", {
                     msg: guistr,
                     type: type,

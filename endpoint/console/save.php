@@ -3,13 +3,30 @@
     header('Content-type: text/html');
     header('Access-Control-Allow-Origin: http://www.bugherd.com');
     
-    if (isset($_POST)) {
-        echo "POST: ".print_r($_POST);
-    } else if(isset($_GET)) {
-        echo "GET: ".print_r($_GET);
+    if (isset($_POST) && !empty($_POST)) {
+        $file = "buffer_";
+        $file .= $_POST["date"];
+        $file .= ".log";
+        
+        $buffer = $_POST["buffer"];
+    } else {
+        exit("ERROR: No POST data found!");
     }
 
-    // respond
-    $uri = 'http://'. $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    echo('This information has come from ' . $uri . '');
+    // write buffer to file
+    write_log($file, $buffer);
+
+    // writes a log file to logs folder
+    function write_log($filename, $buffer) {
+        // check for logs dir
+        if (!is_dir("logs")) {
+            echo "Creating logs directory\r\n";
+            mkdir("logs");
+        }
+        
+        // write buffer to file
+        file_put_contents("logs/".$filename, $buffer, FILE_APPEND);
+        
+        echo "Saved log buffer to: '".$filename."'\r\n";
+    }
 ?>

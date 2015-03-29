@@ -41,7 +41,6 @@ define(['src/util', './counter'], function (util, Counter) {
             
         for (i in data) {
             if (data.hasOwnProperty(i)) {
-                util.log(data[i]);
                 encodedString += i + "=" + data[i] + "& ";
             }
         }
