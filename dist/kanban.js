@@ -8,7 +8,7 @@
 
 define('config',{
     appName: "kbs",
-    version: 0.8,
+    version: 0.9,
     enabled: true,
     mode: "dev",
     offline: false,
@@ -181,6 +181,11 @@ define('src/components/buffer',[],function () {
         return outs[this.index];
     };
     
+    // return the global buffer
+    Buffer.prototype.getGlobalBuffer = function () {
+        return outs;
+    };
+    
     // clear the buffer
     Buffer.prototype.clearBuffer = function () {
         var i = this.index;
@@ -204,6 +209,7 @@ define('src/components/cache',['./buffer'], function (Buffer) {
     
     // cache object
     var cache = {
+        kbs: new Buffer(),
         console: new Buffer()
     };
     
