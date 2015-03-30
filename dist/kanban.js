@@ -40,7 +40,7 @@ define('config',{
     },
     routes: {
         console: {
-            save: "kanban/endpoint/console/save.php"
+            save: "kanban/endpoint/console/SaveBuffer.php"
         }
     },
     tooltips: {
@@ -1153,7 +1153,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
     GUI.prototype.init = function () {
         var
             // loader
-            loader = new Counter(3, function () {
+            loader = new Counter((config.offline) ? 2 : 3, function () {
                 events.publish("kbs/gui/loaded");
             }),
 
@@ -1395,7 +1395,7 @@ define(
             }
         };
 
-        // kbs data object
+        // kbs data/api object
         kanban = {
             version: config.version,
             status: status,

@@ -14,7 +14,11 @@
     }
 
     // write buffer to file
-    write_log($file, $buffer);
+    if ($buffer !== "") {
+        write_log($file, $buffer);
+    } else {
+        echo "Buffer is empty";
+    }
 
     // writes a log file to logs folder
     function write_log($filename, $buffer) {

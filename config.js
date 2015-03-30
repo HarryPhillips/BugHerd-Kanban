@@ -40,7 +40,7 @@ define({
     },
     routes: {
         console: {
-            save: "kanban/endpoint/console/save.php"
+            save: "kanban/endpoint/console/SaveBuffer.php"
         }
     },
     tooltips: {

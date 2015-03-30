@@ -46,7 +46,7 @@ define(
                 (new Date().getTime() - window.KBS_START_TIME) + "ms";
 
             // log
-            util.log("okay", kanban, "Kanban initialised in " +
+            util.log("okay", "Kanban initialised in " +
                 window.KBS_END_TIME);
 
             // expose the api if in dev mode
@@ -66,7 +66,7 @@ define(
             }
         };
 
-        // kbs data object
+        // kbs data/api object
         kanban = {
             version: config.version,
             status: status,

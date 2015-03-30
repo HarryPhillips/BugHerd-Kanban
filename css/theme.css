@@ -13,62 +13,7 @@
     color: #fff;
 }
 
-/* console toolbar 
-------------------------------------------------------------------------------*/
-.kbs-cons-toolbar {
-    background-color: #405662;
-}
-
-.kbs-toggle {
-    background-color: #71ac4d;
-    color: #fff;
-}
-
-.kbs-state {
-    background-color: #33386a;
-    color: #fff;
-}
-
-/* console log nodes 
-------------------------------------------------------------------------------*/
-/* object sub node */
-.kbs-object {
-    background-color: #2a2a2a;
-    color: #fff;
-}
-
-/* type: 'log' */
-.kbs-log {
-    background-color: #000;
-    color: #fff;
-}
-
-/* type: 'info' */
-.kbs-info {
-    background-color: #eee;
-    color: #1a1a1a;
-}
-
-/* type: 'debug' */
-.kbs-debug {
-    background-color: #1b5773;
-    color: #fff;
-}
-
-/* type: 'okay' */
-.kbs-okay {
-    background-color: #2d8444;
-    color: #fff;
-}
-
-/* type: 'warn' */
-.kbs-warn {
-    background-color: #d97330;
-    color: #fff;
-}
-
-/* type: 'error' */
-.kbs-error {
-    background-color: #af3535;
-    color: #fff;
+.kbs-cons-box {
+    background-color: #fff;
+    border: solid #fff 2px;
 }

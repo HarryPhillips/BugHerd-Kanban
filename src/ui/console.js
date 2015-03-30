@@ -187,8 +187,8 @@ define(
             var
                 modalTitle = "Destroy the Console instance?",
                 
-                modalMsg = "Confirm destruction of the GUI Console " +
-                "(irreversible).",
+                modalMsg = "Confirm destruction of the GUI Console? " +
+                "(irreversible until refresh).",
                 
                 modal = new Modal("prompt", gui, {
                     init: true,
@@ -201,6 +201,11 @@ define(
                         // destroy console node
                         parent.removeChild(child);
                         
+                        // clear the log buffer
+                        cache.console.clearBuffer();
+                        util.log("test", cache.console.getBuffer());
+                        
+                        // close the modal
                         modal.close();
                     },
                     cancel: function () {

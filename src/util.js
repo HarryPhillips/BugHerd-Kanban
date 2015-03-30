@@ -203,7 +203,7 @@ define(
 
             // create stringified object
             if (object) {
-                objstr = "Object " + JSON.stringify(object, null, 4);   
+                objstr = "Object " + JSON.stringify(object, null, 4);
             }
             
             // write to buffer

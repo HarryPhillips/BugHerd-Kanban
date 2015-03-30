@@ -58,7 +58,7 @@ define(function (require) {
     GUI.prototype.init = function () {
         var
             // loader
-            loader = new Counter(3, function () {
+            loader = new Counter((config.offline) ? 2 : 3, function () {
                 events.publish("kbs/gui/loaded");
             }),
 
