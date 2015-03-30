@@ -203,7 +203,6 @@ define(
                         
                         // clear the log buffer
                         cache.console.clearBuffer();
-                        util.log("test", cache.console.getBuffer());
                         
                         // close the modal
                         modal.close();

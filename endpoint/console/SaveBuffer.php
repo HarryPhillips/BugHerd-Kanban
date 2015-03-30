@@ -28,9 +28,11 @@
             mkdir("logs");
         }
         
+        $action = (file_exists("logs/".$filename)) ? "Appended":"Saved";
+        
         // write buffer to file
         file_put_contents("logs/".$filename, $buffer, FILE_APPEND);
         
-        echo "Saved log buffer to: '".$filename."'\r\n";
+        echo $action." log buffer to: '".$filename."'\r\n";
     }
 ?>

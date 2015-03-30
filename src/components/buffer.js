@@ -9,68 +9,70 @@
 define(function () {
     'use strict';
     
-    var outs = [];
+    var global = [];
     
     // buffer constructor
     function Buffer(predef) {
-        // push to Buffer global 'outs'
-        outs.push(predef || "");
+        // push to Buffer global 'global'
+        global.push(predef || "");
         
         // set the index of our buffer
-        this.index = outs.length - 1;
+        this.index = global.length - 1;
     }
     
     // write a value to buffer
     Buffer.prototype.writeToBuffer = function (value) {
         // get index
-        var i = this.index;
+        var buffer = this.index;
         
         // add to string buffer
-        if (typeof outs[i] === "string") {
-            outs[i] += value;
+        if (typeof global[buffer] === "string") {
+            global[buffer] += value;
             return;
         }
         
         // add to array buffer
-        if (outs[i] instanceof Array) {
-            outs[i].push(value);
+        if (global[buffer] instanceof Array) {
+            global[buffer].push(value);
             return;
         }
     };
     
     // remove a value from buffer
     Buffer.prototype.removeFromBuffer = function (value) {
-        var i = this.index;
+        var buffer = this.index,
+            position;
         
         // string buffer
-        if (typeof outs[i] === "string") {
-            outs[i] = outs[i].replace(value, "");
+        if (typeof global[buffer] === "string") {
+            global[buffer] = global[buffer].replace(value, "");
             return;
         }
         
         // array buffer
-        if (outs[i] instanceof Array) {
-            outs[i].splice(outs[i].indexOf(value), 1);
+        if (global[buffer] instanceof Array) {
+            position = global[buffer].indexOf(value);
+            global[buffer].splice(position, 1);
             return;
         }
     };
     
     // return the buffer
     Buffer.prototype.getBuffer = function () {
-        return outs[this.index];
+        return global[this.index];
     };
     
     // return the global buffer
     Buffer.prototype.getGlobalBuffer = function () {
-        return outs;
+        return global;
     };
     
     // clear the buffer
     Buffer.prototype.clearBuffer = function () {
-        var i = this.index;
+        var buffer = this.index;
         
         // splice our buffer index from global buffer
-        outs.splice(i, 1);
+        global.splice(buffer, 1);
     };
     
     return Buffer;

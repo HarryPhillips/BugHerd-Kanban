@@ -197,7 +197,7 @@ define(
             // format and push output
             str += "[" + config.appName + "] ";
             str += util.ftime();
-            str += util.spacify("[" + type + "]", 8) + ":> ";
+            str += " " + util.spacify("[" + type + "]", 8) + ":> ";
             str += msg;
             output.push(str);
 
