@@ -18,7 +18,9 @@ define(
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, router, cache, Node, Modal) {
+    function (config, util, events,
+               Http, status, router,
+               cache, Node, Modal) {
         'use strict';
         
         // instance pointers
@@ -243,50 +245,55 @@ define(
             constitle.element.appendChild(titlenode);
             
             // toggle tool
-            this.createTool(constools, "toggle").element.onclick = function () {
-                var classes = wrapper.element.className,
-                    closed = classes.indexOf("kbs-close") !== -1,
-                    full = classes.indexOf("kbs-full") !== -1;
+            this.createTool(constools, "toggle")
+                .element.onclick = function () {
+                    var classes = wrapper.element.className,
+                        closed = classes.indexOf("kbs-close") !== -1,
+                        full = classes.indexOf("kbs-full") !== -1;
 
-                // if not closed and not full screen
-                if (!closed && !full) {
-                    // make full screen
-                    wrapper.element.className += " kbs-full";
-                }
+                    // if not closed and not full screen
+                    if (!closed && !full) {
+                        // make full screen
+                        wrapper.element.className += " kbs-full";
+                    }
 
-                // if in full screen
-                if (full) {
-                    // shrink
-                    wrapper.element.className =
-                        wrapper.element.className.replace(" kbs-full", "");
-                }
+                    // if in full screen
+                    if (full) {
+                        // shrink
+                        wrapper.element.className =
+                            wrapper.element.className.replace(" kbs-full", "");
+                    }
 
-                // if closed
-                if (closed) {
-                    // open
-                    self.open();
-                }
-            };
+                    // if closed
+                    if (closed) {
+                        // open
+                        self.open();
+                    }
+                };
             
             // save tool
-            this.createTool(constools, "save").element.onclick = function () {
-                self.save();
-            };
+            this.createTool(constools, "save")
+                .element.onclick = function () {
+                    self.save();
+                };
 
             // destroy tool
-            this.createTool(constools, "destroy").element.onclick = function () {
-                self.destroy();
-            };
+            this.createTool(constools, "destroy")
+                .element.onclick = function () {
+                    self.destroy();
+                };
 
             // clear tool
-            this.createTool(constools, "clear").element.onclick = function () {
-                self.clear();
-            };
+            this.createTool(constools, "clear")
+                .element.onclick = function () {
+                    self.clear();
+                };
 
             // close tool
-            this.createTool(constools, "close").element.onclick = function () {
-                self.close();
-            };
+            this.createTool(constools, "close")
+                .element.onclick = function () {
+                    self.close();
+                };
 
             // console
             wrapper.cons = cons =

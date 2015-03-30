@@ -12,7 +12,7 @@ define({
     enabled: true,
     mode: "dev",
     offline: false,
-    test: false,
+    test: true,
     logs: {
         enabled: true,
         gui: true,

@@ -4,16 +4,79 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
+body {
+    background-color: #1a1a1a;
+}
+
 .kbs-overlay {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-.kbs-cons-box {
-    background: #1b1b1b;
+.kbs-modal {
+    background-color: #262626;
     color: #fff;
+    border-radius: 10px;
+}
+
+.kbs-modal-title {
+    background-color: #e2e2e2;
+    color: #000;
 }
 
 .kbs-cons-box {
-    background-color: #fff;
-    border: solid #fff 2px;
+    background-color: transparent;
+    color: #fff;
 }
+
+.kbs-cons-box.kbs-open {
+    border: solid #000 2px;
+}
+
+.kbs-cons-toolbar {
+    background-color: #000;
+}
+
+.kbs-cons-title {
+    color: #fff;
+    margin: 2px 0 0 5px;
+}
+
+.kbs-cons {
+    background-color: #fff;
+}
+
+.kbs-log,
+.kbs-info,
+.kbs-debug,
+.kbs-okay,
+.kbs-warn,
+.kbs-error,
+.kbs-test {
+    background-color: transparent;
+}
+
+.kbs-object {
+    background-color: #ddd;
+    color: #000;
+}
+
+.kbs-log { color: #000; }
+
+.kbs-info {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.kbs-test {
+    background-color: #2a2a2a;
+    color: #e8df68;
+}
+
+.kbs-error {
+    background-color: #af3535;
+    color: #fff;
+}
+
+.kbs-debug { color: #1b5773; }
+.kbs-okay { color: #2d8444; }
+.kbs-warn { color: #d97330; }

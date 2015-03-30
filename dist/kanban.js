@@ -12,7 +12,7 @@ define('config',{
     enabled: true,
     mode: "dev",
     offline: false,
-    test: false,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -130,68 +130,70 @@ define('src/components/status',{
 define('src/components/buffer',[],function () {
     
     
-    var outs = [];
+    var global = [];
     
     // buffer constructor
     function Buffer(predef) {
-        // push to Buffer global 'outs'
-        outs.push(predef || "");
+        // push to Buffer global 'global'
+        global.push(predef || "");
         
         // set the index of our buffer
-        this.index = outs.length - 1;
+        this.index = global.length - 1;
     }
     
     // write a value to buffer
     Buffer.prototype.writeToBuffer = function (value) {
         // get index
-        var i = this.index;
+        var buffer = this.index;
         
         // add to string buffer
-        if (typeof outs[i] === "string") {
-            outs[i] += value;
+        if (typeof global[buffer] === "string") {
+            global[buffer] += value;
             return;
         }
         
         // add to array buffer
-        if (outs[i] instanceof Array) {
-            outs[i].push(value);
+        if (global[buffer] instanceof Array) {
+            global[buffer].push(value);
             return;
         }
     };
     
     // remove a value from buffer
     Buffer.prototype.removeFromBuffer = function (value) {
-        var i = this.index;
+        var buffer = this.index,
+            position;
         
         // string buffer
-        if (typeof outs[i] === "string") {
-            outs[i] = outs[i].replace(value, "");
+        if (typeof global[buffer] === "string") {
+            global[buffer] = global[buffer].replace(value, "");
             return;
         }
         
         // array buffer
-        if (outs[i] instanceof Array) {
-            outs[i].splice(outs[i].indexOf(value), 1);
+        if (global[buffer] instanceof Array) {
+            position = global[buffer].indexOf(value);
+            global[buffer].splice(position, 1);
             return;
         }
     };
     
     // return the buffer
     Buffer.prototype.getBuffer = function () {
-        return outs[this.index];
+        return global[this.index];
     };
     
     // return the global buffer
     Buffer.prototype.getGlobalBuffer = function () {
-        return outs;
+        return global;
     };
     
     // clear the buffer
     Buffer.prototype.clearBuffer = function () {
-        var i = this.index;
+        var buffer = this.index;
         
         // splice our buffer index from global buffer
-        outs.splice(i, 1);
+        global.splice(buffer, 1);
     };
     
     return Buffer;
@@ -319,7 +321,8 @@ define(
                 return host.indexOf(target) !== -1;
             }
 
-            // escape regex meta chars from target before generating a new RegEx
+            // escape regex meta chars from target
+            // before generating a new RegEx
             target = util.escapeRegEx(target);
 
             // regex will match whole word of target only
@@ -414,13 +417,13 @@ define(
             // format and push output
             str += "[" + config.appName + "] ";
             str += util.ftime();
-            str += util.spacify("[" + type + "]", 8) + ":> ";
+            str += " " + util.spacify("[" + type + "]", 8) + ":> ";
             str += msg;
             output.push(str);
 
             // create stringified object
             if (object) {
-                objstr = "Object " + JSON.stringify(object, null, 4);   
+                objstr = "Object " + JSON.stringify(object, null, 4);
             }
             
             // write to buffer
@@ -735,9 +738,16 @@ define(
         // init and open modal
         Modal.prototype.init = function () {
             // declarations
-            var title = this.node.createChild("h2", "kbs-modal-title"),
-                message = this.node.createChild("p", "kbs-modal-msg"),
-                close = this.node.createChild("i", "fa fa-times kbs-modal-close"),
+            var
+                title =
+                this.node.createChild("h2", "kbs-modal-title"),
+                
+                message =
+                this.node.createChild("p", "kbs-modal-msg"),
+                
+                close =
+                this.node.createChild("i", "fa fa-times kbs-modal-close"),
+                
                 confirm,
                 cancel;
             
@@ -813,7 +823,9 @@ define(
         'src/ui/node',
         'src/ui/modal'
     ],
-    function (config, util, events, Http, status, router, cache, Node, Modal) {
+    function (config, util, events,
+               Http, status, router,
+               cache, Node, Modal) {
         
         
         // instance pointers
@@ -982,8 +994,8 @@ define(
             var
                 modalTitle = "Destroy the Console instance?",
                 
-                modalMsg = "Confirm destruction of the GUI Console " +
-                "(irreversible).",
+                modalMsg = "Confirm destruction of the GUI Console? " +
+                "(irreversible until refresh).",
                 
                 modal = new Modal("prompt", gui, {
                     init: true,
@@ -996,6 +1008,10 @@ define(
                         // destroy console node
                         parent.removeChild(child);
                         
+                        // clear the log buffer
+                        cache.console.clearBuffer();
+                        
+                        // close the modal
                         modal.close();
                     },
                     cancel: function () {
@@ -1034,50 +1050,55 @@ define(
             constitle.element.appendChild(titlenode);
             
             // toggle tool
-            this.createTool(constools, "toggle").element.onclick = function () {
-                var classes = wrapper.element.className,
-                    closed = classes.indexOf("kbs-close") !== -1,
-                    full = classes.indexOf("kbs-full") !== -1;
+            this.createTool(constools, "toggle")
+                .element.onclick = function () {
+                    var classes = wrapper.element.className,
+                        closed = classes.indexOf("kbs-close") !== -1,
+                        full = classes.indexOf("kbs-full") !== -1;
 
-                // if not closed and not full screen
-                if (!closed && !full) {
-                    // make full screen
-                    wrapper.element.className += " kbs-full";
-                }
+                    // if not closed and not full screen
+                    if (!closed && !full) {
+                        // make full screen
+                        wrapper.element.className += " kbs-full";
+                    }
 
-                // if in full screen
-                if (full) {
-                    // shrink
-                    wrapper.element.className =
-                        wrapper.element.className.replace(" kbs-full", "");
-                }
+                    // if in full screen
+                    if (full) {
+                        // shrink
+                        wrapper.element.className =
+                            wrapper.element.className.replace(" kbs-full", "");
+                    }
 
-                // if closed
-                if (closed) {
-                    // open
-                    self.open();
-                }
-            };
+                    // if closed
+                    if (closed) {
+                        // open
+                        self.open();
+                    }
+                };
             
             // save tool
-            this.createTool(constools, "save").element.onclick = function () {
-                self.save();
-            };
+            this.createTool(constools, "save")
+                .element.onclick = function () {
+                    self.save();
+                };
 
             // destroy tool
-            this.createTool(constools, "destroy").element.onclick = function () {
-                self.destroy();
-            };
+            this.createTool(constools, "destroy")
+                .element.onclick = function () {
+                    self.destroy();
+                };
 
             // clear tool
-            this.createTool(constools, "clear").element.onclick = function () {
-                self.clear();
-            };
+            this.createTool(constools, "clear")
+                .element.onclick = function () {
+                    self.clear();
+                };
 
             // close tool
-            this.createTool(constools, "close").element.onclick = function () {
-                self.close();
-            };
+            this.createTool(constools, "close")
+                .element.onclick = function () {
+                    self.close();
+                };
 
             // console
             wrapper.cons = cons =
@@ -1375,7 +1396,7 @@ define(
                 (new Date().getTime() - window.KBS_START_TIME) + "ms";
 
             // log
-            util.log("okay", kanban, "Kanban initialised in " +
+            util.log("okay", "Kanban initialised in " +
                 window.KBS_END_TIME);
 
             // expose the api if in dev mode

@@ -102,7 +102,8 @@ define(
                 return host.indexOf(target) !== -1;
             }
 
-            // escape regex meta chars from target before generating a new RegEx
+            // escape regex meta chars from target
+            // before generating a new RegEx
             target = util.escapeRegEx(target);
 
             // regex will match whole word of target only

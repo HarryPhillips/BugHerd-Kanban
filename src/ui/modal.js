@@ -59,9 +59,16 @@ define(
         // init and open modal
         Modal.prototype.init = function () {
             // declarations
-            var title = this.node.createChild("h2", "kbs-modal-title"),
-                message = this.node.createChild("p", "kbs-modal-msg"),
-                close = this.node.createChild("i", "fa fa-times kbs-modal-close"),
+            var
+                title =
+                this.node.createChild("h2", "kbs-modal-title"),
+                
+                message =
+                this.node.createChild("p", "kbs-modal-msg"),
+                
+                close =
+                this.node.createChild("i", "fa fa-times kbs-modal-close"),
+                
                 confirm,
                 cancel;
             
