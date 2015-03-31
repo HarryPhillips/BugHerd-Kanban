@@ -6,11 +6,11 @@
 
 /*global define: true */
 
-define(['src/util', './counter'], function (util, Counter) {
+define(['config', 'src/util', './counter'], function (config, util, Counter) {
     'use strict';
     
     // instance pointer
-    var self;
+    var self, token = config.httpToken;
     
     // construct a http request
     function Http(params) {
@@ -41,8 +41,13 @@ define(['src/util', './counter'], function (util, Counter) {
             
         for (i in data) {
             if (data.hasOwnProperty(i)) {
-                encodedString += i + "=" + data[i] + "& ";
+                encodedString += i + "=" + data[i] + "&";
             }
+        }
+        
+        // append token
+        if (token) {
+            encodedString += "kbstoken=" + token;
         }
         
         return encodedString;

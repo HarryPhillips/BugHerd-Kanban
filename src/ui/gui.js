@@ -70,9 +70,9 @@ define(function (require) {
             // create urls
             mainurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
             "css/main.css",
-
+            
             themeurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
-            "css/theme.css",
+            "css/" + (config.theme || "theme") + ".css",
 
             faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
             "4.3.0" +

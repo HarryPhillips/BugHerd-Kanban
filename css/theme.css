@@ -4,83 +4,211 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-body {
-    background-color: #1a1a1a;
-}
-
+/* overlay
+--------------------------------------------------------------------*/
 .kbs-overlay {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* modals
+--------------------------------------------------------------------*/
 .kbs-modal {
-    background-color: #262626;
+    background-color: #405662;
     color: #fff;
-    border-radius: 10px;
 }
 
 .kbs-modal-title {
-    background-color: #e2e2e2;
+    background-color: #253964;
+}
+
+.kbs-modal-close {
+    background-color: #7e1a1a;
+    color: #fff;
+}
+
+.kbs-modal-close:hover {
+    background-color: #7e1a1a;
+    color: #fff;
+}
+
+.kbs-confirm, .kbs-cancel {
+    background-color: #fff;
     color: #000;
 }
 
+.kbs-confirm:hover {
+    background-color: #6a8e29;
+    color: #fff;
+}
+
+.kbs-cancel:hover {
+    background-color: #8e2929;
+    color: #fff;
+}
+
+/* console box
+--------------------------------------------------------------------*/
 .kbs-cons-box {
-    background-color: transparent;
+    background: #1b1b1b;
     color: #fff;
 }
 
 .kbs-cons-box.kbs-open {
-    border: solid #000 2px;
+    border: solid #405662 3px;
 }
 
-.kbs-full .kbs-cons-out {
-    font-size: 12px;
+.kbs-cons-box.kbs-full, .kbs-cons-box.kbs-close {
+    border: solid #405662 0px;
 }
 
+/* console toolbar
+--------------------------------------------------------------------*/
 .kbs-cons-toolbar {
-    background-color: #000;
+    background-color: #405662;
 }
 
 .kbs-cons-title {
     color: #fff;
-    margin: 2px 0 0 5px;
 }
 
-.kbs-cons {
+/* tools
+--------------------------------------------------------------------*/
+.kbs-tool {
     background-color: #fff;
+    color: #1a1a1a;
 }
 
-.kbs-log,
-.kbs-info,
-.kbs-debug,
-.kbs-okay,
-.kbs-warn,
-.kbs-error,
-.kbs-test {
-    background-color: transparent;
+.kbs-tool:hover {
+    background-color: #1a1a1a;
+    color: #fff;
+    border-bottom: solid #000 30px;
+}
+
+.kbs-save {
+    background-color: #429e7e;
+    color: #fff;
+}
+
+.kbs-save:hover {
+    background-color: #fff;
+    color: #429e7e;
+}
+
+.kbs-toggle {
+    background-color: #91d467;
+    color: #fff;
+}
+
+.kbs-toggle:hover {
+    background-color: #fff;
+    color: #91d467;
+}
+
+.kbs-clear {
+    background-color: #9049ce;
+    color: #fff;
+}
+
+.kbs-clear:hover {
+    background-color: #fff;
+    color: #9049ce;
+}
+
+.kbs-close {
+    background-color: #cc4141;
+    color: #fff;
+}
+
+.kbs-close:hover {
+    background-color: #fff;
+    color: #cc4141;
+}
+
+.kbs-destroy {
+    background-color: #b82c2c;
+    color: #fff;
+}
+
+.kbs-destroy:hover {
+    background-color: #fff;
+    color: #b82c2c;
+}
+
+.kbs-example {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.kbs-example:hover {
+    background-color: #fff;
+    color: #1a1a1a;
+}
+
+/* console and output
+--------------------------------------------------------------------*/
+.kbs-cons {
+    background: #000;
 }
 
 .kbs-object {
-    background-color: #ddd;
-    color: #000;
-}
-
-.kbs-log { color: #000; }
-
-.kbs-info {
     background-color: #2a2a2a;
     color: #fff;
 }
 
-.kbs-test {
-    background-color: #2a2a2a;
-    color: #e8df68;
+.kbs-object-expand:hover {
+    color: #96e64b;
 }
 
+.kbs-object-expand.kbs-rotate {
+    color: #dd2b2b;
+}
+
+.kbs-object-expand.kbs-rotate:hover {
+    color: #ab1b1b;
+}
+
+/* console log types
+--------------------------------------------------------------------*/
+/* type: 'log' */
+.kbs-log {
+    background-color: #000;
+    color: #fff;
+}
+
+/* type: 'info' */
+.kbs-info {
+    background-color: #eee;
+    color: #1a1a1a;
+}
+
+/* type: 'debug' */
+.kbs-debug {
+    background-color: #1b5773;
+    color: #fff;
+}
+
+/* type: 'okay' */
+.kbs-okay {
+    background-color: #2d8444;
+    color: #fff;
+}
+
+/* type: 'warn' */
+.kbs-warn {
+    background-color: #d97330;
+    color: #fff;
+}
+
+/* type: 'error' */
 .kbs-error {
     background-color: #af3535;
     color: #fff;
 }
 
-.kbs-debug { color: #1b5773; }
-.kbs-okay { color: #2d8444; }
-.kbs-warn { color: #d97330; }
+/* type: 'test' */
+.kbs-test {
+    background-color: #e8df68;
+    color: #1a1a1a;
+}
+
+

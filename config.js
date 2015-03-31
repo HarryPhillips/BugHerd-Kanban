@@ -11,8 +11,10 @@ define({
     version: 0.9,
     enabled: true,
     mode: "dev",
+    theme: "white",
     offline: false,
-    test: false,
+    httpToken: "Fw43Iueh87aw7",
+    test: true,
     logs: {
         enabled: true,
         gui: true,

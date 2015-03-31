@@ -2,8 +2,15 @@
     // allow requests from bugherd
     header('Content-type: text/html');
     header('Access-Control-Allow-Origin: http://www.bugherd.com');
-    
+
     if (isset($_POST) && !empty($_POST)) {
+        // check for a token set by kanban
+        if (!isset($_POST['kbstoken'])) {
+            exit("403 - Forbidden");
+        } else if ($_POST['kbstoken'] !== "Fw43Iueh87aw7") {
+            exit("Invalid token");
+        }
+        
         $file = "buffer_";
         $file .= $_POST["date"];
         $file .= ".log";

@@ -29,7 +29,6 @@
 /* gui overlay 
 ------------------------------------------------------------------------------*/
 .kbs-overlay {
-    background-color: rgba(0, 0, 0, 0.3);
     position: fixed;
     top: 0; bottom: 0; left: 0; right: 0;
     z-index: 2147483646;
@@ -40,8 +39,6 @@
 .kbs-modal {
     position: fixed;
     top: 50%; left: 50%;
-    background-color: #405662;
-    color: #fff;
     width: 600px; height: 400px;
     margin-left: -300px;
     margin-top: -200px;
@@ -52,7 +49,6 @@
 
 .kbs-modal-title {
     float: left;
-    background-color: #253964;
     width: 90%; height: 40px;
     margin: 0;
     padding: 5px;
@@ -75,8 +71,6 @@
 }
 
 .kbs-modal-close {
-    background-color: #7e1a1a;
-    color: #fff;
     float: left;
     width: 10%; height: 40px;
     margin: 0; padding: 0;
@@ -93,15 +87,11 @@
 }
 
 .kbs-modal-close:hover {
-    background-color: #7e1a1a;
-    color: #fff;
     border-bottom: solid #ff0000 40px;
 }
 
 .kbs-confirm,
 .kbs-cancel {
-    background-color: #fff;
-    color: #000;
     width: 100px; height: 30px;
     margin: 0 2px;
     border: solid transparent 0px;
@@ -117,22 +107,16 @@
 }
 
 .kbs-confirm:hover {
-    background-color: #6a8e29;
-    color: #fff;
     border-bottom: ;
 }
 
 .kbs-cancel:hover {
-    background-color: #8e2929;
-    color: #fff;
     border-bottom: ;
 }
 
 /* gui console wrapper 
 ------------------------------------------------------------------------------*/
 .kbs-cons-box {
-    background: #1b1b1b;
-    color: #fff;
     position: fixed;
     top: 0; right: 0;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
@@ -144,7 +128,6 @@
 .kbs-cons-box.kbs-open {
     width: 50%; height: 50%;
     min-width: 450px; min-height: 300px;
-    border: solid #405662 3px;
     border-top: 0;
     border-right: 0;
     border-radius: 0 0 0 10px;
@@ -152,7 +135,6 @@
 
 .kbs-cons-box.kbs-full {
     width: 100%; height: 100%;
-    border: solid #405662 0px;
     border-radius: 0px;
 }
 
@@ -163,14 +145,12 @@
 .kbs-cons-box.kbs-close {
     width: 30px; height: 30px;
     min-width: 30px; min-height: 30px;
-    border: solid #405662 0px;
     border-radius: 0px;
 }
 
 /* console toolbar 
 ------------------------------------------------------------------------------*/
 .kbs-cons-toolbar {
-    background-color: #405662;
     position: relative;
     box-shadow: 0 0 4px rgba(0,0,0, 0.4);
     text-align: right;
@@ -179,7 +159,6 @@
 
 /* console title */
 .kbs-cons-title {
-    color: #fff;
     margin-top: 3px;
     text-align: left;
     float: left;
@@ -191,8 +170,6 @@
 
 /* console tool btn */
 .kbs-tool {
-    background-color: #fff;
-    color: #1a1a1a;
     display: inline-block;
     width: 30px; height: 30px;
     margin: 0; padding: 0;
@@ -207,76 +184,9 @@
     transition: background-color 0.3s, color 0.3s, border 0.3s;
 }
 
-.kbs-tool:hover {
-    background-color: #1a1a1a;
-    color: #fff;
-    border-bottom: solid #000 30px;
-}
-
-.kbs-save {
-    background-color: #429e7e;
-    color: #fff;
-}
-
-.kbs-save:hover {
-    background-color: #fff;
-    color: #429e7e;
-}
-
-.kbs-toggle {
-    background-color: #91d467;
-    color: #fff;
-}
-
-.kbs-toggle:hover {
-    background-color: #fff;
-    color: #91d467;
-}
-
-.kbs-clear {
-    background-color: #9049ce;
-    color: #fff;
-}
-
-.kbs-clear:hover {
-    background-color: #fff;
-    color: #9049ce;
-}
-
-.kbs-close {
-    background-color: #cc4141;
-    color: #fff;
-}
-
-.kbs-close:hover {
-    background-color: #fff;
-    color: #cc4141;
-}
-
-.kbs-destroy {
-    background-color: #b82c2c;
-    color: #fff;
-}
-
-.kbs-destroy:hover {
-    background-color: #fff;
-    color: #b82c2c;
-}
-
-.kbs-example {
-    background-color: #1a1a1a;
-    color: #fff;
-}
-
-.kbs-example:hover {
-    background-color: #fff;
-    color: #1a1a1a;
-}
-
 /* console output wrapper
 ------------------------------------------------------------------------------*/
 .kbs-cons {
-    background: #000;
     position: absolute;
     top: 30px; bottom: 0;
     left: 0; right: 0;
@@ -308,8 +218,6 @@
 /* object log node */
 .kbs-object {
     position: relative;
-    background-color: #2a2a2a;
-    color: #fff;
     height: 150px;
     margin: 0;
     margin: 3px;
@@ -330,58 +238,7 @@
 }
 
 .kbs-object-expand.kbs-rotate {
-    color: #dd2b2b;
     top: 3px;
-}
-
-.kbs-object-expand:hover {
-    color: #96e64b;
-}
-
-.kbs-object-expand.kbs-rotate:hover {
-    color: #ab1b1b;
-}
-
-/* type: 'log' */
-.kbs-log {
-    background-color: #000;
-    color: #fff;
-}
-
-/* type: 'info' */
-.kbs-info {
-    background-color: #eee;
-    color: #1a1a1a;
-}
-
-/* type: 'debug' */
-.kbs-debug {
-    background-color: #1b5773;
-    color: #fff;
-}
-
-/* type: 'okay' */
-.kbs-okay {
-    background-color: #2d8444;
-    color: #fff;
-}
-
-/* type: 'warn' */
-.kbs-warn {
-    background-color: #d97330;
-    color: #fff;
-}
-
-/* type: 'error' */
-.kbs-error {
-    background-color: #af3535;
-    color: #fff;
-}
-
-/* type: 'test' */
-.kbs-test {
-    background-color: #e8df68;
-    color: #1a1a1a;
 }
 
 /* misc classes
