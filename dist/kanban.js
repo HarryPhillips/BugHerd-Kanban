@@ -12,7 +12,8 @@ define('config',{
     enabled: true,
     mode: "dev",
     offline: false,
-    test: false,
+    httpToken: "Fw43Iueh87aw7",
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -513,11 +514,11 @@ define('src/components/counter',[],function () {
 
 /*global define: true */
 
-define('src/components/http',['src/util', './counter'], function (util, Counter) {
+define('src/components/http',['config', 'src/util', './counter'], function (config, util, Counter) {
     
     
     // instance pointer
-    var self;
+    var self, token = config.httpToken;
     
     // construct a http request
     function Http(params) {
@@ -548,8 +549,13 @@ define('src/components/http',['src/util', './counter'], function (util, Counter)
             
         for (i in data) {
             if (data.hasOwnProperty(i)) {
-                encodedString += i + "=" + data[i] + "& ";
+                encodedString += i + "=" + data[i] + "&";
             }
+        }
+        
+        // append token
+        if (token) {
+            encodedString += "kbstoken=" + token;
         }
         
         return encodedString;
@@ -1188,9 +1194,9 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
             // create urls
             mainurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
             "css/main.css",
-
+            
             themeurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
-            "css/theme.css",
+            "css/" + (config.theme || "theme") + ".css",
 
             faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
             "4.3.0" +

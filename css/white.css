@@ -4,14 +4,24 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
+/*
+*   @type css
+*   @name theme.css
+*   @copy Copyright 2015 Harry Phillips
+*/
+
 body {
-    background-color: #1a1a1a;
+    background-color: #ddd;
 }
 
+/* overlay
+--------------------------------------------------------------------*/
 .kbs-overlay {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* modals
+--------------------------------------------------------------------*/
 .kbs-modal {
     background-color: #262626;
     color: #fff;
@@ -23,6 +33,33 @@ body {
     color: #000;
 }
 
+.kbs-modal-close {
+    background-color: #7e1a1a;
+    color: #fff;
+}
+
+.kbs-modal-close:hover {
+    background-color: #7e1a1a;
+    color: #fff;
+}
+
+.kbs-confirm, .kbs-cancel {
+    background-color: #fff;
+    color: #000;
+}
+
+.kbs-confirm:hover {
+    background-color: #6a8e29;
+    color: #fff;
+}
+
+.kbs-cancel:hover {
+    background-color: #8e2929;
+    color: #fff;
+}
+
+/* console box
+--------------------------------------------------------------------*/
 .kbs-cons-box {
     background-color: transparent;
     color: #fff;
@@ -33,10 +70,17 @@ body {
     border-bottom: solid #000 2px;
 }
 
-.kbs-full .kbs-cons-out {
-    font-size: 12px;
+.kbs-cons-box.kbs-full {
+    border: solid #000 0px;
+    border-left: solid #000 3px;
 }
 
+.kbs-cons-box.kbs-close {
+    border: solid #405662 0px;
+}
+
+/* console and toolbar
+--------------------------------------------------------------------*/
 .kbs-cons-toolbar {
     background-color: #000;
 }
@@ -50,6 +94,35 @@ body {
     background-color: #fff;
 }
 
+/* tools
+--------------------------------------------------------------------*/
+
+
+/* console and output
+--------------------------------------------------------------------*/
+.kbs-cons {
+    background: #fff;
+}
+
+.kbs-object {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.kbs-object-expand:hover {
+    color: #96e64b;
+}
+
+.kbs-object-expand.kbs-rotate {
+    color: #dd2b2b;
+}
+
+.kbs-object-expand.kbs-rotate:hover {
+    color: #ab1b1b;
+}
+
+/* console log types
+--------------------------------------------------------------------*/
 .kbs-log,
 .kbs-info,
 .kbs-debug,

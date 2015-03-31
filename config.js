@@ -11,7 +11,6 @@ define({
     version: 0.9,
     enabled: true,
     mode: "dev",
-    theme: "white",
     offline: false,
     httpToken: "Fw43Iueh87aw7",
     test: true,

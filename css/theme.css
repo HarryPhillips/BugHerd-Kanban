@@ -4,6 +4,10 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
+body {
+    background-color: #000;
+}
+
 /* overlay
 --------------------------------------------------------------------*/
 .kbs-overlay {
@@ -54,10 +58,16 @@
 }
 
 .kbs-cons-box.kbs-open {
-    border: solid #405662 3px;
+    border-left: solid #405662 3px;
+    border-bottom: solid #405662 3px;
 }
 
-.kbs-cons-box.kbs-full, .kbs-cons-box.kbs-close {
+.kbs-cons-box.kbs-full {
+    border: solid #405662 0px;
+    border-left: solid #405662 3px;
+}
+
+.kbs-cons-box.kbs-close {
     border: solid #405662 0px;
 }
 
