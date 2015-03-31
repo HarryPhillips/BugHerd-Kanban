@@ -32,6 +32,10 @@ body {
     border: solid #000 2px;
 }
 
+.kbs-full .kbs-cons-out {
+    font-size: 12px;
+}
+
 .kbs-cons-toolbar {
     background-color: #000;
 }

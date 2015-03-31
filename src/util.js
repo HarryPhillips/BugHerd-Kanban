@@ -86,7 +86,9 @@ define(
         };
 
         // checks if input is an array
-        util.isArray = function () {};
+        util.isArray = function (obj) {
+            return obj instanceof Array || obj.constructor === "Array";
+        };
 
         // returns true or the index
         util.contains = function (host, target, strict) {

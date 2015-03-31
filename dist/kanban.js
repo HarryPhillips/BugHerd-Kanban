@@ -12,7 +12,7 @@ define('config',{
     enabled: true,
     mode: "dev",
     offline: false,
-    test: true,
+    test: false,
     logs: {
         enabled: true,
         gui: true,
@@ -22,7 +22,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -305,7 +305,9 @@ define(
         };
 
         // checks if input is an array
-        util.isArray = function () {};
+        util.isArray = function (obj) {
+            return obj instanceof Array || obj.constructor === "Array";
+        };
 
         // returns true or the index
         util.contains = function (host, target, strict) {
@@ -1446,7 +1448,7 @@ if (!window.KBS_GLOBAL_SET) {
         KBS_START_TIME = new Date().getTime(),
         KBS_END_TIME,
 
-        KBS_BASE_URL = "http://localhost/proj/",
+        KBS_BASE_URL = "http://localhost/GitHub/",
         KBS_SRC_DIR = "kanban/";
 }
 
