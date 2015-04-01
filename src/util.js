@@ -4,16 +4,6 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-/*
-*    TODO:
-*    + add the ability for sub logs (possibly gui console only)
-*      to allow log nodes inside of other log nodes.
-*
-*    + possibly think about adding 'log contexts' to support the
-      above by allowing logs to be written inside a new context,
-      other than the console out element.
-*/
-
 /*global define: true */
 
 define(
@@ -132,7 +122,7 @@ define(
         };
 
         // log wrapper
-        util.log = function (type, msg, opt) {
+        util.log = function (context, type, msg, opt) {
             // check if logs are enabled
             if (!config.logs.enabled) {
                 return;
@@ -146,13 +136,38 @@ define(
                 object = false,
                 guistr = "",
                 objstr = "",
-                bffstr = "";
+                bffstr = "",
+                temp;
 
             // process arguments into an actual array
             for (param in arguments) {
                 if (arguments.hasOwnProperty(param)) {
                     args.push(arguments[param]);
                 }
+            }
+            
+            // adjust args after context check
+            function ctxArgsAdjust() {
+                // adjust arg vars
+                temp = msg;
+                msg = type;
+                type = context;
+                opt = temp;
+            }
+            
+            // check for valid context
+            if (typeof context === "string") {
+                if (context.indexOf("context:") !== -1) {
+                    // we have a context
+                    // set it and adjust args
+                    context = context.replace("context:", "");
+                } else {
+                    ctxArgsAdjust();
+                    context = false;
+                }
+            } else {
+                ctxArgsAdjust();
+                context = false;
             }
 
             // check and process args
@@ -224,7 +239,8 @@ define(
                 events.publish("gui/log", {
                     msg: guistr,
                     type: type,
-                    obj: objstr
+                    obj: objstr,
+                    context: context
                 });
             }
 

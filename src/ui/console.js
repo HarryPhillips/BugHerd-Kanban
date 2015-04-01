@@ -45,6 +45,9 @@ define(
             gui = instance;
             this.buildNodeTree();
             
+            // log contexts
+            this.setContexts();
+            
             // update console status
             events.publish("kbs/status", {
                 component: "console",
@@ -52,10 +55,34 @@ define(
             });
         }
         
+        // console logging contexts
+        Console.prototype.setContexts = function () {
+            // make sure not to overwrite
+            if (this.contexts) {
+                return;
+            }
+            
+            // set log context array
+            this.contexts = {
+                def: self.wrapper.cons.out.element
+            };
+        };
+        
+        // get a logging context
+        Console.prototype.getContext = function (context) {
+            return this.contexts[context];
+        };
+        
+        // add a logging context
+        Console.prototype.createContext = function (context, element) {
+            this.contexts[context] = element;
+            return element;
+        };
+        
         // console output
         Console.prototype.write = function (args) {
-            // get nodes using the self pointer!
-            var out = self.wrapper.cons.out.element,
+            // declarations
+            var context = self.getContext("def"),
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
                 objwrap = new Node("pre", "kbs-object"),
@@ -63,7 +90,19 @@ define(
                       config.gui.console.icons.expand +
                       " kbs-object-expand"),
                 objtxt,
+                doCreateContext = false,
                 i = 0;
+            
+            // check for context param
+            if (args.context) {
+                // get or create new context
+                if (self.getContext(args.context)) {
+                    context = self.getContext(args.context);
+                } else {
+                    // write log then create context with its node
+                    doCreateContext = true;
+                }
+            }
 
             // write message to log node
             log.addChild(txt);
@@ -78,11 +117,26 @@ define(
                 log.addChild(objwrap.element);
             }
 
-            // write to output
-            out.appendChild(log.element);
+            // write to context
+            context.appendChild(log.element);
+            
+            // check to create context
+            if (doCreateContext) {
+                self.createContext(args.context, log.element);
+            }
 
             // refresh
             self.refresh();
+        };
+        
+        // console output to context
+        Console.prototype.writeToContext = function (context) {
+            // check for context
+            if (!this.findLogContext(context)) {
+                util.log("error", "Attempt to write to a log context ('" +
+                         context +
+                         "') which does not exist!");
+            }
         };
         
         // create toolbar widget
