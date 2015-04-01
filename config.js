@@ -12,6 +12,7 @@ define({
     enabled: true,
     mode: "dev",
     offline: false,
+    theme: "white",
     httpToken: "Fw43Iueh87aw7",
     test: true,
     logs: {

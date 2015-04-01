@@ -88,6 +88,7 @@ body {
 .kbs-cons-title {
     color: #fff;
     margin: 2px 0 0 5px;
+    letter-spacing: 0.1em;
 }
 
 .kbs-cons {
@@ -96,7 +97,15 @@ body {
 
 /* tools
 --------------------------------------------------------------------*/
+.kbs-tool:hover {
+    color: #000;
+    border-bottom: solid #fff 30px;
+}
 
+.kbs-tool.kbs-close:hover {
+    color: #fff;
+    border-bottom: solid #d52424 30px;
+}
 
 /* console and output
 --------------------------------------------------------------------*/
