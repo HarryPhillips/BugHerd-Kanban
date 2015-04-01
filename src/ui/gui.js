@@ -39,14 +39,20 @@ define(function (require) {
         // set pointer
         self = this;
 
+        // tree and console
         this.tree = this.buildNodeTree();
         this.console = new Console(this);
+        
+        // test modal!
         this.modal = new Modal(this, {
             init: false,
             title: "Test Modal - Title",
             message: "Test paragraph / modal content."
         });
 
+        // init
+        this.init();
+        
         // update gui status
         events.publish("kbs/status", {
             component: "gui",
@@ -82,15 +88,28 @@ define(function (require) {
             publish = function () {
                 // attach gui when styles have loaded
                 document.body.appendChild(self.tree.main.element);
-                util.log("debug", "+ attached gui tree");
+                util.log("context:gui/init", "debug", "+ attached gui tree");
 
                 // gui is always last to load - publish loaded event
-                util.log("debug", "+ publishing 'kbs/loaded'");
+                util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
                 events.publish("kbs/loaded");
             };
 
-        // gui load event listener
-        events.subscribe("kbs/gui/loaded", publish);
+        // events setup
+        if (config.gui.enabled) {
+            // auto refresh
+            if (config.gui.autorefresh) {
+                events.subscribe("gui/update", this.refresh);
+            }
+
+            // gui logging
+            if (config.logs.gui) {
+                events.subscribe("gui/log", this.console.write);
+            }
+        
+            // gui load event listener
+            events.subscribe("kbs/gui/loaded", publish);
+        }
 
         // props
         mainlink.rel = "stylesheet";
@@ -100,9 +119,12 @@ define(function (require) {
         mainlink.href = mainurl;
         themelink.href = themeurl;
         falink.href = faurl;
+        
+        // gui init log context
+        util.log("context:gui/init", "info", "Initialising GUI...");
 
         mainlink.onload = function () {
-            util.log("debug", "+ main.css loaded");
+            util.log("context:gui/init", "debug", "+ main.css loaded");
             loader.count += 1;
         };
         
@@ -112,7 +134,7 @@ define(function (require) {
         };
 
         themelink.onload = function () {
-            util.log("debug", "+ theme.css loaded");
+            util.log("context:gui/init", "debug", "+ theme.css loaded");
             loader.count += 1;
         };
         
@@ -122,7 +144,7 @@ define(function (require) {
         };
 
         falink.onload = function () {
-            util.log("debug", "+ font-awesome.css loaded");
+            util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
             loader.count += 1;
         };
         
@@ -137,19 +159,6 @@ define(function (require) {
         }
         document.head.appendChild(mainlink);
         document.head.appendChild(themelink);
-        
-        // events setup
-        if (config.gui.enabled) {
-            if (config.gui.autorefresh) {
-                // auto refresh
-                events.subscribe("gui/update", this.refresh);
-            }
-
-            if (config.logs.gui) {
-                // gui logging
-                events.subscribe("gui/log", this.console.write);
-            }
-        }
     };
 
     // build gui node tree

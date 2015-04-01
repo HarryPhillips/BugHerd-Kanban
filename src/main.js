@@ -36,7 +36,6 @@ define(
         // initialise gui
         if (config.gui.enabled) {
             gui = new GUI();
-            gui.init();
         }
 
         // execute kanban
