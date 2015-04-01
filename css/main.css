@@ -216,6 +216,9 @@
     white-space: normal;
 }
 
+/* context / sub log node */
+.kbs-log-node .kbs-log-node {}
+
 /* object log node */
 .kbs-object {
     position: relative;

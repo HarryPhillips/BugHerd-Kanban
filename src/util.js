@@ -147,12 +147,13 @@ define(
             }
             
             // adjust args after context check
-            function ctxArgsAdjust() {
+            function ctxArgsAdjust(args) {
                 // adjust arg vars
                 temp = msg;
                 msg = type;
                 type = context;
                 opt = temp;
+                args.shift();
             }
             
             // check for valid context
@@ -161,18 +162,19 @@ define(
                     // we have a context
                     // set it and adjust args
                     context = context.replace("context:", "");
+                    args.shift();
                 } else {
-                    ctxArgsAdjust();
+                    ctxArgsAdjust(args);
                     context = false;
                 }
             } else {
-                ctxArgsAdjust();
+                ctxArgsAdjust(args);
                 context = false;
             }
-
+            
             // check and process args
             if (args.length > 2) {
-                // given all params
+                // 3 params
                 if (typeof msg === 'object') {
                     object = msg;
                     msg = opt;

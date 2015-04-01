@@ -120,6 +120,12 @@ define(
             gui.tree.main.overlay.element.style.display = "none";
             this.node.element.style.display = "none";
         };
+        
+        // destroy the modal
+        Modal.prototype.destroy = function () {
+            gui.tree.main.overlay.element.style.display = "none";
+            this.node.element.parentNode.removeChild(this.node.element);
+        };
 
         return Modal;
     }

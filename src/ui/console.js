@@ -260,8 +260,8 @@ define(
                         // clear the log buffer
                         cache.console.clearBuffer();
                         
-                        // close the modal
-                        modal.close();
+                        // destroy the modal
+                        modal.destroy();
                     },
                     cancel: function () {
                         modal.close();
