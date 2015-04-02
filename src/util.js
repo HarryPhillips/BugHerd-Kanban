@@ -74,7 +74,12 @@ define(
 
             return result;
         };
-
+        
+        // checks if obj is a Node
+        util.isNode = function (obj) {
+            return obj.constructor.name === "Node";
+        };
+        
         // checks if input is an array
         util.isArray = function (obj) {
             return obj instanceof Array || obj.constructor === "Array";
@@ -137,7 +142,7 @@ define(
                 guistr = "",
                 objstr = "",
                 bffstr = "",
-                temp;
+                ctxFlag = config.logs.contextFlag;
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -147,28 +152,26 @@ define(
             }
             
             // adjust args after context check
-            function ctxArgsAdjust(args) {
+            function ctxArgsAdjust() {
                 // adjust arg vars
-                temp = msg;
+                opt = msg;
                 msg = type;
                 type = context;
-                opt = temp;
-                args.shift();
             }
             
             // check for valid context
             if (typeof context === "string") {
-                if (context.indexOf("context:") !== -1) {
+                if (context.indexOf(ctxFlag) !== -1) {
                     // we have a context
                     // set it and adjust args
-                    context = context.replace("context:", "");
+                    context = context.replace(ctxFlag, "");
                     args.shift();
                 } else {
-                    ctxArgsAdjust(args);
+                    ctxArgsAdjust();
                     context = false;
                 }
             } else {
-                ctxArgsAdjust(args);
+                ctxArgsAdjust();
                 context = false;
             }
             

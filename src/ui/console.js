@@ -75,7 +75,23 @@ define(
         
         // add a logging context
         Console.prototype.createContext = function (context, element) {
-            this.contexts[context] = element;
+            // declarations
+            var logContext;
+            
+            if (util.isNode(element)) {
+                // use create proto of Node
+                logContext = element.createChild("div", "kbs-log-context");
+                logContext.element.id = context;
+            } else {
+                // manually append new Node
+                logContext = new Node("div", "kbs-log-context");
+                logContext.element.id = context;
+                element.appendChild(logContext.element);
+            }
+            
+            // apply to global contexts
+            this.contexts[context] = logContext.element;
+            
             return element;
         };
         
@@ -120,7 +136,8 @@ define(
             // write to context
             context.appendChild(log.element);
             
-            // check to create context
+            // create context with new log node
+            // if set to create
             if (doCreateContext) {
                 self.createContext(args.context, log.element);
             }

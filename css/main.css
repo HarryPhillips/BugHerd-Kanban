@@ -216,6 +216,12 @@
     white-space: normal;
 }
 
+/* log context */
+.kbs-log-context {
+    max-height: 150px;
+    overflow-y: scroll;
+}
+
 /* context / sub log node */
 .kbs-log-node .kbs-log-node {}
 

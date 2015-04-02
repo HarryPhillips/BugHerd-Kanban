@@ -132,6 +132,10 @@ body {
 
 /* console log types
 --------------------------------------------------------------------*/
+.kbs-log-context {
+    background-color: #fff;
+}
+
 .kbs-log,
 .kbs-info,
 .kbs-debug,
@@ -147,7 +151,7 @@ body {
     color: #000;
 }
 
-.kbs-log { background-color: #fff; color: #000; }
+.kbs-log { color: #000; }
 
 .kbs-info {
     background-color: #2a2a2a;
@@ -164,6 +168,6 @@ body {
     color: #fff;
 }
 
-.kbs-debug { background-color: #fff; color: #3360e4; }
-.kbs-okay { background-color: #fff; color: #2d8444; }
-.kbs-warn { background-color: #fff; color: #d97330; }
+.kbs-debug { color: #3360e4; }
+.kbs-okay { color: #2d8444; }
+.kbs-warn { color: #d97330; }

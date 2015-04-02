@@ -12,18 +12,20 @@ define('config',{
     enabled: true,
     mode: "dev",
     offline: false,
+    theme: "white",
     httpToken: "Fw43Iueh87aw7",
     test: true,
     logs: {
         enabled: true,
         gui: true,
+        contextFlag: "context:",
         filter: false
     },
     gui: {
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -224,16 +226,6 @@ define('src/components/cache',['./buffer'], function (Buffer) {
 *   @copy Copyright 2015 Harry Phillips
 */
 
-/*
-*    TODO:
-*    + add the ability for sub logs (possibly gui console only)
-*      to allow log nodes inside of other log nodes.
-*
-*    + possibly think about adding 'log contexts' to support the
-      above by allowing logs to be written inside a new context,
-      other than the console out element.
-*/
-
 /*global define: true */
 
 define(
@@ -304,7 +296,12 @@ define(
 
             return result;
         };
-
+        
+        // checks if obj is a Node
+        util.isNode = function (obj) {
+            return obj.constructor.name === "Node";
+        };
+        
         // checks if input is an array
         util.isArray = function (obj) {
             return obj instanceof Array || obj.constructor === "Array";
@@ -352,7 +349,7 @@ define(
         };
 
         // log wrapper
-        util.log = function (type, msg, opt) {
+        util.log = function (context, type, msg, opt) {
             // check if logs are enabled
             if (!config.logs.enabled) {
                 return;
@@ -366,7 +363,8 @@ define(
                 object = false,
                 guistr = "",
                 objstr = "",
-                bffstr = "";
+                bffstr = "",
+                ctxFlag = config.logs.contextFlag;
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -374,10 +372,34 @@ define(
                     args.push(arguments[param]);
                 }
             }
-
+            
+            // adjust args after context check
+            function ctxArgsAdjust() {
+                // adjust arg vars
+                opt = msg;
+                msg = type;
+                type = context;
+            }
+            
+            // check for valid context
+            if (typeof context === "string") {
+                if (context.indexOf(ctxFlag) !== -1) {
+                    // we have a context
+                    // set it and adjust args
+                    context = context.replace(ctxFlag, "");
+                    args.shift();
+                } else {
+                    ctxArgsAdjust();
+                    context = false;
+                }
+            } else {
+                ctxArgsAdjust();
+                context = false;
+            }
+            
             // check and process args
             if (args.length > 2) {
-                // given all params
+                // 3 params
                 if (typeof msg === 'object') {
                     object = msg;
                     msg = opt;
@@ -444,7 +466,8 @@ define(
                 events.publish("gui/log", {
                     msg: guistr,
                     type: type,
-                    obj: objstr
+                    obj: objstr,
+                    context: context
                 });
             }
 
@@ -807,6 +830,12 @@ define(
             gui.tree.main.overlay.element.style.display = "none";
             this.node.element.style.display = "none";
         };
+        
+        // destroy the modal
+        Modal.prototype.destroy = function () {
+            gui.tree.main.overlay.element.style.display = "none";
+            this.node.element.parentNode.removeChild(this.node.element);
+        };
 
         return Modal;
     }
@@ -858,6 +887,9 @@ define(
             gui = instance;
             this.buildNodeTree();
             
+            // log contexts
+            this.setContexts();
+            
             // update console status
             events.publish("kbs/status", {
                 component: "console",
@@ -865,10 +897,50 @@ define(
             });
         }
         
+        // console logging contexts
+        Console.prototype.setContexts = function () {
+            // make sure not to overwrite
+            if (this.contexts) {
+                return;
+            }
+            
+            // set log context array
+            this.contexts = {
+                def: self.wrapper.cons.out.element
+            };
+        };
+        
+        // get a logging context
+        Console.prototype.getContext = function (context) {
+            return this.contexts[context];
+        };
+        
+        // add a logging context
+        Console.prototype.createContext = function (context, element) {
+            // declarations
+            var logContext;
+            
+            if (util.isNode(element)) {
+                // use create proto of Node
+                logContext = element.createChild("div", "kbs-log-context");
+                logContext.element.id = context;
+            } else {
+                // manually append new Node
+                logContext = new Node("div", "kbs-log-context");
+                logContext.element.id = context;
+                element.appendChild(logContext.element);
+            }
+            
+            // apply to global contexts
+            this.contexts[context] = logContext.element;
+            
+            return element;
+        };
+        
         // console output
         Console.prototype.write = function (args) {
-            // get nodes using the self pointer!
-            var out = self.wrapper.cons.out.element,
+            // declarations
+            var context = self.getContext("def"),
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
                 objwrap = new Node("pre", "kbs-object"),
@@ -876,7 +948,19 @@ define(
                       config.gui.console.icons.expand +
                       " kbs-object-expand"),
                 objtxt,
+                doCreateContext = false,
                 i = 0;
+            
+            // check for context param
+            if (args.context) {
+                // get or create new context
+                if (self.getContext(args.context)) {
+                    context = self.getContext(args.context);
+                } else {
+                    // write log then create context with its node
+                    doCreateContext = true;
+                }
+            }
 
             // write message to log node
             log.addChild(txt);
@@ -891,11 +975,27 @@ define(
                 log.addChild(objwrap.element);
             }
 
-            // write to output
-            out.appendChild(log.element);
+            // write to context
+            context.appendChild(log.element);
+            
+            // create context with new log node
+            // if set to create
+            if (doCreateContext) {
+                self.createContext(args.context, log.element);
+            }
 
             // refresh
             self.refresh();
+        };
+        
+        // console output to context
+        Console.prototype.writeToContext = function (context) {
+            // check for context
+            if (!this.findLogContext(context)) {
+                util.log("error", "Attempt to write to a log context ('" +
+                         context +
+                         "') which does not exist!");
+            }
         };
         
         // create toolbar widget
@@ -1019,8 +1119,8 @@ define(
                         // clear the log buffer
                         cache.console.clearBuffer();
                         
-                        // close the modal
-                        modal.close();
+                        // destroy the modal
+                        modal.destroy();
                     },
                     cancel: function () {
                         modal.close();
@@ -1163,14 +1263,20 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         // set pointer
         self = this;
 
+        // tree and console
         this.tree = this.buildNodeTree();
         this.console = new Console(this);
+        
+        // test modal!
         this.modal = new Modal(this, {
             init: false,
             title: "Test Modal - Title",
             message: "Test paragraph / modal content."
         });
 
+        // init
+        this.init();
+        
         // update gui status
         events.publish("kbs/status", {
             component: "gui",
@@ -1206,15 +1312,28 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
             publish = function () {
                 // attach gui when styles have loaded
                 document.body.appendChild(self.tree.main.element);
-                util.log("debug", "+ attached gui tree");
+                util.log("context:gui/init", "debug", "+ attached gui tree");
 
                 // gui is always last to load - publish loaded event
-                util.log("debug", "+ publishing 'kbs/loaded'");
+                util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
                 events.publish("kbs/loaded");
             };
 
-        // gui load event listener
-        events.subscribe("kbs/gui/loaded", publish);
+        // events setup
+        if (config.gui.enabled) {
+            // auto refresh
+            if (config.gui.autorefresh) {
+                events.subscribe("gui/update", this.refresh);
+            }
+
+            // gui logging
+            if (config.logs.gui) {
+                events.subscribe("gui/log", this.console.write);
+            }
+        
+            // gui load event listener
+            events.subscribe("kbs/gui/loaded", publish);
+        }
 
         // props
         mainlink.rel = "stylesheet";
@@ -1224,9 +1343,12 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         mainlink.href = mainurl;
         themelink.href = themeurl;
         falink.href = faurl;
+        
+        // gui init log context
+        util.log("context:gui/init", "info", "Initialising GUI...");
 
         mainlink.onload = function () {
-            util.log("debug", "+ main.css loaded");
+            util.log("context:gui/init", "debug", "+ main.css loaded");
             loader.count += 1;
         };
         
@@ -1236,7 +1358,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         };
 
         themelink.onload = function () {
-            util.log("debug", "+ theme.css loaded");
+            util.log("context:gui/init", "debug", "+ theme.css loaded");
             loader.count += 1;
         };
         
@@ -1246,7 +1368,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         };
 
         falink.onload = function () {
-            util.log("debug", "+ font-awesome.css loaded");
+            util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
             loader.count += 1;
         };
         
@@ -1261,19 +1383,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','./no
         }
         document.head.appendChild(mainlink);
         document.head.appendChild(themelink);
-        
-        // events setup
-        if (config.gui.enabled) {
-            if (config.gui.autorefresh) {
-                // auto refresh
-                events.subscribe("gui/update", this.refresh);
-            }
-
-            if (config.logs.gui) {
-                // gui logging
-                events.subscribe("gui/log", this.console.write);
-            }
-        }
     };
 
     // build gui node tree
@@ -1351,7 +1460,7 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
     
     return {
         exec: function (test) {
-            util.log('test', 'executing test: "' + test + '"');
+            util.log('context:test/' + test, 'test', 'executing test: "' + test + '"');
             require(['./' + test + '.test']);
         }
     };
@@ -1394,7 +1503,6 @@ define(
         // initialise gui
         if (config.gui.enabled) {
             gui = new GUI();
-            gui.init();
         }
 
         // execute kanban
