@@ -32,7 +32,7 @@ define(function (require) {
         // instance pointer
         self;
     
-    util.log("+ gui.js loaded");
+    util.log("context:test", "+ gui.js loaded");
 
     // gui constructor
     function GUI() {
@@ -123,6 +123,7 @@ define(function (require) {
         // gui init log context
         util.log("context:gui/init", "info", "Initialising GUI...");
 
+        // main css link events
         mainlink.onload = function () {
             util.log("context:gui/init", "debug", "+ main.css loaded");
             loader.count += 1;
@@ -133,6 +134,7 @@ define(function (require) {
             throw new Error("main.css failed to load!");
         };
 
+        // theme css link events
         themelink.onload = function () {
             util.log("context:gui/init", "debug", "+ theme.css loaded");
             loader.count += 1;
@@ -143,6 +145,7 @@ define(function (require) {
             throw new Error("theme.css failed to load!");
         };
 
+        // font-awesome css link events
         falink.onload = function () {
             util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
             loader.count += 1;

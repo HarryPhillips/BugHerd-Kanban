@@ -57,7 +57,7 @@ define(
         
         // console logging contexts
         Console.prototype.setContexts = function () {
-            // make sure not to overwrite
+            // make sure not to overwrite existing
             if (this.contexts) {
                 return;
             }
@@ -77,6 +77,12 @@ define(
         Console.prototype.createContext = function (context, element) {
             // declarations
             var logContext;
+            
+            // make sure not already defined
+            if (this.contexts[context]) {
+                util.log("error", "Log context: '" + context +
+                         "' is already defined");
+            }
             
             if (util.isNode(element)) {
                 // use create proto of Node
