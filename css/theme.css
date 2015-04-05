@@ -75,6 +75,7 @@ body {
 --------------------------------------------------------------------*/
 .kbs-cons-toolbar {
     background-color: #405662;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.8);
 }
 
 .kbs-cons-title {

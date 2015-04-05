@@ -12,8 +12,8 @@ define({
     enabled: true,
     mode: "dev",
     offline: false,
-    theme: "white",
     httpToken: "Fw43Iueh87aw7",
+    theme: "black",
     test: true,
     logs: {
         enabled: true,

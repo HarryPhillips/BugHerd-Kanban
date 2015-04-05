@@ -32,7 +32,7 @@ define(function (require) {
         // instance pointer
         self;
     
-    util.log("context:test", "+ gui.js loaded");
+    util.log("+ gui.js loaded");
 
     // gui constructor
     function GUI() {

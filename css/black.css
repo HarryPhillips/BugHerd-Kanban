@@ -110,7 +110,7 @@ body {
 /* console and output
 --------------------------------------------------------------------*/
 .kbs-cons {
-    background: #fff;
+    background: #000;
 }
 
 .kbs-object {
@@ -133,7 +133,7 @@ body {
 /* console log types
 --------------------------------------------------------------------*/
 .kbs-log-context {
-    background-color: #fff;
+    background-color: #111;
 }
 
 .kbs-log,
@@ -144,30 +144,22 @@ body {
 .kbs-error,
 .kbs-test {
     background-color: transparent;
+    color: #4a5ded;
 }
 
 .kbs-object {
-    background-color: #ddd;
-    color: #000;
+    background-color: #222;
 }
-
-.kbs-log { color: #000; }
 
 .kbs-info {
-    background-color: #2a2a2a;
-    color: #fff;
+    color: #e9b42f;
 }
 
-.kbs-test {
-    background-color: #2a2a2a;
-    color: #e8df68;
+.kbs-debug {
+    color: #5443c0;
 }
 
-.kbs-error {
-    background-color: #af3535;
-    color: #fff;
-}
+.kbs-okay { color: #67b42b; }
+.kbs-okay .kbs-object { background-color: #67b42b; color: #000; }
 
-.kbs-debug { color: #3360e4; }
-.kbs-okay { background-color: #2d8444; color: #fff; }
-.kbs-warn { color: #d97330; }
+.kbs-warn { color: #e9b42f; }

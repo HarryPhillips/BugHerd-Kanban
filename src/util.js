@@ -212,7 +212,7 @@ define(
             // check if we need to filter the type
             if (filter) {
                 // apply filter
-                if (util.contains(filter, type, true)) {
+                if (util.contains(filter, type, true) !== false) {
                     return;
                 }
             }
