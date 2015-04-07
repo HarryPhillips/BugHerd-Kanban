@@ -9,7 +9,11 @@
 define(['src/util'], function (util) {
     'use strict';
     
+    // test object
     var test = {};
+    
+    // begin test/util logging context
+    util.log.beginContext('test/util');
     
     // util.log tests
     test.log = function () {
@@ -51,4 +55,7 @@ define(['src/util'], function (util) {
     
     // run tests
     test.log();
+    
+    // end our logging context
+    //util.log.endContext();
 });

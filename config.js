@@ -13,13 +13,13 @@ define({
     mode: "dev",
     offline: false,
     httpToken: "Fw43Iueh87aw7",
-    //theme: "black",
-    test: true,
+//    theme: "black",
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
         contextFlag: "context:",
-        obj2buffer: true,
+        obj2buffer: false,
         filter: false
     },
     gui: {
