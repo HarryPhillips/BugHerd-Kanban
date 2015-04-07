@@ -222,4 +222,10 @@ body {
     color: #1a1a1a;
 }
 
+/* type: 'exec' */
+.kbs-exec {
+    background-color: #8610c6;
+    color: #fff;
+}
+
 

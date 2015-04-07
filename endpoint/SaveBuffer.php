@@ -12,13 +12,15 @@
         }
         
         // get type from post
-        $type = "";
+        $type = $_POST['type'];
         
         $file = "buffer_";
         $file .= $_POST["date"];
         $file .= ".log";
         
         $buffer = $_POST["buffer"];
+        
+        echo "Response: ";
     } else {
         exit("ERROR: No POST data found!");
     }
@@ -43,7 +45,7 @@
     // writes a log file to logs folder
     function write_log_file($log, $buffer) {
         echo "attempting to save log buffer to: 'logs/$log'\n";
-        write_file("console/logs", $log, $buffer);
+        write_file("logs", $log, $buffer);
     }
 
     // write a test result file

@@ -117,12 +117,23 @@ define(
             
             // check for context param
             if (args.context) {
-                // get or create new context
-                if (self.getContext(args.context)) {
-                    context = self.getContext(args.context);
+                // check for subcontext
+                if (args.subcontext) {
+                    // check if subcontext exists
+                    if (self.getContext(args.subcontext)) {
+                        context = self.getContext(args.subcontext);
+                    } else {
+                        context = self.getContext(args.context);
+                        doCreateContext = args.subcontext;
+                    }
                 } else {
-                    // write log then create context with its node
-                    doCreateContext = true;
+                    // get or create new context
+                    if (self.getContext(args.context)) {
+                        context = self.getContext(args.context);
+                    } else {
+                        // write log then create context with its node
+                        doCreateContext = args.context;
+                    }
                 }
             }
 
@@ -145,7 +156,7 @@ define(
             // create context with new log node
             // if set to create
             if (doCreateContext) {
-                self.createContext(args.context, log.element);
+                self.createContext(doCreateContext, log.element);
             }
 
             // refresh
@@ -163,13 +174,13 @@ define(
         };
         
         // create toolbar widget
-        Console.prototype.createTool = function (toolbar, tool) {
+        Console.prototype.createTool = function (tool) {
+            var toolbar = this.wrapper.constools,
+                icon;
+            
             if (typeof toolbar === "undefined") {
-                throw new Error("No toolbar passed to " +
-                                "GUI.Console.createTool()");
+                throw new Error("Could not create new tool, no toolbar!");
             }
-
-            var icon;
 
             icon = this.getIcon(tool);
             toolbar[tool] = toolbar.createChild(
@@ -252,6 +263,7 @@ define(
                     method: "POST",
                     send: true,
                     data: {
+                        type: "log",
                         date: date,
                         buffer: buffer
                     },
@@ -322,7 +334,7 @@ define(
             constitle.element.appendChild(titlenode);
             
             // toggle tool
-            this.createTool(constools, "toggle")
+            this.createTool("toggle")
                 .element.onclick = function () {
                     var classes = wrapper.element.className,
                         closed = classes.indexOf("kbs-close") !== -1,
@@ -349,25 +361,25 @@ define(
                 };
             
             // save tool
-            this.createTool(constools, "save")
+            this.createTool("save")
                 .element.onclick = function () {
                     self.save();
                 };
 
             // destroy tool
-            this.createTool(constools, "destroy")
+            this.createTool("destroy")
                 .element.onclick = function () {
                     self.destroy();
                 };
 
             // clear tool
-            this.createTool(constools, "clear")
+            this.createTool("clear")
                 .element.onclick = function () {
                     self.clear();
                 };
 
             // close tool
-            this.createTool(constools, "close")
+            this.createTool("close")
                 .element.onclick = function () {
                     self.close();
                 };

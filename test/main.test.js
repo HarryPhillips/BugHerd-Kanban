@@ -11,7 +11,7 @@ define(['require', 'src/util'], function (require, util) {
     
     return {
         exec: function (test) {
-            util.log('context:test/' + test, 'test', 'executing test: "' + test + '"');
+            util.log('context:test/' + test, 'exec', 'executing test: "' + test + '"...');
             require(['./' + test + '.test']);
         }
     };
