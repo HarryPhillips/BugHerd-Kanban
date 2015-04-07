@@ -14,7 +14,7 @@ define('config',{
     offline: false,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
