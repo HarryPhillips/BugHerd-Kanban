@@ -57,5 +57,5 @@ define(['src/util'], function (util) {
     test.log();
     
     // end our logging context
-    //util.log.endContext();
+    util.log.endContext();
 });
