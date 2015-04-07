@@ -90,10 +90,6 @@ define(function (require) {
                 // attach gui when styles have loaded
                 document.body.appendChild(self.tree.main.element);
                 util.log("context:gui/init", "debug", "+ attached gui tree");
-                
-                // run event listeners
-                self.runEventListeners();
-                util.log("context:gui/init", "debug", "+ running event listeners");
 
                 // gui is always last to load - publish loaded event
                 util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
@@ -179,29 +175,6 @@ define(function (require) {
         main.overlay = tree.main.createChild("div", "kbs-overlay");
 
         return tree;
-    };
-    
-    // run event listeners
-    GUI.prototype.runEventListeners = function () {
-        // handle log node of type 'exec' clicks
-        var out = this.console.wrapper.cons.out.element,
-            current;
-        
-        // bind a click handler to the console out
-        out.onclick = function (event) {
-            current = event.target;
-            if (util.contains(current.className, "kbs-exec") !== false) {
-                // we clicked on an exec block
-                if (!util.contains(current.className, "kbs-log-close")) {
-                    // we need to close the block
-                    current.className += " kbs-log-close";
-                } else {
-                    // we need to open the block
-                    current.className =
-                        current.className.replace(" kbs-log-close", "");
-                }
-            }
-        };
     };
 
     // refresh the gui and its child nodes

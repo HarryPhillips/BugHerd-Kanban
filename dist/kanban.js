@@ -12,14 +12,13 @@ define('config',{
     enabled: true,
     mode: "dev",
     offline: false,
+    theme: "white",
     httpToken: "Fw43Iueh87aw7",
-//    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
         contextFlag: "context:",
-        obj2buffer: false,
         filter: false
     },
     gui: {
@@ -44,7 +43,7 @@ define('config',{
     },
     routes: {
         console: {
-            save: "kanban/endpoint/SaveBuffer.php"
+            save: "kanban/endpoint/console/SaveBuffer.php"
         }
     },
     tooltips: {
@@ -215,7 +214,7 @@ define('src/components/cache',['./buffer'], function (Buffer) {
     
     // cache object
     var cache = {
-        app: new Buffer(),
+        kbs: new Buffer(),
         console: new Buffer()
     };
     
@@ -339,13 +338,9 @@ define(
                     i += 1;
                 }
 
-                if (!strict) {
-                    return true;
-                } else {
-                    // return the index(es)
-                    return (occs.length === 0) ? false :
-                            (occs.length > 1) ? occs : occs[0];
-                }
+                // return index(es)
+                return (occs.length === 0) ? false :
+                        (occs.length > 1) ? occs : occs[0];
             } else if (regex.test(host)) {
                 return true;
             }
@@ -366,7 +361,6 @@ define(
                 output = [],
                 str = "",
                 object = false,
-                subcontext = false,
                 guistr = "",
                 objstr = "",
                 bffstr = "",
@@ -387,28 +381,20 @@ define(
                 type = context;
             }
             
-            // check context
+            // check for valid context
             if (typeof context === "string") {
                 if (context.indexOf(ctxFlag) !== -1) {
-                    // we have a valid context param
-                    if (util.log.currentContext !== false) {
-                        // we have an active context
-                        // create a subcontext
-                        subcontext = context.replace(ctxFlag, "");
-                        context = util.log.currentContext;
-                        args.shift();
-                    } else {
-                        // set new context
-                        context = context.replace(ctxFlag, "");
-                        args.shift();
-                    }
+                    // we have a context
+                    // set it and adjust args
+                    context = context.replace(ctxFlag, "");
+                    args.shift();
                 } else {
                     ctxArgsAdjust();
-                    context = util.log.currentContext;
+                    context = false;
                 }
             } else {
                 ctxArgsAdjust();
-                context = util.log.currentContext;
+                context = false;
             }
             
             // check and process args
@@ -448,15 +434,15 @@ define(
             // check if we need to filter the type
             if (filter) {
                 // apply filter
-                if (util.contains(filter, type, true) !== false) {
+                if (util.contains(filter, type, true)) {
                     return;
                 }
             }
 
             // format and push output
+            str += "[" + config.appName + "] ";
             str += util.ftime();
-            str += " [" + (subcontext || context || config.appName) + "]";
-            str += " [" + type + "]" + ":> ";
+            str += " " + util.spacify("[" + type + "]", 8) + ":> ";
             str += msg;
             output.push(str);
 
@@ -468,14 +454,7 @@ define(
             // write to buffer
             bffstr = str.replace(/\s/g, " ");
             bffstr = encodeURIComponent(bffstr);
-            
-            // should write object to buffer?
-            if (config.logs.obj2buffer) {
-                bffstr += (objstr !== "") ? "\n" + objstr : "";
-            } else {
-                bffstr += (objstr !== "") ? "\n[object omitted]" : "";
-            }
-            
+            bffstr += (objstr !== "") ? "\n" + objstr : "";
             bffstr += "\n";
             cache.console.writeToBuffer(bffstr);
             
@@ -488,8 +467,7 @@ define(
                     msg: guistr,
                     type: type,
                     obj: objstr,
-                    context: context,
-                    subcontext: subcontext
+                    context: context
                 });
             }
 
@@ -510,24 +488,6 @@ define(
                 window.console[type](output[i]);
                 i += 1;
             }
-        };
-        
-        // current logging context - defaults to false boolean
-        util.log.currentContext = util.log.currentContext || false;
-        
-        // begin a continuous logging context
-        util.log.beginContext = function (context) {
-            if (context.indexOf(config.logs.contextFlag) !== -1) {
-                util.log("error", "You shouldn't pass the context flag " +
-                               "when using beginContext()");
-                return;
-            }
-            util.log.currentContext = context;
-        };
-        
-        // end a continuous logging context
-        util.log.endContext = function () {
-            util.log.currentContext = false;
         };
 
         util.log("+ util.js loaded");
@@ -658,27 +618,6 @@ define('src/components/http',['config', 'src/util', './counter'], function (conf
     };
     
     return Http;
-});
-/*
-*   @type javascript
-*   @name interactor.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define('src/interactor',['require'],function (require) {
-    
-    
-    function Interactor() {
-        
-    }
-    
-    Interactor.prototype.init = function () {
-        
-    };
-    
-    return Interactor;
 });
 /*
 *   @type javascript
@@ -960,7 +899,7 @@ define(
         
         // console logging contexts
         Console.prototype.setContexts = function () {
-            // make sure not to overwrite existing
+            // make sure not to overwrite
             if (this.contexts) {
                 return;
             }
@@ -980,12 +919,6 @@ define(
         Console.prototype.createContext = function (context, element) {
             // declarations
             var logContext;
-            
-            // make sure not already defined
-            if (this.contexts[context]) {
-                util.log("error", "Log context: '" + context +
-                         "' is already defined");
-            }
             
             if (util.isNode(element)) {
                 // use create proto of Node
@@ -1020,23 +953,12 @@ define(
             
             // check for context param
             if (args.context) {
-                // check for subcontext
-                if (args.subcontext) {
-                    // check if subcontext exists
-                    if (self.getContext(args.subcontext)) {
-                        context = self.getContext(args.subcontext);
-                    } else {
-                        context = self.getContext(args.context);
-                        doCreateContext = args.subcontext;
-                    }
+                // get or create new context
+                if (self.getContext(args.context)) {
+                    context = self.getContext(args.context);
                 } else {
-                    // get or create new context
-                    if (self.getContext(args.context)) {
-                        context = self.getContext(args.context);
-                    } else {
-                        // write log then create context with its node
-                        doCreateContext = args.context;
-                    }
+                    // write log then create context with its node
+                    doCreateContext = true;
                 }
             }
 
@@ -1059,7 +981,7 @@ define(
             // create context with new log node
             // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(args.context, log.element);
             }
 
             // refresh
@@ -1077,13 +999,13 @@ define(
         };
         
         // create toolbar widget
-        Console.prototype.createTool = function (tool) {
-            var toolbar = this.wrapper.constools,
-                icon;
-            
+        Console.prototype.createTool = function (toolbar, tool) {
             if (typeof toolbar === "undefined") {
-                throw new Error("Could not create new tool, no toolbar!");
+                throw new Error("No toolbar passed to " +
+                                "GUI.Console.createTool()");
             }
+
+            var icon;
 
             icon = this.getIcon(tool);
             toolbar[tool] = toolbar.createChild(
@@ -1166,7 +1088,6 @@ define(
                     method: "POST",
                     send: true,
                     data: {
-                        type: "log",
                         date: date,
                         buffer: buffer
                     },
@@ -1237,7 +1158,7 @@ define(
             constitle.element.appendChild(titlenode);
             
             // toggle tool
-            this.createTool("toggle")
+            this.createTool(constools, "toggle")
                 .element.onclick = function () {
                     var classes = wrapper.element.className,
                         closed = classes.indexOf("kbs-close") !== -1,
@@ -1264,25 +1185,25 @@ define(
                 };
             
             // save tool
-            this.createTool("save")
+            this.createTool(constools, "save")
                 .element.onclick = function () {
                     self.save();
                 };
 
             // destroy tool
-            this.createTool("destroy")
+            this.createTool(constools, "destroy")
                 .element.onclick = function () {
                     self.destroy();
                 };
 
             // clear tool
-            this.createTool("clear")
+            this.createTool(constools, "clear")
                 .element.onclick = function () {
                     self.clear();
                 };
 
             // close tool
-            this.createTool("close")
+            this.createTool(constools, "close")
                 .element.onclick = function () {
                     self.close();
                 };
@@ -1319,7 +1240,7 @@ define(
     - Re-write to support the new node tree structure
 */
 
-define('src/ui/gui',['require','config','src/util','src/components/events','src/interactor','./node','src/components/counter','./console','./modal'],function (require) {
+define('src/ui/gui',['require','config','src/util','src/components/events','./node','src/components/counter','./console','./modal'],function (require) {
     
 
     // dependencies
@@ -1327,7 +1248,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
         config = require('config'),
         util = require('src/util'),
         events = require('src/components/events'),
-        interactor = require('src/interactor'),
         Node = require('./node'),
         Counter = require('src/components/counter'),
         Console = require('./console'),
@@ -1393,10 +1313,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
                 // attach gui when styles have loaded
                 document.body.appendChild(self.tree.main.element);
                 util.log("context:gui/init", "debug", "+ attached gui tree");
-                
-                // run event listeners
-                self.runEventListeners();
-                util.log("context:gui/init", "debug", "+ running event listeners");
 
                 // gui is always last to load - publish loaded event
                 util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
@@ -1431,7 +1347,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
         // gui init log context
         util.log("context:gui/init", "info", "Initialising GUI...");
 
-        // main css link events
         mainlink.onload = function () {
             util.log("context:gui/init", "debug", "+ main.css loaded");
             loader.count += 1;
@@ -1442,7 +1357,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
             throw new Error("main.css failed to load!");
         };
 
-        // theme css link events
         themelink.onload = function () {
             util.log("context:gui/init", "debug", "+ theme.css loaded");
             loader.count += 1;
@@ -1453,7 +1367,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
             throw new Error("theme.css failed to load!");
         };
 
-        // font-awesome css link events
         falink.onload = function () {
             util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
             loader.count += 1;
@@ -1482,29 +1395,6 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
         main.overlay = tree.main.createChild("div", "kbs-overlay");
 
         return tree;
-    };
-    
-    // run event listeners
-    GUI.prototype.runEventListeners = function () {
-        // handle log node of type 'exec' clicks
-        var out = this.console.wrapper.cons.out.element,
-            current;
-        
-        // bind a click handler to the console out
-        out.onclick = function (event) {
-            current = event.target;
-            if (util.contains(current.className, "kbs-exec") !== false) {
-                // we clicked on an exec block
-                if (!util.contains(current.className, "kbs-log-close")) {
-                    // we need to close the block
-                    current.className += " kbs-log-close";
-                } else {
-                    // we need to open the block
-                    current.className =
-                        current.className.replace(" kbs-log-close", "");
-                }
-            }
-        };
     };
 
     // refresh the gui and its child nodes
@@ -1570,7 +1460,7 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
     
     return {
         exec: function (test) {
-            util.log('context:test/' + test, 'exec', 'executing test: "' + test + '"...');
+            util.log('context:test/' + test, 'test', 'executing test: "' + test + '"');
             require(['./' + test + '.test']);
         }
     };
@@ -1622,7 +1512,7 @@ define(
                 (new Date().getTime() - window.KBS_START_TIME) + "ms";
 
             // log
-            util.log("okay", kanban, "Kanban initialised in " +
+            util.log("okay", "Kanban initialised in " +
                 window.KBS_END_TIME);
 
             // expose the api if in dev mode

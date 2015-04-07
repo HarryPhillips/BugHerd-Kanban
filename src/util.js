@@ -116,13 +116,9 @@ define(
                     i += 1;
                 }
 
-                if (!strict) {
-                    return true;
-                } else {
-                    // return the index(es)
-                    return (occs.length === 0) ? false :
-                            (occs.length > 1) ? occs : occs[0];
-                }
+                // return index(es)
+                return (occs.length === 0) ? false :
+                        (occs.length > 1) ? occs : occs[0];
             } else if (regex.test(host)) {
                 return true;
             }
@@ -143,7 +139,6 @@ define(
                 output = [],
                 str = "",
                 object = false,
-                subcontext = false,
                 guistr = "",
                 objstr = "",
                 bffstr = "",
@@ -164,28 +159,20 @@ define(
                 type = context;
             }
             
-            // check context
+            // check for valid context
             if (typeof context === "string") {
                 if (context.indexOf(ctxFlag) !== -1) {
-                    // we have a valid context param
-                    if (util.log.currentContext !== false) {
-                        // we have an active context
-                        // create a subcontext
-                        subcontext = context.replace(ctxFlag, "");
-                        context = util.log.currentContext;
-                        args.shift();
-                    } else {
-                        // set new context
-                        context = context.replace(ctxFlag, "");
-                        args.shift();
-                    }
+                    // we have a context
+                    // set it and adjust args
+                    context = context.replace(ctxFlag, "");
+                    args.shift();
                 } else {
                     ctxArgsAdjust();
-                    context = util.log.currentContext;
+                    context = false;
                 }
             } else {
                 ctxArgsAdjust();
-                context = util.log.currentContext;
+                context = false;
             }
             
             // check and process args
@@ -231,9 +218,9 @@ define(
             }
 
             // format and push output
+            str += "[" + (context || config.appName) + "] ";
             str += util.ftime();
-            str += " [" + (subcontext || context || config.appName) + "]";
-            str += " [" + type + "]" + ":> ";
+            str += " " + util.spacify("[" + type + "]", 8) + ":> ";
             str += msg;
             output.push(str);
 
@@ -265,8 +252,7 @@ define(
                     msg: guistr,
                     type: type,
                     obj: objstr,
-                    context: context,
-                    subcontext: subcontext
+                    context: context
                 });
             }
 
@@ -289,22 +275,14 @@ define(
             }
         };
         
-        // current logging context - defaults to false boolean
-        util.log.currentContext = util.log.currentContext || false;
-        
         // begin a continuous logging context
         util.log.beginContext = function (context) {
-            if (context.indexOf(config.logs.contextFlag) !== -1) {
-                util.log("error", "You shouldn't pass the context flag " +
-                               "when using beginContext()");
-                return;
-            }
-            util.log.currentContext = context;
+            
         };
         
         // end a continuous logging context
-        util.log.endContext = function () {
-            util.log.currentContext = false;
+        util.log.endContext = function (context) {
+            
         };
 
         util.log("+ util.js loaded");

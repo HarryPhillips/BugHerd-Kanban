@@ -117,23 +117,12 @@ define(
             
             // check for context param
             if (args.context) {
-                // check for subcontext
-                if (args.subcontext) {
-                    // check if subcontext exists
-                    if (self.getContext(args.subcontext)) {
-                        context = self.getContext(args.subcontext);
-                    } else {
-                        context = self.getContext(args.context);
-                        doCreateContext = args.subcontext;
-                    }
+                // get or create new context
+                if (self.getContext(args.context)) {
+                    context = self.getContext(args.context);
                 } else {
-                    // get or create new context
-                    if (self.getContext(args.context)) {
-                        context = self.getContext(args.context);
-                    } else {
-                        // write log then create context with its node
-                        doCreateContext = args.context;
-                    }
+                    // write log then create context with its node
+                    doCreateContext = true;
                 }
             }
 
@@ -156,7 +145,7 @@ define(
             // create context with new log node
             // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(args.context, log.element);
             }
 
             // refresh
@@ -174,13 +163,13 @@ define(
         };
         
         // create toolbar widget
-        Console.prototype.createTool = function (tool) {
-            var toolbar = this.wrapper.constools,
-                icon;
-            
+        Console.prototype.createTool = function (toolbar, tool) {
             if (typeof toolbar === "undefined") {
-                throw new Error("Could not create new tool, no toolbar!");
+                throw new Error("No toolbar passed to " +
+                                "GUI.Console.createTool()");
             }
+
+            var icon;
 
             icon = this.getIcon(tool);
             toolbar[tool] = toolbar.createChild(
@@ -263,7 +252,6 @@ define(
                     method: "POST",
                     send: true,
                     data: {
-                        type: "log",
                         date: date,
                         buffer: buffer
                     },
@@ -334,7 +322,7 @@ define(
             constitle.element.appendChild(titlenode);
             
             // toggle tool
-            this.createTool("toggle")
+            this.createTool(constools, "toggle")
                 .element.onclick = function () {
                     var classes = wrapper.element.className,
                         closed = classes.indexOf("kbs-close") !== -1,
@@ -361,25 +349,25 @@ define(
                 };
             
             // save tool
-            this.createTool("save")
+            this.createTool(constools, "save")
                 .element.onclick = function () {
                     self.save();
                 };
 
             // destroy tool
-            this.createTool("destroy")
+            this.createTool(constools, "destroy")
                 .element.onclick = function () {
                     self.destroy();
                 };
 
             // clear tool
-            this.createTool("clear")
+            this.createTool(constools, "clear")
                 .element.onclick = function () {
                     self.clear();
                 };
 
             // close tool
-            this.createTool("close")
+            this.createTool(constools, "close")
                 .element.onclick = function () {
                     self.close();
                 };
