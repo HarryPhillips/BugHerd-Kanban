@@ -185,12 +185,13 @@ define(function (require) {
     GUI.prototype.runEventListeners = function () {
         // handle log node of type 'exec' clicks
         var out = this.console.wrapper.cons.out.element,
-            current;
+            current,
+            togglables = ["kbs-exec", "kbs-test"];
         
         // bind a click handler to the console out
         out.onclick = function (event) {
             current = event.target;
-            if (util.contains(current.className, "kbs-exec") !== false) {
+            if (util.contains(current.className, togglables) !== false) {
                 // we clicked on an exec block
                 if (!util.contains(current.className, "kbs-log-close")) {
                     // we need to close the block

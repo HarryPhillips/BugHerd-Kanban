@@ -89,44 +89,62 @@ define(
         util.contains = function (host, target, strict) {
             var i = 0,
                 occs = [],
-                regex;
+                regex,
+                temp;
+            
+            // checker function
+            function chk(host, target) {
+                // if not strict - use indexOf to find substring
+                if (!strict) {
+                    return host.indexOf(target) !== -1;
+                }
+
+                // escape regex meta chars from target
+                // before generating a new RegEx
+                target = util.escapeRegEx(target);
+
+                // regex will match whole word of target only
+                regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
+
+                // is host an array?
+                if (util.isArray(host)) {
+                   // add to occurences array
+                    while (i < host.length) {
+                        if (regex.test(host[i])) {
+                            occs.push(i);
+                        }
+                        i += 1;
+                    }
+
+                    if (!strict) {
+                        return true;
+                    } else {
+                        // return the index(es)
+                        return (occs.length === 0) ? false :
+                                (occs.length > 1) ? occs : occs[0];
+                    }
+                } else if (regex.test(host)) {
+                    return true;
+                }
+
+                return false;
+            }
 
             // default strict to false
             strict = strict || false;
 
-            // if not strict - use indexOf to find substring
-            if (!strict) {
-                return host.indexOf(target) !== -1;
-            }
-
-            // escape regex meta chars from target
-            // before generating a new RegEx
-            target = util.escapeRegEx(target);
-
-            // regex will match whole word of target only
-            regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
-
-            // is host an array?
-            if (util.isArray(host)) {
-               // add to occurences array
-                while (i < host.length) {
-                    if (regex.test(host[i])) {
-                        occs.push(i);
+            // is target an array of targets?
+            if (util.isArray(target)) {
+                for (i = 0; i < target.length; i += 1) {
+                    temp = chk(host, target[i]);
+                    if (temp !== false) {
+                        return temp;
                     }
-                    i += 1;
                 }
-
-                if (!strict) {
-                    return true;
-                } else {
-                    // return the index(es)
-                    return (occs.length === 0) ? false :
-                            (occs.length > 1) ? occs : occs[0];
-                }
-            } else if (regex.test(host)) {
-                return true;
+            } else {
+                return chk(host, target);
             }
-
+            
             return false;
         };
 

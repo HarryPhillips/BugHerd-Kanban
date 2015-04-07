@@ -135,12 +135,8 @@
 }
 
 .kbs-cons-box.kbs-full {
-    width: 750px; height: 100%;
+    width: 100%; height: 100%;
     border-radius: 0px;
-}
-
-.kbs-full .kbs-cons-out {
-    font-size: 16px;
 }
 
 .kbs-cons-box.kbs-close {
@@ -263,12 +259,17 @@
     top: 3px;
 }
 
-/* exec nodes */
-.kbs-exec {
-    cursor: pointer;
+/* togglable nodes */
+.kbs-exec, .kbs-test {
+    cursor: pointer !important;
 }
 
-.kbs-exec .kbs-log-node {
+.kbs-exec .kbs-test {
+    border-bottom: solid #000 1px;
+}
+
+.kbs-exec .kbs-log-node,
+.kbs-test .kbs-log-node {
     cursor: default;
 }
 

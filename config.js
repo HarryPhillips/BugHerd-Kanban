@@ -26,7 +26,7 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
