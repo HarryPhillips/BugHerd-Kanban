@@ -9,36 +9,46 @@
 define(['src/util'], function (util) {
     'use strict';
     
-    // undefined value
-    util.log("context:test/util");
+    var test = {};
     
-    // untyped log
-    util.log("context:test/util", "default log");
+    // util.log tests
+    test.log = function () {
+        util.log("context:test/util/log", "test", "running util.log tests");
+        
+        // undefined value
+        util.log("context:test/util/log");
+
+        // untyped log
+        util.log("context:test/util/log", "default log");
+
+        // info log
+        util.log("context:test/util/log", "info", "info log");
+
+        // debug log
+        util.log("context:test/util/log", "debug", "debug log");
+
+        // warning message
+        util.log("context:test/util/log", "warn", "warning log");
+
+        // error message
+        util.log("context:test/util/log", "error", "error log");
+
+        // okay / success message
+        util.log("context:test/util/log", "okay", "okay/success log");
+
+        // object log
+        util.log("context:test/util/log",
+                 {test: "object log"});
+
+        // object log with description
+        util.log("context:test/util/log",
+                 {test: "object log with description"}, "test #8");
+
+        // typed object log
+        util.log("context:test/util/log", "error",
+                 {test: "#9"}, "test #9");
+    };
     
-    // info log
-    util.log("context:test/util", "info", "info log");
-    
-    // debug log
-    util.log("context:test/util", "debug", "debug log");
-    
-    // warning message
-    util.log("context:test/util", "warn", "warning log");
-    
-    // error message
-    util.log("context:test/util", "error", "error log");
-    
-    // okay / success message
-    util.log("context:test/util", "okay", "okay/success log");
-    
-    // object log
-    util.log("context:test/util", {test: "object log"});
-    
-    // object log with description
-    util.log("context:test/util", {test: "object log with description"}, "test #8");
-    
-    // typed object log
-    util.log("context:test/util", "error", {test: "#9"}, "test #9");
-    
-    // return results
-    return true;
+    // run tests
+    test.log();
 });

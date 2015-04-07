@@ -24,6 +24,7 @@ define(function (require) {
         config = require('config'),
         util = require('src/util'),
         events = require('src/components/events'),
+        interactor = require('src/interactor'),
         Node = require('./node'),
         Counter = require('src/components/counter'),
         Console = require('./console'),

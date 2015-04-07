@@ -13,12 +13,13 @@ define({
     mode: "dev",
     offline: false,
     httpToken: "Fw43Iueh87aw7",
-    theme: "black",
+    //theme: "black",
     test: true,
     logs: {
         enabled: true,
         gui: true,
         contextFlag: "context:",
+        obj2buffer: true,
         filter: false
     },
     gui: {
@@ -43,7 +44,7 @@ define({
     },
     routes: {
         console: {
-            save: "kanban/endpoint/console/SaveBuffer.php"
+            save: "kanban/endpoint/SaveBuffer.php"
         }
     },
     tooltips: {

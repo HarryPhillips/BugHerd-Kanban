@@ -232,7 +232,14 @@ define(
             // write to buffer
             bffstr = str.replace(/\s/g, " ");
             bffstr = encodeURIComponent(bffstr);
-            bffstr += (objstr !== "") ? "\n" + objstr : "";
+            
+            // should write object to buffer?
+            if (config.logs.obj2buffer) {
+                bffstr += (objstr !== "") ? "\n" + objstr : "";
+            } else {
+                bffstr += (objstr !== "") ? "\n[object omitted]" : "";
+            }
+            
             bffstr += "\n";
             cache.console.writeToBuffer(bffstr);
             
@@ -266,6 +273,16 @@ define(
                 window.console[type](output[i]);
                 i += 1;
             }
+        };
+        
+        // begin a continuous logging context
+        util.log.beginContext = function (context) {
+            
+        };
+        
+        // end a continuous logging context
+        util.log.endContext = function (context) {
+            
         };
 
         util.log("+ util.js loaded");
