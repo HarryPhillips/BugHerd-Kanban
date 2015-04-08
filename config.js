@@ -14,7 +14,7 @@ define({
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: false,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",

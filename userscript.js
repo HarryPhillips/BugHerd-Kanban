@@ -15,7 +15,7 @@
     window.KBS_GLOBAL_SET = true;
     window.KBS_START_TIME = new Date().getTime();
     window.KBS_DELTA_TIME = "";
-    window.KBS_BASE_URL = "http://localhost/GitHub/Kanban/";
+    window.KBS_BASE_URL = "http://localhost/proj/Kanban/";
 
     // check for document body
     if (!window.document.body) {

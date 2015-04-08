@@ -103,4 +103,9 @@ define(function (require) {
 
     // wait for kbs loaded event
     events.subscribe("kbs/loaded", end);
+    
+    // if gui is disabled - publish the load event
+    if (!config.gui.enabled) {
+        events.publish("kbs/loaded");
+    }
 });
