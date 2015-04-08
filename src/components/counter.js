@@ -10,7 +10,8 @@ define(function () {
     'use strict';
     
     function Counter(target, callback) {
-        var value = 0;
+        var value = 0,
+            executed = false;
         
         this.target = target;
         this.exec = callback;
@@ -22,7 +23,8 @@ define(function () {
             set: function (newvalue) {
                 value = newvalue;
                 
-                if (value >= target) {
+                if (value >= target && !executed) {
+                    executed = true;
                     this.exec();
                 }
             }

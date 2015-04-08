@@ -105,6 +105,7 @@ define(
         Console.prototype.write = function (args) {
             // declarations
             var context = self.getContext("def"),
+                contextParent,
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
                 objwrap = new Node("pre", "kbs-object"),
@@ -143,11 +144,41 @@ define(
             // write object to log node
             if (args.obj) {
                 objtxt = document.createTextNode(args.obj);
-                objexp.element.setAttribute("onclick",
-                                            "kbsExpandObjectNode(this)");
+                
+                // object node expansion
+                objexp.element.onclick = function (event) {
+                    // elements
+                    var btn = event.target,
+                        parent = btn.parentNode;
+                    
+                    // check state
+                    if (util.contains(
+                        parent.className,
+                        "kbs-expand"
+                    )) {
+                        // shrink
+                        parent.className =
+                            parent.className.replace(" kbs-expand", "");
+                        
+                        btn.className =
+                            btn.className.replace(" kbs-rotate", "");
+                    } else {
+                        // expand
+                        parent.className += " kbs-expand";
+                        btn.className += " kbs-rotate";
+                    }
+                };
+                
                 objwrap.addChild(objexp.element);
                 objwrap.addChild(objtxt);
                 log.addChild(objwrap.element);
+            }
+            
+            // check if test node within exec node
+            contextParent = context.parentNode.className;
+            if (args.type === "test" &&
+                    util.contains(contextParent, "kbs-exec")) {
+                log.element.className += " kbs-log-close";
             }
 
             // write to context

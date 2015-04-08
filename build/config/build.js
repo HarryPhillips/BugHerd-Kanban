@@ -6,7 +6,7 @@
     },
     name: "kanban",
     out: "../../dist/kanban.js",
-    wrap: false,
+    wrap: true,
     removeCombined: true,
     findNestedDependencies: true,
     optimize: "none"

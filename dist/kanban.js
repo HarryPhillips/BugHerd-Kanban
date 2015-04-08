@@ -1,4 +1,4 @@
-/*
+(function () {/*
 *   @type javascript
 *   @name config.js
 *   @copy Copyright 2015 Harry Phillips
@@ -10,14 +10,15 @@ define('config',{
     appName: "kbs",
     version: 0.9,
     enabled: true,
-    mode: "dev",
-    offline: false,
+    mode: "prod",
+//    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+    test: false,
     logs: {
         enabled: true,
         gui: true,
+        contexts: true,
         contextFlag: "context:",
         obj2buffer: false,
         filter: false
@@ -26,7 +27,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -44,7 +45,7 @@ define('config',{
     },
     routes: {
         console: {
-            save: "kanban/endpoint/SaveBuffer.php"
+            save: "endpoint/SaveBuffer.php"
         }
     },
     tooltips: {
@@ -312,44 +313,62 @@ define(
         util.contains = function (host, target, strict) {
             var i = 0,
                 occs = [],
-                regex;
+                regex,
+                temp;
+            
+            // checker function
+            function chk(host, target) {
+                // if not strict - use indexOf to find substring
+                if (!strict) {
+                    return host.indexOf(target) !== -1;
+                }
+
+                // escape regex meta chars from target
+                // before generating a new RegEx
+                target = util.escapeRegEx(target);
+
+                // regex will match whole word of target only
+                regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
+
+                // is host an array?
+                if (util.isArray(host)) {
+                   // add to occurences array
+                    while (i < host.length) {
+                        if (regex.test(host[i])) {
+                            occs.push(i);
+                        }
+                        i += 1;
+                    }
+
+                    if (!strict) {
+                        return true;
+                    } else {
+                        // return the index(es)
+                        return (occs.length === 0) ? false :
+                                (occs.length > 1) ? occs : occs[0];
+                    }
+                } else if (regex.test(host)) {
+                    return true;
+                }
+
+                return false;
+            }
 
             // default strict to false
             strict = strict || false;
 
-            // if not strict - use indexOf to find substring
-            if (!strict) {
-                return host.indexOf(target) !== -1;
-            }
-
-            // escape regex meta chars from target
-            // before generating a new RegEx
-            target = util.escapeRegEx(target);
-
-            // regex will match whole word of target only
-            regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
-
-            // is host an array?
-            if (util.isArray(host)) {
-               // add to occurences array
-                while (i < host.length) {
-                    if (regex.test(host[i])) {
-                        occs.push(i);
+            // is target an array of targets?
+            if (util.isArray(target)) {
+                for (i = 0; i < target.length; i += 1) {
+                    temp = chk(host, target[i]);
+                    if (temp !== false) {
+                        return temp;
                     }
-                    i += 1;
                 }
-
-                if (!strict) {
-                    return true;
-                } else {
-                    // return the index(es)
-                    return (occs.length === 0) ? false :
-                            (occs.length > 1) ? occs : occs[0];
-                }
-            } else if (regex.test(host)) {
-                return true;
+            } else {
+                return chk(host, target);
             }
-
+            
             return false;
         };
 
@@ -548,7 +567,8 @@ define('src/components/counter',[],function () {
     
     
     function Counter(target, callback) {
-        var value = 0;
+        var value = 0,
+            executed = false;
         
         this.target = target;
         this.exec = callback;
@@ -560,7 +580,8 @@ define('src/components/counter',[],function () {
             set: function (newvalue) {
                 value = newvalue;
                 
-                if (value >= target) {
+                if (value >= target && !executed) {
+                    executed = true;
                     this.exec();
                 }
             }
@@ -667,15 +688,56 @@ define('src/components/http',['config', 'src/util', './counter'], function (conf
 
 /*global define: true */
 
-define('src/interactor',['require'],function (require) {
+define('src/interactor',['require','src/util'],function (require) {
     
     
+    // declarations
+    var
+        util = require('src/util'),
+    
+        // jquery pointer
+        $;
+    
+    // interactor constructor
     function Interactor() {
-        
+        this.init();
     }
     
+    // initialise the interactor
     Interactor.prototype.init = function () {
+        // check jquery
+        if (typeof window.jQuery !== "undefined") {
+            // get
+            $ = window.jQuery;
+        } else {
+            // no jquery, log error
+            util.log(
+                "error",
+                "Interactor could not initialise, jQuery not found!"
+            );
+            
+            // and exit interactor
+            return;
+        }
         
+        // apply elements and styling
+        this.applyElements();
+        this.applyStyles();
+    };
+    
+    // append elements to bugherd ui
+    Interactor.prototype.applyElements = function () {
+        // write an 'expand task' button to main nav
+        //$(".nav.main-nav").append("<li>Expand Task</li>");
+        $(".nav.main-nav").append(
+            "<li><a href='javascript:void(0)'>Expand Task</a></li>"
+        );
+    };
+    
+    // apply new styling to bugherd ui
+    Interactor.prototype.applyStyles = function () {
+        // add a margin to user nav to accompany console controls
+        $(".nav.user-menu").css("margin-right", "10px");
     };
     
     return Interactor;
@@ -1008,6 +1070,7 @@ define(
         Console.prototype.write = function (args) {
             // declarations
             var context = self.getContext("def"),
+                contextParent,
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
                 objwrap = new Node("pre", "kbs-object"),
@@ -1046,11 +1109,41 @@ define(
             // write object to log node
             if (args.obj) {
                 objtxt = document.createTextNode(args.obj);
-                objexp.element.setAttribute("onclick",
-                                            "kbsExpandObjectNode(this)");
+                
+                // object node expansion
+                objexp.element.onclick = function (event) {
+                    // elements
+                    var btn = event.target,
+                        parent = btn.parentNode;
+                    
+                    // check state
+                    if (util.contains(
+                        parent.className,
+                        "kbs-expand"
+                    )) {
+                        // shrink
+                        parent.className =
+                            parent.className.replace(" kbs-expand", "");
+                        
+                        btn.className =
+                            btn.className.replace(" kbs-rotate", "");
+                    } else {
+                        // expand
+                        parent.className += " kbs-expand";
+                        btn.className += " kbs-rotate";
+                    }
+                };
+                
                 objwrap.addChild(objexp.element);
                 objwrap.addChild(objtxt);
                 log.addChild(objwrap.element);
+            }
+            
+            // check if test node within exec node
+            contextParent = context.parentNode.className;
+            if (args.type === "test" &&
+                    util.contains(contextParent, "kbs-exec")) {
+                log.element.className += " kbs-log-close";
             }
 
             // write to context
@@ -1378,10 +1471,10 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
             falink = document.createElement("link"),
 
             // create urls
-            mainurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
+            mainurl = window.KBS_BASE_URL +
             "css/main.css",
             
-            themeurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
+            themeurl = window.KBS_BASE_URL +
             "css/" + (config.theme || "theme") + ".css",
 
             faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
@@ -1488,12 +1581,13 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
     GUI.prototype.runEventListeners = function () {
         // handle log node of type 'exec' clicks
         var out = this.console.wrapper.cons.out.element,
-            current;
+            current,
+            togglables = ["kbs-exec", "kbs-test"];
         
         // bind a click handler to the console out
         out.onclick = function (event) {
             current = event.target;
-            if (util.contains(current.className, "kbs-exec") !== false) {
+            if (util.contains(current.className, togglables) !== false) {
                 // we clicked on an exec block
                 if (!util.contains(current.className, "kbs-log-close")) {
                     // we need to close the block
@@ -1571,7 +1665,7 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
     return {
         exec: function (test) {
             util.log('context:test/' + test, 'exec', 'executing test: "' + test + '"...');
-            require(['./' + test + '.test']);
+            require([window.KBS_BASE_URL + 'test/' + test + '.test.js']);
         }
     };
 });
@@ -1583,81 +1677,104 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
 
 /*global define: true */
 
-define(
-    'src/main',[
-        'config',
-        './components/events',
-        './util',
-        './components/status',
-        './components/http',
-        './components/cache',
-        './ui/gui',
-        'test/main.test'
-    ],
-    function (config, events, util, status, http, cache, GUI, tests) {
-        
-        
-        // declarations
-        var kanban, exec, gui;
+define('src/main',['require','config','./components/events','./util','./components/status','./components/http','./components/cache','./ui/gui','./interactor','test/main.test'],function (require) {
+    
 
-        // return if kanban is disabled
-        if (!config.enabled) {
-            return;
+    // declarations
+    var
+        // requirements
+        config, events, util,
+        status, http, cache,
+        GUI, Interactor,
+        tests,
+
+        // components
+        kanban, end, gui, interactor;
+
+    
+    // get config
+    config = require('config');
+    
+    // check if disabled
+    if (!config.enabled) {
+        return;
+    }
+    
+    // require calls
+    events = require('./components/events');
+    util = require('./util');
+    status = require('./components/status');
+    http = require('./components/http');
+    cache = require('./components/cache');
+    GUI = require('./ui/gui');
+    Interactor = require('./interactor');
+    tests = require('test/main.test');
+
+    // subscribe to status updates
+    events.subscribe("kbs/status", function (data) {
+        status[data.component] = data.status;
+    });
+
+    // initialise gui
+    if (config.gui.enabled) {
+        gui = new GUI();
+    }
+
+    // initialise interactor
+    interactor = new Interactor();
+
+    // execute kanban
+    end = function () {
+        // get performance delta
+        window.KBS_DELTA_TIME =
+            (new Date().getTime() - window.KBS_START_TIME) + "ms";
+
+        // log
+        util.log(
+            "okay",
+            //kanban,
+            "Kanban initialised in " +
+                window.KBS_DELTA_TIME
+        );
+
+        // expose the api if in dev mode
+        if (config.mode === "dev") {
+            window[config.appName] = kanban;
+        }
+        
+        // expose logging api to window.log
+        if (typeof window.log === "undefined") {
+            window.log = util.log;
         }
 
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
+        // update app status
+        events.publish("kbs/status", {
+            component: "app",
+            status: true
         });
 
-        // initialise gui
-        if (config.gui.enabled) {
-            gui = new GUI();
+        // tests
+        if (config.test) {
+            tests.exec(['util']);
         }
+    };
 
-        // execute kanban
-        exec = function () {
-            // get performance delta
-            window.KBS_END_TIME =
-                (new Date().getTime() - window.KBS_START_TIME) + "ms";
+    // kbs data/api object
+    kanban = {
+        version: config.version,
+        interactor: interactor,
+        status: status,
+        cache: cache,
+        config: config,
+        events: events,
+        http: http,
+        util: util,
+        gui: gui
+    };
 
-            // log
-            util.log("okay", kanban, "Kanban initialised in " +
-                window.KBS_END_TIME);
-
-            // expose the api if in dev mode
-            if (config.mode === "dev") {
-                window[config.appName] = kanban;
-            }
-
-            // update app status
-            events.publish("kbs/status", {
-                component: "app",
-                status: true
-            });
-
-            // tests
-            if (config.test) {
-                tests.exec(['util']);
-            }
-        };
-
-        // kbs data/api object
-        kanban = {
-            version: config.version,
-            status: status,
-            cache: cache,
-            config: config,
-            events: events,
-            http: http,
-            util: util,
-            gui: gui
-        };
-
-        // wait for kbs loaded event
-        events.subscribe("kbs/loaded", exec);
-    }
-);
+    // wait for kbs loaded event
+    events.subscribe("kbs/loaded", end);
+});
 
 /*
 *   @type javascript
@@ -1670,10 +1787,9 @@ if (!window.KBS_GLOBAL_SET) {
     var KBS_GLOBAL_SET = true,
         
         KBS_START_TIME = new Date().getTime(),
-        KBS_END_TIME,
+        KBS_DELTA_TIME,
 
-        KBS_BASE_URL = "http://localhost/GitHub/",
-        KBS_SRC_DIR = "kanban/";
+        KBS_BASE_URL = "http://localhost/GitHub/";
 }
 
 (function (window) {
@@ -1683,25 +1799,13 @@ if (!window.KBS_GLOBAL_SET) {
     
     require.config({
         paths: {
-            src: "src",
-            test: "test"
+            src: KBS_BASE_URL + "src",
+            test: KBS_BASE_URL + "test"
         }
     });
     
     require(['src/main']);
 }(window));
-
-// globally exposed functions
-function kbsExpandObjectNode(element) {
-    
-    
-    if (element.parentNode.style.height !== "450px") {
-        element.parentNode.style.height = "450px";
-        element.className += " kbs-rotate";
-    } else {
-        element.parentNode.style.height = "150px";
-        element.className = element.className.replace("kbs-rotate", "");
-    }
-};
 define("kanban", function(){});
 
+}());

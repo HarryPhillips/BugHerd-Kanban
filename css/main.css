@@ -247,6 +247,10 @@
     overflow-y: scroll;
 }
 
+.kbs-object.kbs-expand {
+    height: 450px;
+}
+
 .kbs-object-expand {
     position: relative;
     top: 2px;

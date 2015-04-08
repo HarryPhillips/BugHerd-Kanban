@@ -6,82 +6,101 @@
 
 /*global define: true */
 
-define(
-    [
-        'config',
-        './components/events',
-        './util',
-        './components/status',
-        './components/http',
-        './components/cache',
-        './ui/gui',
-        'test/main.test'
-    ],
-    function (config, events, util, status, http, cache, GUI, tests) {
-        'use strict';
-        
-        // declarations
-        var kanban, exec, gui;
+define(function (require) {
+    'use strict';
 
-        // return if kanban is disabled
-        if (!config.enabled) {
-            return;
+    // declarations
+    var
+        // requirements
+        config, events, util,
+        status, http, cache,
+        GUI, Interactor,
+        tests,
+
+        // components
+        kanban, end, gui, interactor;
+
+    
+    // get config
+    config = require('config');
+    
+    // check if disabled
+    if (!config.enabled) {
+        return;
+    }
+    
+    // require calls
+    events = require('./components/events');
+    util = require('./util');
+    status = require('./components/status');
+    http = require('./components/http');
+    cache = require('./components/cache');
+    GUI = require('./ui/gui');
+    Interactor = require('./interactor');
+    tests = require('test/main.test');
+
+    // subscribe to status updates
+    events.subscribe("kbs/status", function (data) {
+        status[data.component] = data.status;
+    });
+
+    // initialise gui
+    if (config.gui.enabled) {
+        gui = new GUI();
+    }
+
+    // initialise interactor
+    interactor = new Interactor();
+
+    // execute kanban
+    end = function () {
+        // get performance delta
+        window.KBS_DELTA_TIME =
+            (new Date().getTime() - window.KBS_START_TIME) + "ms";
+
+        // log
+        util.log(
+            "okay",
+            //kanban,
+            "Kanban initialised in " +
+                window.KBS_DELTA_TIME
+        );
+
+        // expose the api if in dev mode
+        if (config.mode === "dev") {
+            window[config.appName] = kanban;
+        }
+        
+        // expose logging api to window.log
+        if (typeof window.log === "undefined") {
+            window.log = util.log;
         }
 
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
+        // update app status
+        events.publish("kbs/status", {
+            component: "app",
+            status: true
         });
 
-        // initialise gui
-        if (config.gui.enabled) {
-            gui = new GUI();
+        // tests
+        if (config.test) {
+            tests.exec(['util']);
         }
+    };
 
-        // execute kanban
-        exec = function () {
-            // get performance delta
-            window.KBS_END_TIME =
-                (new Date().getTime() - window.KBS_START_TIME) + "ms";
+    // kbs data/api object
+    kanban = {
+        version: config.version,
+        interactor: interactor,
+        status: status,
+        cache: cache,
+        config: config,
+        events: events,
+        http: http,
+        util: util,
+        gui: gui
+    };
 
-            // log
-            util.log(
-                "okay",
-//                kanban,
-                "Kanban initialised in " +
-                    window.KBS_END_TIME
-            );
-
-            // expose the api if in dev mode
-            if (config.mode === "dev") {
-                window[config.appName] = kanban;
-            }
-
-            // update app status
-            events.publish("kbs/status", {
-                component: "app",
-                status: true
-            });
-
-            // tests
-            if (config.test) {
-                tests.exec(['util']);
-            }
-        };
-
-        // kbs data/api object
-        kanban = {
-            version: config.version,
-            status: status,
-            cache: cache,
-            config: config,
-            events: events,
-            http: http,
-            util: util,
-            gui: gui
-        };
-
-        // wait for kbs loaded event
-        events.subscribe("kbs/loaded", exec);
-    }
-);
+    // wait for kbs loaded event
+    events.subscribe("kbs/loaded", end);
+});

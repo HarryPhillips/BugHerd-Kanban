@@ -10,14 +10,15 @@ define({
     appName: "kbs",
     version: 0.9,
     enabled: true,
-    mode: "dev",
-    offline: false,
+    mode: "prod",
+//    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+    test: false,
     logs: {
         enabled: true,
         gui: true,
+        contexts: true,
         contextFlag: "context:",
         obj2buffer: false,
         filter: false
@@ -44,7 +45,7 @@ define({
     },
     routes: {
         console: {
-            save: "kanban/endpoint/SaveBuffer.php"
+            save: "endpoint/SaveBuffer.php"
         }
     },
     tooltips: {

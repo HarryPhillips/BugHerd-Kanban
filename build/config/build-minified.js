@@ -6,7 +6,7 @@
     },
     name: "kanban",
     out: "../../dist/kanban.min.js",
-    wrap: false,
+    wrap: true,
     removeCombined: true,
     findNestedDependencies: true,
     uglify2: {

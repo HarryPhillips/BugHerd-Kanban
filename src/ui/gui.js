@@ -75,10 +75,10 @@ define(function (require) {
             falink = document.createElement("link"),
 
             // create urls
-            mainurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
+            mainurl = window.KBS_BASE_URL +
             "css/main.css",
             
-            themeurl = window.KBS_BASE_URL + window.KBS_SRC_DIR +
+            themeurl = window.KBS_BASE_URL +
             "css/" + (config.theme || "theme") + ".css",
 
             faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +

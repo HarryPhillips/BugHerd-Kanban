@@ -219,12 +219,30 @@ body {
 .kbs-test {
     background-color: #e8df68;
     color: #1a1a1a;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+
+.kbs-test:hover {
+    background-color: #aaa34C;
 }
 
 /* type: 'exec' */
 .kbs-exec {
     background-color: #8610c6;
     color: #fff;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+
+.kbs-exec:hover {
+    background-color: #580b84;
 }
 
 
