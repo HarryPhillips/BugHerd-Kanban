@@ -18,6 +18,11 @@ define(function (require) {
     
     // interactor constructor
     function Interactor() {
+        util.log(
+            "context:inter/init",
+            "info",
+            "Initialising Interactor..."
+        );
         this.init();
     }
     
@@ -45,8 +50,13 @@ define(function (require) {
     
     // append elements to bugherd ui
     Interactor.prototype.applyElements = function () {
+        util.log(
+            "context:inter/init",
+            "debug",
+            "+ appending elements to bugherd"
+        );
+        
         // write an 'expand task' button to main nav
-        //$(".nav.main-nav").append("<li>Expand Task</li>");
         $(".nav.main-nav").append(
             "<li><a href='javascript:void(0)'>Expand Task</a></li>"
         );
@@ -54,6 +64,12 @@ define(function (require) {
     
     // apply new styling to bugherd ui
     Interactor.prototype.applyStyles = function () {
+        util.log(
+            "context:inter/init",
+            "debug",
+            "+ applying styles to bugherd"
+        );
+        
         // add a margin to user nav to accompany console controls
         $(".nav.user-menu").css("margin-right", "10px");
     };
