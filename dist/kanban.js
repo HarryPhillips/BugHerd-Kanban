@@ -10,11 +10,11 @@ define('config',{
     appName: "kbs",
     version: 0.9,
     enabled: true,
-    mode: "prod",
+    mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: false,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -316,6 +316,11 @@ define(
                 regex,
                 temp;
             
+            // make sure target is defined
+            if (typeof target === "undefined" || target === "") {
+                return false;
+            }
+            
             // checker function
             function chk(host, target) {
                 // if not strict - use indexOf to find substring
@@ -406,28 +411,45 @@ define(
                 type = context;
             }
             
-            // check context
-            if (typeof context === "string") {
-                if (context.indexOf(ctxFlag) !== -1) {
-                    // we have a valid context param
-                    if (util.log.currentContext !== false) {
-                        // we have an active context
-                        // create a subcontext
-                        subcontext = context.replace(ctxFlag, "");
-                        context = util.log.currentContext;
-                        args.shift();
+            // check and process context
+            if (config.logs.contexts) {
+                // contexts enabled
+                if (typeof context === "string") {
+                    if (context.indexOf(ctxFlag) !== -1) {
+                        // we have a valid context param
+                        if (util.log.currentContext !== false) {
+                            // we have an active context
+                            // create a subcontext
+                            subcontext = context.replace(ctxFlag, "");
+                            context = util.log.currentContext;
+                            args.shift();
+                        } else {
+                            // set new context
+                            context = context.replace(ctxFlag, "");
+                            args.shift();
+                        }
                     } else {
-                        // set new context
-                        context = context.replace(ctxFlag, "");
-                        args.shift();
+                        ctxArgsAdjust();
+                        context = util.log.currentContext;
                     }
                 } else {
                     ctxArgsAdjust();
                     context = util.log.currentContext;
                 }
             } else {
-                ctxArgsAdjust();
-                context = util.log.currentContext;
+                // check if we were passed a context
+                // remove it, shift and continue
+                if (context.indexOf(ctxFlag) !== -1) {
+                    // remove the context
+                    args.shift();
+                } else {
+                    // adjust if no context passed
+                    ctxArgsAdjust();
+                }
+                
+                // disabled contexts
+                context = false;
+                subcontext = false;
             }
             
             // check and process args
@@ -536,6 +558,11 @@ define(
         
         // begin a continuous logging context
         util.log.beginContext = function (context) {
+            // return if disabled
+            if (!config.logs.contexts) {
+                return;
+            }
+            
             if (context.indexOf(config.logs.contextFlag) !== -1) {
                 util.log("error", "You shouldn't pass the context flag " +
                                "when using beginContext()");
@@ -700,6 +727,11 @@ define('src/interactor',['require','src/util'],function (require) {
     
     // interactor constructor
     function Interactor() {
+        util.log(
+            "context:inter/init",
+            "info",
+            "Initialising Interactor..."
+        );
         this.init();
     }
     
@@ -712,6 +744,7 @@ define('src/interactor',['require','src/util'],function (require) {
         } else {
             // no jquery, log error
             util.log(
+                "context:inter/init",
                 "error",
                 "Interactor could not initialise, jQuery not found!"
             );
@@ -727,8 +760,13 @@ define('src/interactor',['require','src/util'],function (require) {
     
     // append elements to bugherd ui
     Interactor.prototype.applyElements = function () {
+        util.log(
+            "context:inter/init",
+            "debug",
+            "+ appending elements to bugherd"
+        );
+        
         // write an 'expand task' button to main nav
-        //$(".nav.main-nav").append("<li>Expand Task</li>");
         $(".nav.main-nav").append(
             "<li><a href='javascript:void(0)'>Expand Task</a></li>"
         );
@@ -736,6 +774,12 @@ define('src/interactor',['require','src/util'],function (require) {
     
     // apply new styling to bugherd ui
     Interactor.prototype.applyStyles = function () {
+        util.log(
+            "context:inter/init",
+            "debug",
+            "+ applying styles to bugherd"
+        );
+        
         // add a margin to user nav to accompany console controls
         $(".nav.user-menu").css("margin-right", "10px");
     };
@@ -1035,11 +1079,20 @@ define(
         
         // get a logging context
         Console.prototype.getContext = function (context) {
+            if (!config.logs.contexts) {
+                return this.contexts.def;
+            }
+            
             return this.contexts[context];
         };
         
         // add a logging context
         Console.prototype.createContext = function (context, element) {
+            // return if disabled
+            if (!config.logs.contexts) {
+                return;
+            }
+            
             // declarations
             var logContext;
             
@@ -1118,9 +1171,9 @@ define(
                     
                     // check state
                     if (util.contains(
-                        parent.className,
-                        "kbs-expand"
-                    )) {
+                            parent.className,
+                            "kbs-expand"
+                        )) {
                         // shrink
                         parent.className =
                             parent.className.replace(" kbs-expand", "");
@@ -1582,7 +1635,10 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
         // handle log node of type 'exec' clicks
         var out = this.console.wrapper.cons.out.element,
             current,
-            togglables = ["kbs-exec", "kbs-test"];
+            togglables;
+        
+        // set togglables based on context state
+        togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
         
         // bind a click handler to the console out
         out.onclick = function (event) {
@@ -1774,6 +1830,11 @@ define('src/main',['require','config','./components/events','./util','./componen
 
     // wait for kbs loaded event
     events.subscribe("kbs/loaded", end);
+    
+    // if gui is disabled - publish the load event
+    if (!config.gui.enabled) {
+        events.publish("kbs/loaded");
+    }
 });
 
 /*
