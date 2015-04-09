@@ -18,11 +18,19 @@ define(
         'src/components/node',
         'src/ui/modal'
     ],
-    function (config, util, events,
-               Http, status, router,
-               cache, Node, Modal) {
+    function (
+        config,
+        util,
+        events,
+        Http,
+        status,
+        router,
+        cache,
+        Node,
+        Modal
+    ) {
         'use strict';
-        
+            
         // instance pointers
         var self, gui;
         

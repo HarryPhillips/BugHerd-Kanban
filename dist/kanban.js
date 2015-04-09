@@ -590,131 +590,6 @@ define(
 
 /*
 *   @type javascript
-*   @name coutner.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define('src/components/counter',[],function () {
-    
-    
-    function Counter(target, callback) {
-        var value = 0,
-            executed = false;
-        
-        this.target = target;
-        this.exec = callback;
-        
-        Object.defineProperty(this, "count", {
-            get: function () {
-                return value;
-            },
-            set: function (newvalue) {
-                value = newvalue;
-                
-                if (value >= target && !executed) {
-                    executed = true;
-                    this.exec();
-                }
-            }
-        });
-    }
-    
-    return Counter;
-});
-/*
-*   @type javascript
-*   @name http.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define('src/components/http',['config', 'src/util', './counter'], function (config, util, Counter) {
-    
-    
-    // instance pointer
-    var self, token = config.httpToken;
-    
-    // construct a http request
-    function Http(params) {
-        // props
-        this.url = params.url;
-        this.method = params.method || "GET";
-        this.async = params.async || true;
-        this.data = params.data;
-        
-        // handlers
-        this.callbacks = {};
-        this.callbacks.success = params.success || function () {};
-        this.callbacks.fail = params.fail || function () {};
-        
-        // set pointer
-        self = this;
-        
-        // auto send
-        if (params.send) {
-            this.send(this.data);
-        }
-    }
-    
-    // build encoded data string
-    Http.prototype.encodeData = function (data) {
-        var encodedString = "",
-            i;
-            
-        for (i in data) {
-            if (data.hasOwnProperty(i)) {
-                encodedString += i + "=" + data[i] + "&";
-            }
-        }
-        
-        // append token
-        if (token) {
-            encodedString += "kbstoken=" + token;
-        }
-        
-        return encodedString;
-    };
-    
-    // send request
-    Http.prototype.send = function () {
-        // new request
-        var xml = new XMLHttpRequest();
-        
-        // open
-        xml.open(this.method, this.url, this.async);
-        
-        // set content type
-        xml.setRequestHeader("Content-Type",
-                             "application/x-www-form-urlencoded");
-        
-        xml.onreadystatechange = function () {
-            if (this.readyState === 4) {
-                if (this.status === 200 && this.status < 400) {
-                    // success
-                    util.log("debug", "HTTP 200: " + self.url);
-                    self.callbacks.success(this.responseText);
-                } else {
-                    // failure
-                    util.log("debug", "HTTP " + this.status + ": " + self.url);
-                    self.callbacks.fail(this.responseText);
-                }
-            }
-        };
-        
-        // send
-        xml.send(self.encodeData(self.data));
-        
-        // nullify
-        xml = null;
-    };
-    
-    return Http;
-});
-/*
-*   @type javascript
 *   @name interactor.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -792,6 +667,138 @@ define('src/interactor',['require','src/util'],function (require) {
     
     return Interactor;
 });
+/*
+*   @type javascript
+*   @name counter.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('src/components/counter',[],function () {
+    
+    
+    function Counter(target, callback) {
+        var value = 0,
+            executed = false;
+        
+        this.target = target;
+        this.exec = callback;
+        
+        Object.defineProperty(this, "count", {
+            get: function () {
+                return value;
+            },
+            set: function (newvalue) {
+                value = newvalue;
+                
+                if (value >= target && !executed) {
+                    executed = true;
+                    this.exec();
+                }
+            }
+        });
+    }
+    
+    return Counter;
+});
+/*
+*   @type javascript
+*   @name http.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define(
+    'src/components/http',[
+        'config',
+        'src/util',
+        './counter'
+    ],
+    function (config, util, Counter) {
+        
+
+        // instance pointer
+        var self, token = config.httpToken;
+
+        // construct a http request
+        function Http(params) {
+            // props
+            this.url = params.url;
+            this.method = params.method || "GET";
+            this.async = params.async || true;
+            this.data = params.data;
+
+            // handlers
+            this.callbacks = {};
+            this.callbacks.success = params.success || function () {};
+            this.callbacks.fail = params.fail || function () {};
+
+            // set pointer
+            self = this;
+
+            // auto send
+            if (params.send) {
+                this.send(this.data);
+            }
+        }
+
+        // build encoded data string
+        Http.prototype.encodeData = function (data) {
+            var encodedString = "",
+                i;
+
+            for (i in data) {
+                if (data.hasOwnProperty(i)) {
+                    encodedString += i + "=" + data[i] + "&";
+                }
+            }
+
+            // append token
+            if (token) {
+                encodedString += "kbstoken=" + token;
+            }
+
+            return encodedString;
+        };
+
+        // send request
+        Http.prototype.send = function () {
+            // new request
+            var xml = new XMLHttpRequest();
+
+            // open
+            xml.open(this.method, this.url, this.async);
+
+            // set content type
+            xml.setRequestHeader("Content-Type",
+                                 "application/x-www-form-urlencoded");
+
+            xml.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    if (this.status === 200 && this.status < 400) {
+                        // success
+                        util.log("debug", "HTTP 200: " + self.url);
+                        self.callbacks.success(this.responseText);
+                    } else {
+                        // failure
+                        util.log("debug", "HTTP " + this.status + ": " + self.url);
+                        self.callbacks.fail(this.responseText);
+                    }
+                }
+            };
+
+            // send
+            xml.send(self.encodeData(self.data));
+
+            // nullify
+            xml = null;
+        };
+
+        return Http;
+    }
+);
 /*
 *   @type javascript
 *   @name node.js
@@ -1132,11 +1139,19 @@ define(
         'src/components/node',
         'src/ui/modal'
     ],
-    function (config, util, events,
-               Http, status, router,
-               cache, Node, Modal) {
+    function (
+        config,
+        util,
+        events,
+        Http,
+        status,
+        router,
+        cache,
+        Node,
+        Modal
+    ) {
         
-        
+            
         // instance pointers
         var self, gui;
         
@@ -1546,246 +1561,256 @@ define(
 
 /*global define: true */
 
-define('src/ui/gui',['require','config','src/util','src/components/events','src/interactor','src/components/node','src/components/counter','./console','./modal'],function (require) {
-    
-
-    // dependencies
-    var
-        config = require('config'),
-        util = require('src/util'),
-        events = require('src/components/events'),
-        interactor = require('src/interactor'),
-        Node = require('src/components/node'),
-        Counter = require('src/components/counter'),
-        Console = require('./console'),
-        Modal = require('./modal'),
+define(
+    'src/ui/gui',[
+        'config',
+        'src/util',
+        'src/interactor',
+        'src/components/events',
+        'src/components/counter',
+        'src/components/node',
+        'src/ui/console',
+        'src/ui/modal'
+    ],
+    function (
+        config,
+        util,
+        interactor,
+        events,
+        Counter,
+        Node,
+        Console,
+        Modal
+    ) {
         
+
         // instance pointer
-        self;
-    
-    util.log("+ gui.js loaded");
+        var self;
 
-    // gui constructor
-    function GUI() {
-        // set pointer
-        self = this;
+        util.log("+ gui.js loaded");
 
-        // tree and console
-        this.tree = this.buildNodeTree();
-        this.console = new Console(this);
-        
-        // test modal!
-        this.modal = new Modal(this, {
-            init: false,
-            title: "Test Modal - Title",
-            message: "Test paragraph / modal content."
-        });
+        // gui constructor
+        function GUI() {
+            // set pointer
+            self = this;
 
-        // init
-        this.init();
-        
-        // update gui status
-        events.publish("kbs/status", {
-            component: "gui",
-            status: true
-        });
-    }
+            // tree and console
+            this.tree = this.buildNodeTree();
+            this.console = new Console(this);
 
-    // initialise gui
-    GUI.prototype.init = function () {
-        var
-            // loader
-            loader = new Counter((config.offline) ? 2 : 3, function () {
-                events.publish("kbs/gui/loaded");
-            }),
+            // test modal!
+            this.modal = new Modal(this, {
+                init: false,
+                title: "Test Modal - Title",
+                message: "Test paragraph / modal content."
+            });
 
-            // create link elements
-            mainlink = document.createElement("link"),
-            themelink = document.createElement("link"),
-            falink = document.createElement("link"),
+            // init
+            this.init();
 
-            // create urls
-            mainurl = window.KBS_BASE_URL +
-            "css/main.css",
-            
-            themeurl = window.KBS_BASE_URL +
-            "css/" + (config.theme || "theme") + ".css",
+            // update gui status
+            events.publish("kbs/status", {
+                component: "gui",
+                status: true
+            });
+        }
 
-            faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
-            "4.3.0" +
-            "/css/font-awesome.min.css",
+        // initialise gui
+        GUI.prototype.init = function () {
+            var
+                // loader
+                loader = new Counter((config.offline) ? 2 : 3, function () {
+                    events.publish("kbs/gui/loaded");
+                }),
 
-            // attach gui element and publish loaded event
-            publish = function () {
-                // attach gui when styles have loaded
-                document.body.appendChild(self.tree.main.element);
-                util.log("context:gui/init", "debug", "+ attached gui tree");
-                
-                // run event listeners
-                self.runEventListeners();
-                util.log("context:gui/init", "debug", "+ running event listeners");
+                // create link elements
+                mainlink = document.createElement("link"),
+                themelink = document.createElement("link"),
+                falink = document.createElement("link"),
 
-                // gui is always last to load - publish loaded event
-                util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
-                events.publish("kbs/loaded");
+                // create urls
+                mainurl = window.KBS_BASE_URL +
+                "css/main.css",
+
+                themeurl = window.KBS_BASE_URL +
+                "css/" + (config.theme || "theme") + ".css",
+
+                faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
+                "4.3.0" +
+                "/css/font-awesome.min.css",
+
+                // attach gui element and publish loaded event
+                publish = function () {
+                    // attach gui when styles have loaded
+                    document.body.appendChild(self.tree.main.element);
+                    util.log("context:gui/init", "debug", "+ attached gui tree");
+
+                    // run event listeners
+                    self.runEventListeners();
+                    util.log("context:gui/init", "debug", "+ running event listeners");
+
+                    // gui is always last to load - publish loaded event
+                    util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
+                    events.publish("kbs/loaded");
+                };
+
+            // events setup
+            if (config.gui.enabled) {
+                // auto refresh
+                if (config.gui.autorefresh) {
+                    events.subscribe("gui/update", this.refresh);
+                }
+
+                // gui logging
+                if (config.logs.gui) {
+                    events.subscribe("gui/log", this.console.write);
+                }
+
+                // gui load event listener
+                events.subscribe("kbs/gui/loaded", publish);
+            }
+
+            // props
+            mainlink.rel = "stylesheet";
+            themelink.rel = "stylesheet";
+            falink.rel = "stylesheet";
+
+            mainlink.href = mainurl;
+            themelink.href = themeurl;
+            falink.href = faurl;
+
+            // gui init log context
+            util.log("context:gui/init", "info", "Initialising GUI...");
+
+            // main css link events
+            mainlink.onload = function () {
+                util.log("context:gui/init", "debug", "+ main.css loaded");
+                loader.count += 1;
             };
 
-        // events setup
-        if (config.gui.enabled) {
-            // auto refresh
-            if (config.gui.autorefresh) {
-                events.subscribe("gui/update", this.refresh);
+            mainlink.onerror = function () {
+                loader.count += 1;
+                throw new Error("main.css failed to load!");
+            };
+
+            // theme css link events
+            themelink.onload = function () {
+                util.log("context:gui/init", "debug", "+ theme.css loaded");
+                loader.count += 1;
+            };
+
+            themelink.onerror = function () {
+                loader.count += 1;
+                throw new Error("theme.css failed to load!");
+            };
+
+            // font-awesome css link events
+            falink.onload = function () {
+                util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
+                loader.count += 1;
+            };
+
+            falink.onerror = function () {
+                loader.count += 1;
+                throw new Error("font-awesome.css failed to load!");
+            };
+
+            // write out to document
+            if (!config.offline) {
+                document.head.appendChild(falink);
             }
-
-            // gui logging
-            if (config.logs.gui) {
-                events.subscribe("gui/log", this.console.write);
-            }
-        
-            // gui load event listener
-            events.subscribe("kbs/gui/loaded", publish);
-        }
-
-        // props
-        mainlink.rel = "stylesheet";
-        themelink.rel = "stylesheet";
-        falink.rel = "stylesheet";
-
-        mainlink.href = mainurl;
-        themelink.href = themeurl;
-        falink.href = faurl;
-        
-        // gui init log context
-        util.log("context:gui/init", "info", "Initialising GUI...");
-
-        // main css link events
-        mainlink.onload = function () {
-            util.log("context:gui/init", "debug", "+ main.css loaded");
-            loader.count += 1;
-        };
-        
-        mainlink.onerror = function () {
-            loader.count += 1;
-            throw new Error("main.css failed to load!");
+            document.head.appendChild(mainlink);
+            document.head.appendChild(themelink);
         };
 
-        // theme css link events
-        themelink.onload = function () {
-            util.log("context:gui/init", "debug", "+ theme.css loaded");
-            loader.count += 1;
-        };
-        
-        themelink.onerror = function () {
-            loader.count += 1;
-            throw new Error("theme.css failed to load!");
-        };
+        // build gui node tree
+        GUI.prototype.buildNodeTree = function () {
+            // create tree and nodes
+            var tree = {}, main;
 
-        // font-awesome css link events
-        falink.onload = function () {
-            util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
-            loader.count += 1;
-        };
-        
-        falink.onerror = function () {
-            loader.count += 1;
-            throw new Error("font-awesome.css failed to load!");
+            // create nodes
+            tree.main = main = new Node("div", "kbs-gui");
+            main.overlay = main.createChild("div", "kbs-overlay");
+
+            return tree;
         };
 
-        // write out to document
-        if (!config.offline) {
-            document.head.appendChild(falink);
-        }
-        document.head.appendChild(mainlink);
-        document.head.appendChild(themelink);
-    };
+        // run event listeners
+        GUI.prototype.runEventListeners = function () {
+            // handle log node of type 'exec' clicks
+            var out = this.console.wrapper.cons.out.element,
+                current,
+                togglables;
 
-    // build gui node tree
-    GUI.prototype.buildNodeTree = function () {
-        // create tree and nodes
-        var tree = {}, main;
+            // set togglables based on context state
+            togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
 
-        // create nodes
-        tree.main = main = new Node("div", "kbs-gui");
-        main.overlay = main.createChild("div", "kbs-overlay");
-
-        return tree;
-    };
-    
-    // run event listeners
-    GUI.prototype.runEventListeners = function () {
-        // handle log node of type 'exec' clicks
-        var out = this.console.wrapper.cons.out.element,
-            current,
-            togglables;
-        
-        // set togglables based on context state
-        togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
-        
-        // bind a click handler to the console out
-        out.onclick = function (event) {
-            current = event.target;
-            if (util.contains(current.className, togglables) !== false) {
-                // we clicked on an exec block
-                if (!util.contains(current.className, "kbs-log-close")) {
-                    // we need to close the block
-                    current.className += " kbs-log-close";
-                } else {
-                    // we need to open the block
-                    current.className =
-                        current.className.replace(" kbs-log-close", "");
+            // bind a click handler to the console out
+            out.onclick = function (event) {
+                current = event.target;
+                if (util.contains(current.className, togglables) !== false) {
+                    // we clicked on an exec block
+                    if (!util.contains(current.className, "kbs-log-close")) {
+                        // we need to close the block
+                        current.className += " kbs-log-close";
+                    } else {
+                        // we need to open the block
+                        current.className =
+                            current.className.replace(" kbs-log-close", "");
+                    }
                 }
-            }
+            };
         };
-    };
 
-    // refresh the gui and its child nodes
-    GUI.prototype.refresh = function () {
-        this.console.refresh();
-    };
+        // refresh the gui and its child nodes
+        GUI.prototype.refresh = function () {
+            this.console.refresh();
+        };
 
 
-    // add a child node to the gui
-    GUI.prototype.addChild = function (node) {
-        this.tree.main.element.appendChild(node);
-    };
+        // add a child node to the gui
+        GUI.prototype.addChild = function (node) {
+            this.tree.main.element.appendChild(node);
+        };
 
-    // create a child and add to the gui
-    GUI.prototype.createChild = function (type, classes, id) {
-        var node = new Node(type, classes, id);
-        this.tree.main.element.appendChild(node.element);
-        return node;
-    };
-    // benchmarks the generation of 10000 log nodes
-    GUI.prototype.benchmark = function () {
-        var cons = self.console.wrapper.cons.element,
-            out = self.console.wrapper.cons.out.element,
-            start = new Date().getTime(),
-            end,
-            i = 0;
+        // create a child and add to the gui
+        GUI.prototype.createChild = function (type, classes, id) {
+            var node = new Node(type, classes, id);
+            this.tree.main.element.appendChild(node.element);
+            return node;
+        };
+        // benchmarks the generation of 10000 log nodes
+        GUI.prototype.benchmark = function () {
+            var cons = self.console.wrapper.cons.element,
+                out = self.console.wrapper.cons.out.element,
+                start = new Date().getTime(),
+                end,
+                i = 0;
 
-        // detach
-        cons.removeChild(out);
+            // detach
+            cons.removeChild(out);
 
-        while (i < 10000) {
-            util.log("debug", "log #" + i);
-            i += 1;
-        }
+            while (i < 10000) {
+                util.log("debug", "log #" + i);
+                i += 1;
+            }
 
-        // reattach
-        cons.appendChild(out);
+            // reattach
+            cons.appendChild(out);
 
-        end = new Date().getTime() - start;
-        util.log("debug", "opt: " + end + "ms");
-    };
-    
-    // return the current gui instance
-    GUI.prototype.getCurrentInstance = function () {
-        return self;
-    };
+            end = new Date().getTime() - start;
+            util.log("debug", "opt: " + end + "ms");
+        };
 
-    // return gui
-    return GUI;
-});
+        // return the current gui instance
+        GUI.prototype.getCurrentInstance = function () {
+            return self;
+        };
+
+        // return gui
+        return GUI;
+    }
+);
     
 
 /*
@@ -1814,109 +1839,110 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
 
 /*global define: true */
 
-define('src/main',['require','config','./components/events','./util','./components/status','./components/http','./components/cache','./ui/gui','./interactor','test/main.test'],function (require) {
-    
-
-    // declarations
-    var
-        // requirements
-        config, events, util,
-        status, http, cache,
-        GUI, Interactor,
-        tests,
+define(
+    'src/main',[
+        'config',
+        'src/util',
+        'src/interactor',
+        'src/components/events',
+        'src/components/status',
+        'src/components/cache',
+        'src/components/http',
+        'src/ui/gui',
+        'test/main.test'
+    ],
+    function (
+        config,
+        util,
+        Interactor,
+        events,
+        status,
+        cache,
+        http,
+        GUI,
+        tests
+    ) {
+        
 
         // components
-        kanban, end, gui, interactor;
+        var kanban, end, gui, interactor;
 
-    
-    // get config
-    config = require('config');
-    
-    // check if disabled
-    if (!config.enabled) {
-        return;
-    }
-    
-    // require calls
-    events = require('./components/events');
-    util = require('./util');
-    status = require('./components/status');
-    http = require('./components/http');
-    cache = require('./components/cache');
-    GUI = require('./ui/gui');
-    Interactor = require('./interactor');
-    tests = require('test/main.test');
-
-    // subscribe to status updates
-    events.subscribe("kbs/status", function (data) {
-        status[data.component] = data.status;
-    });
-
-    // initialise gui
-    if (config.gui.enabled) {
-        gui = new GUI();
-    }
-
-    // initialise interactor
-    interactor = new Interactor();
-
-    // execute kanban
-    end = function () {
-        // get performance delta
-        window.KBS_DELTA_TIME =
-            (new Date().getTime() - window.KBS_START_TIME) + "ms";
-
-        // log
-        util.log(
-            "okay",
-            //kanban,
-            "Kanban initialised in " +
-                window.KBS_DELTA_TIME
-        );
-
-        // expose the api if in dev mode
-        if (config.mode === "dev") {
-            window[config.appName] = kanban;
-        }
-        
-        // expose logging api to window.log
-        if (typeof window.log === "undefined") {
-            window.log = util.log;
+        // check if disabled
+        if (!config.enabled) {
+            return;
         }
 
-        // update app status
-        events.publish("kbs/status", {
-            component: "app",
-            status: true
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
         });
 
-        // tests
-        if (config.test) {
-            tests.exec(['util']);
+        // initialise gui
+        if (config.gui.enabled) {
+            gui = new GUI();
         }
-    };
 
-    // kbs data/api object
-    kanban = {
-        version: config.version,
-        interactor: interactor,
-        status: status,
-        cache: cache,
-        config: config,
-        events: events,
-        http: http,
-        util: util,
-        gui: gui
-    };
+        // initialise interactor
+        interactor = new Interactor();
 
-    // wait for kbs loaded event
-    events.subscribe("kbs/loaded", end);
-    
-    // if gui is disabled - publish the load event
-    if (!config.gui.enabled) {
-        events.publish("kbs/loaded");
+        // execute kanban
+        end = function () {
+            // get performance delta
+            window.KBS_DELTA_TIME =
+                (new Date().getTime() - window.KBS_START_TIME) + "ms";
+
+            // log
+            util.log(
+                "okay",
+                //kanban,
+                "Kanban initialised in " +
+                    window.KBS_DELTA_TIME
+            );
+
+            // expose the api if in dev mode
+            if (config.mode === "dev") {
+                window[config.appName] = kanban;
+            }
+
+            // expose logging api to window.log
+            if (typeof window.log === "undefined") {
+                window.log = util.log;
+            }
+
+            // update app status
+            events.publish("kbs/status", {
+                component: "app",
+                status: true
+            });
+
+            // tests
+            if (config.test) {
+                tests.exec(['util']);
+            }
+        };
+
+        // kbs data/api object
+        kanban = {
+            version: config.version,
+            interactor: interactor,
+            status: status,
+            cache: cache,
+            config: config,
+            events: events,
+            http: http,
+            util: util,
+            gui: gui
+        };
+
+        // wait for kbs loaded event
+        events.subscribe("kbs/loaded", end);
+
+        // if gui is disabled - publish the load event
+        if (!config.gui.enabled) {
+            events.publish("kbs/loaded");
+        }
     }
-});
+);
 
 /*
 *   @type javascript

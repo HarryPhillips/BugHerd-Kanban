@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name coutner.js
+*   @name counter.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
