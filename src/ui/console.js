@@ -201,16 +201,6 @@ define(
             self.refresh();
         };
         
-        // console output to context
-        Console.prototype.writeToContext = function (context) {
-            // check for context
-            if (!this.findLogContext(context)) {
-                util.log("error", "Attempt to write to a log context ('" +
-                         context +
-                         "') which does not exist!");
-            }
-        };
-        
         // create toolbar widget
         Console.prototype.createTool = function (tool) {
             var toolbar = this.wrapper.constools,
@@ -282,6 +272,9 @@ define(
 
             // reattach
             cons.appendChild(out);
+            
+            // clear buffer
+            cache.console.clearBuffer();
 
             // bench
             end = new Date().getTime() - start;

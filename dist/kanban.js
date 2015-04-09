@@ -14,7 +14,7 @@ define('config',{
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -316,7 +316,13 @@ define(
                 regex,
                 temp;
             
-            // make sure target is defined
+            // make sure target and host are defined
+            if (typeof host === "undefined" || host === "") {
+                // throw an error if host is undefined
+                throw new Error("Could not determine a contained value, " +
+                               "haystack object is undefined!");
+            }
+            
             if (typeof target === "undefined" || target === "") {
                 return false;
             }
@@ -1104,12 +1110,10 @@ define(
             
             if (util.isNode(element)) {
                 // use create proto of Node
-                logContext = element.createChild("div", "kbs-log-context");
-                logContext.element.id = context;
+                logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context");
-                logContext.element.id = context;
+                logContext = new Node("div", "kbs-log-context", context);
                 element.appendChild(logContext.element);
             }
             
@@ -1154,6 +1158,15 @@ define(
                         doCreateContext = args.context;
                     }
                 }
+            }
+            
+            // do we need to filter the context?
+            if (util.contains(
+                    context.className,
+                    "kbs-" + args.type,
+                    true
+                )) {
+                return;
             }
 
             // write message to log node
@@ -1210,16 +1223,6 @@ define(
 
             // refresh
             self.refresh();
-        };
-        
-        // console output to context
-        Console.prototype.writeToContext = function (context) {
-            // check for context
-            if (!this.findLogContext(context)) {
-                util.log("error", "Attempt to write to a log context ('" +
-                         context +
-                         "') which does not exist!");
-            }
         };
         
         // create toolbar widget
@@ -1293,6 +1296,9 @@ define(
 
             // reattach
             cons.appendChild(out);
+            
+            // clear buffer
+            cache.console.clearBuffer();
 
             // bench
             end = new Date().getTime() - start;
@@ -1456,14 +1462,6 @@ define(
 /*jslint devel: true */
 
 /*global define: true */
-
-/*
-    TODO:
-    
-    - Add an array to Node class to store child nodes
-    - Add ability to remove child nodes
-    - Re-write to support the new node tree structure
-*/
 
 define('src/ui/gui',['require','config','src/util','src/components/events','src/interactor','./node','src/components/counter','./console','./modal'],function (require) {
     
@@ -1720,8 +1718,8 @@ define('test/main.test',['require', 'src/util'], function (require, util) {
     
     return {
         exec: function (test) {
-            util.log('context:test/' + test, 'exec', 'executing test: "' + test + '"...');
-            require([window.KBS_BASE_URL + 'test/' + test + '.test.js']);
+            util.log("context:test/" + test, "exec", "executing test: \"" + test + "\"...");
+            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
         }
     };
 });
