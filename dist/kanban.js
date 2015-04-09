@@ -14,7 +14,7 @@ define('config',{
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -800,17 +800,24 @@ define('src/interactor',['require','src/util'],function (require) {
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Add the ability to create a Node from a HTML Element
+*/
+
 define(
-    'src/ui/node',['config'],
-    function () {
+    'src/components/node',['config', 'src/util'],
+    function (config, util) {
         
         
         // node constructor
         function Node(type, classes, id) {
             // set props
-            this.type = type;
-            this.classes = classes;
-            this.selector = id;
+            this.settings = {
+                type: type,
+                classes: classes,
+                id: id
+            };
             
             // create element
             this.element = document.createElement(type);
@@ -820,7 +827,88 @@ define(
                 this.element.id = id;
             }
         }
+        
+        // show node
+        Node.prototype.show = function () {
+            this.element.style.display = "block";
+        };
+        
+        // hide node
+        Node.prototype.hide = function () {
+            this.element.style.display = "none";
+        };
+        
+        // get parent node
+        Node.prototype.parent = function () {
+            return this.element.parentNode;
+        };
+        
+        // return current element classes
+        Node.prototype.getClasses = function () {
+            return this.element.className;
+        };
+        
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
+        };
+        
+        // return if node has a class
+        Node.prototype.hasClass = function (name) {
+            return this.element.className.indexOf(name) !== -1;
+        };
+        
+        // add class(es) to node
+        Node.prototype.addClass = function (classes) {
+            if (this.element.className === "") {
+                // no previous classes
+                this.element.className = classes;
+            } else {
+                // add whitespace
+                this.element.className += " " + classes;
+            }
+        };
 
+        // remove class(es) from node
+        Node.prototype.removeClass = function (classes) {
+            // declarations
+            var curr = this.element.className,
+                newclass,
+                i,
+                
+                remove = function (name) {
+                    if (curr.indexOf(" " + name) !== -1) {
+                        newclass = curr.replace(" " + name, "");
+                    } else if (curr.indexOf(name + " ") !== -1) {
+                        newclass = curr.replace(name + " ", "");
+                    } else {
+                        newclass = curr.replace(name, "");
+                    }
+                };
+            
+            // check if array or single string
+            if (util.isArray(classes)) {
+                // preserve current classes
+                newclass = curr;
+                
+                // remove all classes
+                for (i = 0; i < classes.length; i += 1) {
+                    remove(classes[i]);
+                }
+            } else {
+                remove(classes);
+            }
+            
+            // set new classes
+            this.element.className = newclass;
+        };
+        
+        // set class(es) to node
+        // removes all other classes
+        Node.prototype.setClass = function (classes) {
+            this.element.className = classes;
+        };
+        
         // add a child to node
         Node.prototype.addChild = function (node) {
             // check if node is an instance of class Node
@@ -840,17 +928,28 @@ define(
             return node;
         };
         
-        // delete node and it's children
-        Node.prototype.destroy = function () {
+        // detach from parent
+        Node.prototype.detach = function () {
             this.element.parentNode.removeChild(this.element);
+        };
+        
+        // (re)attach to parent
+        Node.prototype.attach = function () {
+            this.element.parentNode.appendChild(this.element);
+        };
+        
+        // delete and reset node and it's children
+        Node.prototype.destroy = function () {
+            this.parent().removeChild(this.element);
+            this.element = null;
         };
         
         // clone node instance and return
         Node.prototype.clone = function () {
             var clone = new Node(
-                this.type,
-                this.classes,
-                this.selector
+                this.settings.type,
+                this.getClasses(),
+                this.getId()
             );
             
             // nullify the new node element and clone this
@@ -896,7 +995,7 @@ define(
         'src/components/events',
         'src/components/http',
         'src/components/status',
-        './node'
+        'src/components/node'
     ],
     function (config, util, events, Http, status, Node) {
         
@@ -923,7 +1022,7 @@ define(
             this.node.element.style.display = "none";
             
             if (type) {
-                this.node.element.className += " kbs-" + type;
+                this.node.addClass("kbs-" + type);
             }
             
             this.onConfirm = params.confirm || function () {};
@@ -994,20 +1093,20 @@ define(
         
         // reveal modal and overlay
         Modal.prototype.open = function () {
-            gui.tree.main.overlay.element.style.display = "block";
-            this.node.element.style.display = "block";
+            gui.tree.main.overlay.show();
+            this.node.show();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
-            gui.tree.main.overlay.element.style.display = "none";
-            this.node.element.style.display = "none";
+            gui.tree.main.overlay.hide();
+            this.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
-            gui.tree.main.overlay.element.style.display = "none";
-            this.node.element.parentNode.removeChild(this.node.element);
+            gui.tree.main.overlay.hide();
+            this.node.destroy();
         };
 
         return Modal;
@@ -1030,7 +1129,7 @@ define(
         'src/components/status',
         'src/components/router',
         'src/components/cache',
-        'src/ui/node',
+        'src/components/node',
         'src/ui/modal'
     ],
     function (config, util, events,
@@ -1128,13 +1227,16 @@ define(
             // declarations
             var context = self.getContext("def"),
                 contextParent,
+                
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
+                
                 objwrap = new Node("pre", "kbs-object"),
                 objexp = new Node("i", "fa fa-" +
-                      config.gui.console.icons.expand +
+                      self.getIcon("expand") +
                       " kbs-object-expand"),
                 objtxt,
+                
                 doCreateContext = false,
                 i = 0;
             
@@ -1158,15 +1260,6 @@ define(
                         doCreateContext = args.context;
                     }
                 }
-            }
-            
-            // do we need to filter the context?
-            if (util.contains(
-                    context.className,
-                    "kbs-" + args.type,
-                    true
-                )) {
-                return;
             }
 
             // write message to log node
@@ -1209,7 +1302,7 @@ define(
             contextParent = context.parentNode.className;
             if (args.type === "test" &&
                     util.contains(contextParent, "kbs-exec")) {
-                log.element.className += " kbs-log-close";
+                log.addClass("kbs-log-close");
             }
 
             // write to context
@@ -1237,8 +1330,7 @@ define(
             icon = this.getIcon(tool);
             toolbar[tool] = toolbar.createChild(
                 "i",
-                "fa fa-" + icon + " kbs-tool " +
-                    "kbs-" + tool
+                "fa fa-" + icon + " kbs-tool kbs-" + tool
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
@@ -1252,25 +1344,15 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            var element = this.wrapper.element,
-                classes = element.className;
-
-            element.className = classes.replace(" kbs-close", " kbs-open");
+            this.wrapper.removeClass("kbs-close");
+            this.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
-            var element = this.wrapper.element,
-                classes = element.className;
-
-            element.className = classes.replace(" kbs-open", " kbs-close");
+            this.wrapper.removeClass("kbs-open");
+            this.wrapper.addClass("kbs-close");
         };
-        
-        // shrink console
-        Console.prototype.shrink = function () {};
-        
-        // make console fullscreen
-        Console.prototype.full = function () {};
         
         // refresh console
         Console.prototype.refresh = function () {
@@ -1341,11 +1423,14 @@ define(
                     title: modalTitle,
                     message: modalMsg,
                     confirm: function () {
-                        var parent = self.wrapper.element.parentNode,
+                        var parent = self.wrapper.parent(),
                             child = self.wrapper.element;
                         
                         // destroy console node
                         parent.removeChild(child);
+                        
+                        // set console status
+                        status.console = false;
                         
                         // clear the log buffer
                         cache.console.clearBuffer();
@@ -1386,26 +1471,24 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode("Kanban v" + config.version);
-            constitle.element.appendChild(titlenode);
+            constitle.addChild(titlenode);
             
             // toggle tool
             this.createTool("toggle")
                 .element.onclick = function () {
-                    var classes = wrapper.element.className,
-                        closed = classes.indexOf("kbs-close") !== -1,
-                        full = classes.indexOf("kbs-full") !== -1;
+                    var closed = wrapper.hasClass("kbs-close"),
+                        full = wrapper.hasClass("kbs-full");
 
                     // if not closed and not full screen
                     if (!closed && !full) {
                         // make full screen
-                        wrapper.element.className += " kbs-full";
+                        wrapper.addClass("kbs-full");
                     }
 
                     // if in full screen
                     if (full) {
                         // shrink
-                        wrapper.element.className =
-                            wrapper.element.className.replace(" kbs-full", "");
+                        wrapper.removeClass("kbs-full");
                     }
 
                     // if closed
@@ -1463,7 +1546,7 @@ define(
 
 /*global define: true */
 
-define('src/ui/gui',['require','config','src/util','src/components/events','src/interactor','./node','src/components/counter','./console','./modal'],function (require) {
+define('src/ui/gui',['require','config','src/util','src/components/events','src/interactor','src/components/node','src/components/counter','./console','./modal'],function (require) {
     
 
     // dependencies
@@ -1472,7 +1555,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
         util = require('src/util'),
         events = require('src/components/events'),
         interactor = require('src/interactor'),
-        Node = require('./node'),
+        Node = require('src/components/node'),
         Counter = require('src/components/counter'),
         Console = require('./console'),
         Modal = require('./modal'),
@@ -1623,7 +1706,7 @@ define('src/ui/gui',['require','config','src/util','src/components/events','src/
 
         // create nodes
         tree.main = main = new Node("div", "kbs-gui");
-        main.overlay = tree.main.createChild("div", "kbs-overlay");
+        main.overlay = main.createChild("div", "kbs-overlay");
 
         return tree;
     };

@@ -15,7 +15,7 @@ define(
         'src/components/status',
         'src/components/router',
         'src/components/cache',
-        'src/ui/node',
+        'src/components/node',
         'src/ui/modal'
     ],
     function (config, util, events,

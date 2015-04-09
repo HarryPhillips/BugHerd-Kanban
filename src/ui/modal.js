@@ -13,7 +13,7 @@ define(
         'src/components/events',
         'src/components/http',
         'src/components/status',
-        './node'
+        'src/components/node'
     ],
     function (config, util, events, Http, status, Node) {
         'use strict';
