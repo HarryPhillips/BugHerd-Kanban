@@ -11,8 +11,8 @@ define(['require', 'src/util'], function (require, util) {
     
     return {
         exec: function (test) {
-            util.log('context:test/' + test, 'exec', 'executing test: "' + test + '"...');
-            require([window.KBS_BASE_URL + 'test/' + test + '.test.js']);
+            util.log("context:test/" + test, "exec", "executing test: \"" + test + "\"...");
+            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
         }
     };
 });

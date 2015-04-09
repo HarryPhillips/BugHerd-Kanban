@@ -208,6 +208,8 @@
 /* individual log node */
 .kbs-log-node {
     padding: 6px;
+    font-weight: 300;
+    text-transform: initial;
     word-break: break-all;
     white-space: normal;
     overflow: hidden;
@@ -261,6 +263,11 @@
 
 .kbs-object-expand.kbs-rotate {
     top: 3px;
+}
+
+.kbs-exec {
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 /* togglable nodes */

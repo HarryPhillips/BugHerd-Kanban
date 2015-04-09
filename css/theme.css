@@ -157,7 +157,7 @@ body {
 /* console and output
 --------------------------------------------------------------------*/
 .kbs-cons {
-    background: #000;
+    background: #1a1a1a;
 }
 
 .kbs-object {
@@ -227,7 +227,8 @@ body {
 }
 
 .kbs-test:hover {
-    background-color: #aaa34C;
+    background-color: #1a1a1a;
+    color: #e8df68;
 }
 
 /* type: 'exec' */

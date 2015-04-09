@@ -95,12 +95,10 @@ define(
             
             if (util.isNode(element)) {
                 // use create proto of Node
-                logContext = element.createChild("div", "kbs-log-context");
-                logContext.element.id = context;
+                logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context");
-                logContext.element.id = context;
+                logContext = new Node("div", "kbs-log-context", context);
                 element.appendChild(logContext.element);
             }
             

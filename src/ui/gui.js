@@ -8,14 +8,6 @@
 
 /*global define: true */
 
-/*
-    TODO:
-    
-    - Add an array to Node class to store child nodes
-    - Add ability to remove child nodes
-    - Re-write to support the new node tree structure
-*/
-
 define(function (require) {
     'use strict';
 
