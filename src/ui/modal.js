@@ -40,7 +40,7 @@ define(
             this.node.element.style.display = "none";
             
             if (type) {
-                this.node.element.className += " kbs-" + type;
+                this.node.addClass("kbs-" + type);
             }
             
             this.onConfirm = params.confirm || function () {};
@@ -111,20 +111,20 @@ define(
         
         // reveal modal and overlay
         Modal.prototype.open = function () {
-            gui.tree.main.overlay.element.style.display = "block";
-            this.node.element.style.display = "block";
+            gui.tree.main.overlay.show();
+            this.node.show();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
-            gui.tree.main.overlay.element.style.display = "none";
-            this.node.element.style.display = "none";
+            gui.tree.main.overlay.hide();
+            this.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
-            gui.tree.main.overlay.element.style.display = "none";
-            this.node.element.parentNode.removeChild(this.node.element);
+            gui.tree.main.overlay.hide();
+            this.node.destroy();
         };
 
         return Modal;

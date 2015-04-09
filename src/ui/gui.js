@@ -168,7 +168,7 @@ define(function (require) {
 
         // create nodes
         tree.main = main = new Node("div", "kbs-gui");
-        main.overlay = tree.main.createChild("div", "kbs-overlay");
+        main.overlay = main.createChild("div", "kbs-overlay");
 
         return tree;
     };

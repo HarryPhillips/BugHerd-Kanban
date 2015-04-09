@@ -6,17 +6,24 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Add the ability to create a Node from a HTML Element
+*/
+
 define(
-    ['config'],
-    function () {
+    ['config', 'src/util'],
+    function (config, util) {
         'use strict';
         
         // node constructor
         function Node(type, classes, id) {
             // set props
-            this.type = type;
-            this.classes = classes;
-            this.selector = id;
+            this.settings = {
+                type: type,
+                classes: classes,
+                id: id
+            };
             
             // create element
             this.element = document.createElement(type);
@@ -26,7 +33,88 @@ define(
                 this.element.id = id;
             }
         }
+        
+        // show node
+        Node.prototype.show = function () {
+            this.element.style.display = "block";
+        };
+        
+        // hide node
+        Node.prototype.hide = function () {
+            this.element.style.display = "none";
+        };
+        
+        // get parent node
+        Node.prototype.parent = function () {
+            return this.element.parentNode;
+        };
+        
+        // return current element classes
+        Node.prototype.getClasses = function () {
+            return this.element.className;
+        };
+        
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
+        };
+        
+        // return if node has a class
+        Node.prototype.hasClass = function (name) {
+            return this.element.className.indexOf(name) !== -1;
+        };
+        
+        // add class(es) to node
+        Node.prototype.addClass = function (classes) {
+            if (this.element.className === "") {
+                // no previous classes
+                this.element.className = classes;
+            } else {
+                // add whitespace
+                this.element.className += " " + classes;
+            }
+        };
 
+        // remove class(es) from node
+        Node.prototype.removeClass = function (classes) {
+            // declarations
+            var curr = this.element.className,
+                newclass,
+                i,
+                
+                remove = function (name) {
+                    if (curr.indexOf(" " + name) !== -1) {
+                        newclass = curr.replace(" " + name, "");
+                    } else if (curr.indexOf(name + " ") !== -1) {
+                        newclass = curr.replace(name + " ", "");
+                    } else {
+                        newclass = curr.replace(name, "");
+                    }
+                };
+            
+            // check if array or single string
+            if (util.isArray(classes)) {
+                // preserve current classes
+                newclass = curr;
+                
+                // remove all classes
+                for (i = 0; i < classes.length; i += 1) {
+                    remove(classes[i]);
+                }
+            } else {
+                remove(classes);
+            }
+            
+            // set new classes
+            this.element.className = newclass;
+        };
+        
+        // set class(es) to node
+        // removes all other classes
+        Node.prototype.setClass = function (classes) {
+            this.element.className = classes;
+        };
+        
         // add a child to node
         Node.prototype.addChild = function (node) {
             // check if node is an instance of class Node
@@ -46,17 +134,28 @@ define(
             return node;
         };
         
-        // delete node and it's children
-        Node.prototype.destroy = function () {
+        // detach from parent
+        Node.prototype.detach = function () {
             this.element.parentNode.removeChild(this.element);
+        };
+        
+        // (re)attach to parent
+        Node.prototype.attach = function () {
+            this.element.parentNode.appendChild(this.element);
+        };
+        
+        // delete and reset node and it's children
+        Node.prototype.destroy = function () {
+            this.parent().removeChild(this.element);
+            this.element = null;
         };
         
         // clone node instance and return
         Node.prototype.clone = function () {
             var clone = new Node(
-                this.type,
-                this.classes,
-                this.selector
+                this.settings.type,
+                this.getClasses(),
+                this.getId()
             );
             
             // nullify the new node element and clone this

@@ -113,13 +113,16 @@ define(
             // declarations
             var context = self.getContext("def"),
                 contextParent,
+                
                 log = new Node("div", "kbs-log-node kbs-" + args.type),
                 txt = document.createTextNode(args.msg),
+                
                 objwrap = new Node("pre", "kbs-object"),
                 objexp = new Node("i", "fa fa-" +
-                      config.gui.console.icons.expand +
+                      self.getIcon("expand") +
                       " kbs-object-expand"),
                 objtxt,
+                
                 doCreateContext = false,
                 i = 0;
             
@@ -185,7 +188,7 @@ define(
             contextParent = context.parentNode.className;
             if (args.type === "test" &&
                     util.contains(contextParent, "kbs-exec")) {
-                log.element.className += " kbs-log-close";
+                log.addClass("kbs-log-close");
             }
 
             // write to context
@@ -213,8 +216,7 @@ define(
             icon = this.getIcon(tool);
             toolbar[tool] = toolbar.createChild(
                 "i",
-                "fa fa-" + icon + " kbs-tool " +
-                    "kbs-" + tool
+                "fa fa-" + icon + " kbs-tool kbs-" + tool
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
@@ -228,25 +230,15 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            var element = this.wrapper.element,
-                classes = element.className;
-
-            element.className = classes.replace(" kbs-close", " kbs-open");
+            this.wrapper.removeClass("kbs-close");
+            this.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
-            var element = this.wrapper.element,
-                classes = element.className;
-
-            element.className = classes.replace(" kbs-open", " kbs-close");
+            this.wrapper.removeClass("kbs-open");
+            this.wrapper.addClass("kbs-close");
         };
-        
-        // shrink console
-        Console.prototype.shrink = function () {};
-        
-        // make console fullscreen
-        Console.prototype.full = function () {};
         
         // refresh console
         Console.prototype.refresh = function () {
@@ -317,11 +309,14 @@ define(
                     title: modalTitle,
                     message: modalMsg,
                     confirm: function () {
-                        var parent = self.wrapper.element.parentNode,
+                        var parent = self.wrapper.parent(),
                             child = self.wrapper.element;
                         
                         // destroy console node
                         parent.removeChild(child);
+                        
+                        // set console status
+                        status.console = false;
                         
                         // clear the log buffer
                         cache.console.clearBuffer();
@@ -362,26 +357,24 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode("Kanban v" + config.version);
-            constitle.element.appendChild(titlenode);
+            constitle.addChild(titlenode);
             
             // toggle tool
             this.createTool("toggle")
                 .element.onclick = function () {
-                    var classes = wrapper.element.className,
-                        closed = classes.indexOf("kbs-close") !== -1,
-                        full = classes.indexOf("kbs-full") !== -1;
+                    var closed = wrapper.hasClass("kbs-close"),
+                        full = wrapper.hasClass("kbs-full");
 
                     // if not closed and not full screen
                     if (!closed && !full) {
                         // make full screen
-                        wrapper.element.className += " kbs-full";
+                        wrapper.addClass("kbs-full");
                     }
 
                     // if in full screen
                     if (full) {
                         // shrink
-                        wrapper.element.className =
-                            wrapper.element.className.replace(" kbs-full", "");
+                        wrapper.removeClass("kbs-full");
                     }
 
                     // if closed
