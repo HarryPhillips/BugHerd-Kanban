@@ -70,11 +70,20 @@ define(
         
         // get a logging context
         Console.prototype.getContext = function (context) {
+            if (!config.logs.contexts) {
+                return this.contexts.def;
+            }
+            
             return this.contexts[context];
         };
         
         // add a logging context
         Console.prototype.createContext = function (context, element) {
+            // return if disabled
+            if (!config.logs.contexts) {
+                return;
+            }
+            
             // declarations
             var logContext;
             
@@ -153,9 +162,9 @@ define(
                     
                     // check state
                     if (util.contains(
-                        parent.className,
-                        "kbs-expand"
-                    )) {
+                            parent.className,
+                            "kbs-expand"
+                        )) {
                         // shrink
                         parent.className =
                             parent.className.replace(" kbs-expand", "");

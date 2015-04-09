@@ -186,7 +186,10 @@ define(function (require) {
         // handle log node of type 'exec' clicks
         var out = this.console.wrapper.cons.out.element,
             current,
-            togglables = ["kbs-exec", "kbs-test"];
+            togglables;
+        
+        // set togglables based on context state
+        togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
         
         // bind a click handler to the console out
         out.onclick = function (event) {

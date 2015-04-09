@@ -10,11 +10,11 @@ define({
     appName: "kbs",
     version: 0.9,
     enabled: true,
-    mode: "prod",
+    mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,

@@ -92,6 +92,11 @@ define(
                 regex,
                 temp;
             
+            // make sure target is defined
+            if (typeof target === "undefined" || target === "") {
+                return false;
+            }
+            
             // checker function
             function chk(host, target) {
                 // if not strict - use indexOf to find substring
@@ -182,28 +187,45 @@ define(
                 type = context;
             }
             
-            // check context
-            if (typeof context === "string") {
-                if (context.indexOf(ctxFlag) !== -1) {
-                    // we have a valid context param
-                    if (util.log.currentContext !== false) {
-                        // we have an active context
-                        // create a subcontext
-                        subcontext = context.replace(ctxFlag, "");
-                        context = util.log.currentContext;
-                        args.shift();
+            // check and process context
+            if (config.logs.contexts) {
+                // contexts enabled
+                if (typeof context === "string") {
+                    if (context.indexOf(ctxFlag) !== -1) {
+                        // we have a valid context param
+                        if (util.log.currentContext !== false) {
+                            // we have an active context
+                            // create a subcontext
+                            subcontext = context.replace(ctxFlag, "");
+                            context = util.log.currentContext;
+                            args.shift();
+                        } else {
+                            // set new context
+                            context = context.replace(ctxFlag, "");
+                            args.shift();
+                        }
                     } else {
-                        // set new context
-                        context = context.replace(ctxFlag, "");
-                        args.shift();
+                        ctxArgsAdjust();
+                        context = util.log.currentContext;
                     }
                 } else {
                     ctxArgsAdjust();
                     context = util.log.currentContext;
                 }
             } else {
-                ctxArgsAdjust();
-                context = util.log.currentContext;
+                // check if we were passed a context
+                // remove it, shift and continue
+                if (context.indexOf(ctxFlag) !== -1) {
+                    // remove the context
+                    args.shift();
+                } else {
+                    // adjust if no context passed
+                    ctxArgsAdjust();
+                }
+                
+                // disabled contexts
+                context = false;
+                subcontext = false;
             }
             
             // check and process args
@@ -312,6 +334,11 @@ define(
         
         // begin a continuous logging context
         util.log.beginContext = function (context) {
+            // return if disabled
+            if (!config.logs.contexts) {
+                return;
+            }
+            
             if (context.indexOf(config.logs.contextFlag) !== -1) {
                 util.log("error", "You shouldn't pass the context flag " +
                                "when using beginContext()");

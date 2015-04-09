@@ -35,6 +35,7 @@ define(function (require) {
         } else {
             // no jquery, log error
             util.log(
+                "context:inter/init",
                 "error",
                 "Interactor could not initialise, jQuery not found!"
             );
