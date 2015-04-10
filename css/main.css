@@ -31,7 +31,7 @@
 .kbs-overlay {
     position: fixed;
     top: 0; bottom: 0; left: 0; right: 0;
-    z-index: 2147483646;
+    z-index: 2147483644;
     display: none;
 }
 
@@ -121,13 +121,13 @@
     position: fixed;
     top: 0; right: 0;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-    z-index: 2147483645;
+    z-index: 2147483646;
     overflow: hidden;
 }
 
 /* console status */
 .kbs-cons-box.kbs-open {
-    width: 50%; height: 50%;
+    width: 50%; height: 65%;
     min-width: 450px; min-height: 300px;
     border-top: 0;
     border-right: 0;
@@ -296,9 +296,20 @@
 /* kbs bugherd classes
 ------------------------------------------------------------------------------*/
 /* task details expand */
-.kbs-bh-expand {
+.kbs-details-expand {
     position: fixed;
-    top: 0; bottom: 0;
-    left: 0; right: 0;
+    top: 60px; bottom: 60px;
+    left: 60px; right: 60px;
     z-index: 2147483645;
+}
+
+.kbs-details-expand .taskDescription,
+.kbs-details-expand .taskDescriptionHolder {
+    position: relative !important;
+    left: 0; right: 0;
+    width: inherit !important;
+}
+
+.kbs-details-expand .taskDescription:focus {
+    width: 99% !important;
 }

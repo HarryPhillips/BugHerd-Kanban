@@ -8,6 +8,13 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Handle overlay status and events, for example if a modal is open/closed
+*     while a task is expanded, there either needs to be an additional overlay
+*     or the current overlay needs to be preserved.
+*/
+
 define(
     [
         'config',

@@ -8,6 +8,9 @@
 
 define({
     app: false,
+    interactor: {
+        taskDetailsExpanded: false
+    },
     gui: false,
     console: false
 });
