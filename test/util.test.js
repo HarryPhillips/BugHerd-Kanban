@@ -26,14 +26,57 @@ define(['src/util'], function (util) {
         
         f = util.zerofy;
         
-        util.log("context:test/util/zerofy",
-            "debug", "12-4: " + f(12, 4));
+        util.log(
+            "context:test/util/zerofy",
+            "debug",
+            "12-4: " + f(12, 4)
+        );
 
-        util.log("context:test/util/zerofy",
-            "debug", "123-2: " + f(123, 2));
+        util.log(
+            "context:test/util/zerofy",
+            "debug",
+            "123-2: " + f(123, 2)
+        );
         
-        util.log("context:test/util/zerofy",
-            "debug", "5-21: " + f(5, 21));
+        util.log(
+            "context:test/util/zerofy",
+            "debug",
+            "5-21: " + f(5, 21)
+        );
+    };
+    
+    // util.spacify tests
+    test.spacify = function () {
+        util.log(
+            "context:test/util/spacify",
+            "test",
+            "running 'util.spacify' tests..."
+        );
+        
+        var result;
+        
+        f = util.spacify;
+        
+        result = f("test", 6).replace(" ", " ");
+        util.log(
+            "context:test/util/spacify",
+            "debug",
+            "'test' - 6: " + result
+        );
+        
+        result = f("test", 2).replace(/\s/g, " ");
+        util.log(
+            "context:test/util/spacify",
+            "debug",
+            "'test' - 2: " + result
+        );
+        
+        result = f("test", 21).replace(/\s/g, " ");
+        util.log(
+            "context:test/util/spacify",
+            "debug",
+            "'test' - 21: " + result
+        );
     };
     
     // util.log tests
@@ -90,6 +133,7 @@ define(['src/util'], function (util) {
     
     // run tests
     test.zerofy();
+    test.spacify();
     test.log();
     
     // end our logging context
