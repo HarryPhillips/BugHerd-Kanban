@@ -49,6 +49,11 @@ define(
             return this.element.parentNode;
         };
         
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            this.element.setAttribute(name, value);
+        };
+        
         // return current element classes
         Node.prototype.getClasses = function () {
             return this.element.className;
