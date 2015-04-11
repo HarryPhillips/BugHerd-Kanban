@@ -75,6 +75,57 @@ define(
             return result;
         };
         
+        // cookie lib
+        util.cookie = {
+            // gets a cookie with name
+            get: function (name) {
+                var cname = "_" + config.appName + "-" + name + "=",
+                    ca = document.cookie.split(';'),
+                    i,
+                    c;
+
+                for (i = 0; i < ca.length; i += 1) {
+                    c = ca[i];
+
+                    while (c.charAt(0) === ' ') {
+                        c = c.substring(1);
+                    }
+
+                    if (c.indexOf(cname) === 0) {
+                        return c.substring(cname.length, c.length);
+                    }
+                }
+            
+                return "";
+            },
+            // sets a cookie with name, value and options expiry days
+            set: function (name, value, days) {
+                var expires, date;
+            
+                if (days) {
+                    date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toGMTString();
+                } else {
+                    expires = "";
+                }
+
+                // write cookie
+                document.cookie =
+                    "_" + config.appName + "-" + name +
+                    "=" + value + expires + "; path=/";
+            },
+            // deletes a cookie by name
+            del: function (name) {
+                util.cookie.set(name, "", -1);
+            },
+            // returns true if cookie exists
+            exists: function (name) {
+                var cookie = util.cookie.get(name);
+                return cookie !== "" && cookie !== null && cookie !== undefined;
+            }
+        };
+        
         // checks if obj is a Node
         util.isNode = function (obj) {
             return obj.constructor.name === "Node";
