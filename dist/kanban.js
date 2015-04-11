@@ -121,6 +121,9 @@ define('src/components/events',['config'], function (config) {
 
 define('src/components/status',{
     app: false,
+    interactor: {
+        taskDetailsExpanded: false
+    },
     gui: false,
     console: false
 });
@@ -297,6 +300,57 @@ define(
             result = result.replace(/\x08/g, '\\x08');
 
             return result;
+        };
+        
+        // cookie lib
+        util.cookie = {
+            // gets a cookie with name
+            get: function (name) {
+                var cname = "_" + config.appName + "-" + name + "=",
+                    ca = document.cookie.split(';'),
+                    i,
+                    c;
+
+                for (i = 0; i < ca.length; i += 1) {
+                    c = ca[i];
+
+                    while (c.charAt(0) === ' ') {
+                        c = c.substring(1);
+                    }
+
+                    if (c.indexOf(cname) === 0) {
+                        return c.substring(cname.length, c.length);
+                    }
+                }
+            
+                return "";
+            },
+            // sets a cookie with name, value and options expiry days
+            set: function (name, value, days) {
+                var expires, date;
+            
+                if (days) {
+                    date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toGMTString();
+                } else {
+                    expires = "";
+                }
+
+                // write cookie
+                document.cookie =
+                    "_" + config.appName + "-" + name +
+                    "=" + value + expires + "; path=/";
+            },
+            // deletes a cookie by name
+            del: function (name) {
+                util.cookie.set(name, "", -1);
+            },
+            // returns true if cookie exists
+            exists: function (name) {
+                var cookie = util.cookie.get(name);
+                return cookie !== "" && cookie !== null && cookie !== undefined;
+            }
         };
         
         // checks if obj is a Node
@@ -596,77 +650,187 @@ define(
 
 /*global define: true */
 
-define('src/interactor',['require','src/util'],function (require) {
-    
-    
-    // declarations
-    var
-        util = require('src/util'),
-    
-        // jquery pointer
-        $;
-    
-    // interactor constructor
-    function Interactor() {
-        util.log(
-            "context:inter/init",
-            "info",
-            "Initialising Interactor..."
-        );
-        this.init();
-    }
-    
-    // initialise the interactor
-    Interactor.prototype.init = function () {
-        // check jquery
-        if (typeof window.jQuery !== "undefined") {
-            // get
-            $ = window.jQuery;
-        } else {
-            // no jquery, log error
+define(
+    'src/interactor',[
+        'config',
+        'src/util',
+        'src/components/events',
+        'src/components/status'
+    ],
+    function (
+        config,
+        util,
+        events,
+        status
+    ) {
+        
+
+        // declarations
+        var $;
+
+        // interactor constructor
+        function Interactor() {
             util.log(
                 "context:inter/init",
-                "error",
-                "Interactor could not initialise, jQuery not found!"
+                "info",
+                "Initialising Interactor..."
             );
-            
-            // and exit interactor
-            return;
+            this.init();
         }
-        
-        // apply elements and styling
-        this.applyElements();
-        this.applyStyles();
-    };
-    
-    // append elements to bugherd ui
-    Interactor.prototype.applyElements = function () {
-        util.log(
-            "context:inter/init",
-            "debug",
-            "+ appending elements to bugherd"
-        );
-        
-        // write an 'expand task' button to main nav
-        $(".nav.main-nav").append(
-            "<li><a href='javascript:void(0)'>Expand Task</a></li>"
-        );
-    };
-    
-    // apply new styling to bugherd ui
-    Interactor.prototype.applyStyles = function () {
-        util.log(
-            "context:inter/init",
-            "debug",
-            "+ applying styles to bugherd"
-        );
-        
-        // add a margin to user nav to accompany console controls
-        $(".nav.user-menu").css("margin-right", "10px");
-    };
-    
-    return Interactor;
-});
+
+        // initialise the interactor
+        Interactor.prototype.init = function () {
+            // check jquery
+            if (typeof window.jQuery !== "undefined") {
+                // get
+                $ = window.jQuery;
+            } else {
+                // no jquery, log error
+                util.log(
+                    "context:inter/init",
+                    "error",
+                    "Interactor could not initialise, jQuery not found!"
+                );
+
+                // and exit interactor
+                return;
+            }
+
+            // apply elements and styling
+            this.applyElements();
+            this.applyStyles();
+        };
+
+        // expand the currently active task or a specified task id
+        Interactor.prototype.openTask = function (localId) {
+            // get global id of task number
+            var globalId = this.findGlobalId(localId || "");
+
+            // get task if specified
+            $("#task_" + globalId).trigger("click");
+
+            // expand task details
+            this.expandTaskDetails();
+        };
+
+        // close the currently expanded task
+        Interactor.prototype.closeTask = function () {
+            // shrink task details
+            this.shrinkTaskDetails();
+        };
+
+        // expands the task details panel
+        Interactor.prototype.expandTaskDetails = function () {
+            // check current status
+            if (status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            // show overlay
+            $(".kbs-overlay").show();
+            
+            // expand
+            $(".taskDetails").addClass("kbs-details-expand");
+            
+            // set status
+            status.interactor.taskDetailsExpanded = true;
+        };
+
+        // shrinks the task details panel
+        Interactor.prototype.shrinkTaskDetails = function () {
+            if (!status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            // hide overlay
+            $(".kbs-overlay").hide();
+            
+            // shrink
+            $(".taskDetails").removeClass("kbs-details-expand");
+            
+            // set status
+            status.interactor.taskDetailsExpanded = false;
+        };
+
+        // find a global task id from a local task id
+        Interactor.prototype.findGlobalId = function (localId) {
+            /*
+            *   TODO:
+            *   + Because this will only search currently displayed elements,
+            *     it would be a good idea to perform an entire task search and
+            *     check the elements that are returned for a global id
+            */
+            
+            // declarations
+            var child,
+                parent,
+                globalId;
+
+            // get current task id if none passed
+            if (typeof localId === "undefined") {
+                localId = $(".local_task_id")[0].textContent;
+            }
+
+            util.log("debug", "Finding global id for task #" + localId);
+
+            // get elements
+            child = $(".task-id:contains(" + localId + ")");
+            parent = child.parent();
+
+            // if couldn't find a .task-id
+            // try .taskID
+            if (child.length < 1) {
+                child = $(".taskID:contains(" + localId + ")");
+                parent = child.parent().parent();
+            }
+
+            // if still nothing return false
+            if (child.length < 1) {
+                util.log("error", "Couldn't find task #" + localId);
+                return false;
+            }
+
+            globalId = parent[0].id.replace("task_", "");
+
+            util.log(
+                "debug",
+                parent,
+                "Found parent element for task #" + localId +
+                    " and got global id #" + globalId
+            );
+
+            return globalId;
+        };
+
+        // append elements to bugherd ui
+        Interactor.prototype.applyElements = function () {
+            util.log(
+                "context:inter/init",
+                "debug",
+                "+ appending elements to bugherd"
+            );
+
+            // write an 'expand task' button to main nav
+            $(".nav.main-nav").append(
+                "<li><a href='javascript:void(0)'>Expand Task</a></li>"
+            );
+        };
+
+        // apply new styling to bugherd ui
+        Interactor.prototype.applyStyles = function () {
+            util.log(
+                "context:inter/init",
+                "debug",
+                "+ applying styles to bugherd"
+            );
+
+            // add a margin to user nav to accompany console controls
+            $(".nav.user-menu").css("margin-right", "10px");
+        };
+
+        return Interactor;
+    }
+);
 /*
 *   @type javascript
 *   @name counter.js
@@ -848,6 +1012,11 @@ define(
         // get parent node
         Node.prototype.parent = function () {
             return this.element.parentNode;
+        };
+        
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            this.element.setAttribute(name, value);
         };
         
         // return current element classes
@@ -1126,6 +1295,12 @@ define(
 */
 
 /*global define: true */
+
+/*
+*   TODO:
+*   + White space in log strings aren't formatting correctly when passed
+*     into a log / text node
+*/
 
 define(
     'src/ui/console',[
@@ -1560,6 +1735,13 @@ define(
 /*jslint devel: true */
 
 /*global define: true */
+
+/*
+*   TODO:
+*   + Handle overlay status and events, for example if a modal is open/closed
+*     while a task is expanded, there either needs to be an additional overlay
+*     or the current overlay needs to be preserved.
+*/
 
 define(
     'src/ui/gui',[
