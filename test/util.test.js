@@ -11,7 +11,8 @@ define(['src/util'], function (util) {
     
     // test object
     var test = {},
-        f;
+        f,
+        i;
     
     // begin test/util logging context
     util.log.beginContext('test/util');
@@ -132,9 +133,11 @@ define(['src/util'], function (util) {
     };
     
     // run tests
-    test.zerofy();
-    test.spacify();
-    test.log();
+    for (i in test) {
+        if (test.hasOwnProperty(i)) {
+            test[i]();
+        }
+    }
     
     // end our logging context
     util.log.endContext();

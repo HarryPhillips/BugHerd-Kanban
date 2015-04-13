@@ -84,7 +84,7 @@ define(
 
             // tests
             if (config.test) {
-                tests.exec(['util']);
+                tests.execAll();
             }
         };
 
