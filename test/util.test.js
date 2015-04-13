@@ -19,12 +19,7 @@ define(['src/util'], function (util) {
     
     // util.zerofy tests
     test.zerofy = function () {
-        util.log(
-            "context:test/util/zerofy",
-            "test",
-            "running 'util.zerofy' tests..."
-        );
-        
+        // set test function
         f = util.zerofy;
         
         util.log(
@@ -48,14 +43,9 @@ define(['src/util'], function (util) {
     
     // util.spacify tests
     test.spacify = function () {
-        util.log(
-            "context:test/util/spacify",
-            "test",
-            "running 'util.spacify' tests..."
-        );
-        
         var result;
         
+        // set test function
         f = util.spacify;
         
         result = f("test", 6).replace(" ", " ");
@@ -82,12 +72,7 @@ define(['src/util'], function (util) {
     
     // util.log tests
     test.log = function () {
-        util.log(
-            "context:test/util/log",
-            "test",
-            "running 'util.log' tests..."
-        );
-        
+        // set test function
         f = util.log;
         
         // undefined value
@@ -135,6 +120,11 @@ define(['src/util'], function (util) {
     // run tests
     for (i in test) {
         if (test.hasOwnProperty(i)) {
+            util.log(
+                "context:test/util/" + i,
+                "test",
+                "running 'util." + i + "' tests..."
+            );
             test[i]();
         }
     }
