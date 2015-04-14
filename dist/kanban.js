@@ -8,13 +8,13 @@
 
 define('config',{
     appName: "kbs",
-    version: 0.9,
+    version: "1.0.0",
     enabled: true,
     mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -293,11 +293,11 @@ define(
         // escapes regex meta characters from a string
         util.escapeRegEx = function (str) {
             var result;
-
-            result =
-                String(str).replace(/([\-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1');
-
-            result = result.replace(/\x08/g, '\\x08');
+            
+            // escape
+            result = String(str)
+                .replace(/([\-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1')
+                .replace(/\x08/g, '\\x08');
 
             return result;
         };
@@ -358,6 +358,19 @@ define(
             return obj.constructor.name === "Node";
         };
         
+        // checks if input is a dom element
+        util.isDomElement = function (obj) {
+            return (
+                (typeof window.HTMLElement === "object") ?
+                        obj instanceof window.HTMLElement :
+                        obj &&
+                            typeof obj === "object" &&
+                            obj !== null &&
+                            obj.nodeType === 1 &&
+                            typeof obj.nodeName === "string"
+            );
+        };
+        
         // checks if input is an array
         util.isArray = function (obj) {
             return obj instanceof Array || obj.constructor === "Array";
@@ -368,6 +381,7 @@ define(
             var i = 0,
                 occs = [],
                 regex,
+                chk,
                 temp;
             
             // make sure target and host are defined
@@ -382,7 +396,7 @@ define(
             }
             
             // checker function
-            function chk(host, target) {
+            chk = function (host, target) {
                 // if not strict - use indexOf to find substring
                 if (!strict) {
                     return host.indexOf(target) !== -1;
@@ -417,7 +431,7 @@ define(
                 }
 
                 return false;
-            }
+            };
 
             // default strict to false
             strict = strict || false;
@@ -435,6 +449,17 @@ define(
             }
             
             return false;
+        };
+        
+        // swap values in array at specified indexes
+        util.swap = function (array, i, j) {
+            // save array[i]
+            // so we can assign to array[j]
+            var tmp = array[i];
+            
+            // swap values
+            array[i] = array[j];
+            array[j] = tmp;
         };
 
         // log wrapper
@@ -644,6 +669,213 @@ define(
 
 /*
 *   @type javascript
+*   @name node.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+/*
+*   TODO:
+*   + Add the ability to create a Node from a HTML Element
+*/
+
+define(
+    'src/components/node',['config', 'src/util'],
+    function (config, util) {
+        
+        
+        // node constructor
+        function Node(type, classes, id) {
+            // check if passed an HTML node
+            if (typeof type.appendChild !== "undefined") {
+                this.element = type;
+            } else {
+                // set props
+                this.settings = {
+                    type: type,
+                    classes: classes,
+                    id: id
+                };
+
+                // create element
+                this.element = document.createElement(type);
+                this.element.className = classes || "";
+
+                if (id) {
+                    this.element.id = id;
+                }
+            }
+        }
+        
+        // show node
+        Node.prototype.show = function () {
+            this.element.style.display = "block";
+        };
+        
+        // hide node
+        Node.prototype.hide = function () {
+            this.element.style.display = "none";
+        };
+        
+        // get parent node
+        Node.prototype.parent = function () {
+            return this.element.parentNode;
+        };
+        
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            this.element.setAttribute(name, value);
+        };
+        
+        // return current element classes
+        Node.prototype.getClasses = function () {
+            return this.element.className;
+        };
+        
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
+        };
+        
+        // return if node has a class
+        Node.prototype.hasClass = function (name) {
+            return this.element.className.indexOf(name) !== -1;
+        };
+        
+        // add class(es) to node
+        Node.prototype.addClass = function (classes) {
+            if (this.element.className === "") {
+                // no previous classes
+                this.element.className = classes;
+            } else {
+                // add whitespace
+                this.element.className += " " + classes;
+            }
+        };
+
+        // remove class(es) from node
+        Node.prototype.removeClass = function (classes) {
+            // declarations
+            var curr = this.element.className,
+                newclass,
+                i,
+                
+                remove = function (name) {
+                    if (curr.indexOf(" " + name) !== -1) {
+                        newclass = curr.replace(" " + name, "");
+                    } else if (curr.indexOf(name + " ") !== -1) {
+                        newclass = curr.replace(name + " ", "");
+                    } else {
+                        newclass = curr.replace(name, "");
+                    }
+                };
+            
+            // check if array or single string
+            if (util.isArray(classes)) {
+                // preserve current classes
+                newclass = curr;
+                
+                // remove all classes
+                for (i = 0; i < classes.length; i += 1) {
+                    remove(classes[i]);
+                }
+            } else {
+                remove(classes);
+            }
+            
+            // set new classes
+            this.element.className = newclass;
+        };
+        
+        // set class(es) to node
+        // removes all other classes
+        Node.prototype.setClass = function (classes) {
+            this.element.className = classes;
+        };
+        
+        // add a child to node
+        Node.prototype.addChild = function (child) {
+            // check if node is an instance of class Node
+            if (child.constructor === Node || child instanceof Node) {
+                this.element.appendChild(child.element);
+                return;
+            }
+            
+            // just a HTML node, append
+            this.element.appendChild(child);
+        };
+
+        // create and add child to node
+        Node.prototype.createChild = function (type, classes, id) {
+            var child = new Node(type, classes, id);
+            this.addChild(child.element);
+            return child;
+        };
+        
+        // detach from parent
+        Node.prototype.detach = function () {
+            this.element.parentNode.removeChild(this.element);
+        };
+        
+        // (re)attach to parent
+        Node.prototype.attach = function () {
+            this.element.parentNode.appendChild(this.element);
+        };
+        
+        // delete and reset node and it's children
+        Node.prototype.destroy = function () {
+            this.parent().removeChild(this.element);
+            this.element = null;
+        };
+        
+        // clone node instance and return
+        Node.prototype.clone = function () {
+            var clone = new Node(
+                this.settings.type,
+                this.getClasses(),
+                this.getId()
+            );
+            
+            // nullify the new node element and clone this
+            clone.element = null;
+            clone.element = this.element.cloneNode();
+            
+            return clone;
+        };
+        
+        // write or return node text
+        Node.prototype.text = function (text) {
+            if (typeof text === "undefined") {
+                return this.element.textContent;
+            }
+            
+            text = document.createTextNode(text);
+            this.addChild(text);
+            return this;
+        };
+        
+        // Node event listeners
+        Node.prototype.on = function (event, listener) {
+            this.element.addEventListener(event, listener);
+            return this;
+        };
+        
+        // write node to specified element
+        // mostly used when function chaining node fn's
+        Node.prototype.writeTo = function (element) {
+            if (typeof element === "undefined") {
+                return;
+            }
+            
+            element.appendChild(this.element);
+        };
+        
+        return Node;
+    }
+);
+/*
+*   @type javascript
 *   @name interactor.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -655,18 +887,22 @@ define(
         'config',
         'src/util',
         'src/components/events',
-        'src/components/status'
+        'src/components/status',
+        'src/components/node'
     ],
     function (
         config,
         util,
         events,
-        status
+        status,
+        Node
     ) {
         
 
         // declarations
-        var $;
+        var $,
+            self,
+            inited = false;
 
         // interactor constructor
         function Interactor() {
@@ -675,11 +911,20 @@ define(
                 "info",
                 "Initialising Interactor..."
             );
+            
+            // set pointer
+            self = this;
+            
+            // initialise
             this.init();
         }
 
         // initialise the interactor
         Interactor.prototype.init = function () {
+            if (inited) {
+                return;
+            }
+            
             // check jquery
             if (typeof window.jQuery !== "undefined") {
                 // get
@@ -699,10 +944,17 @@ define(
             // apply elements and styling
             this.applyElements();
             this.applyStyles();
+            
+            inited = true;
         };
 
         // expand the currently active task or a specified task id
         Interactor.prototype.openTask = function (localId) {
+            if (typeof localId === "undefined") {
+                this.expandTaskDetails();
+                return;
+            }
+            
             // get global id of task number
             var globalId = this.findGlobalId(localId || "");
 
@@ -721,13 +973,18 @@ define(
 
         // expands the task details panel
         Interactor.prototype.expandTaskDetails = function () {
+            if (!$(".panelDetail").is(":visible")) {
+                return;
+            }
+            
             // check current status
             if (status.interactor.taskDetailsExpanded) {
                 return;
             }
             
-            // show overlay
-            $(".kbs-overlay").show();
+            // show elements
+            $(".kbs-overlay").fadeIn();
+            $(".kbs-details-close").fadeIn();
             
             // expand
             $(".taskDetails").addClass("kbs-details-expand");
@@ -742,8 +999,9 @@ define(
                 return;
             }
             
-            // hide overlay
-            $(".kbs-overlay").hide();
+            // hide elements
+            $(".kbs-overlay").fadeOut();
+            $(".kbs-details-close").fadeOut();
             
             // shrink
             $(".taskDetails").removeClass("kbs-details-expand");
@@ -754,15 +1012,9 @@ define(
 
         // find a global task id from a local task id
         Interactor.prototype.findGlobalId = function (localId) {
-            /*
-            *   TODO:
-            *   + Because this will only search currently displayed elements,
-            *     it would be a good idea to perform an entire task search and
-            *     check the elements that are returned for a global id
-            */
-            
             // declarations
-            var child,
+            var children,
+                child,
                 parent,
                 globalId;
 
@@ -774,7 +1026,22 @@ define(
             util.log("debug", "Finding global id for task #" + localId);
 
             // get elements
-            child = $(".task-id:contains(" + localId + ")");
+            children = $(".task-id");
+            
+            // find the right task
+            children.each(function (index) {
+                if ($(this)[0].textContent === localId.toString()) {
+                    child = $(this);
+                }
+            });
+            
+            // check if child was found
+            if (typeof child === "undefined") {
+                throw new Error("No task found with id: '" +
+                                localId +
+                                "'!");
+            }
+            
             parent = child.parent();
 
             // if couldn't find a .task-id
@@ -804,16 +1071,36 @@ define(
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
+            // declarations
+            var taskExpander,
+                taskContractor;
+            
             util.log(
                 "context:inter/init",
                 "debug",
                 "+ appending elements to bugherd"
             );
 
-            // write an 'expand task' button to main nav
-            $(".nav.main-nav").append(
-                "<li><a href='javascript:void(0)'>Expand Task</a></li>"
-            );
+            // task expander list element
+            taskExpander = new Node("li");
+            
+            // task expander anchor element
+            taskExpander.createChild("a")
+                .text("Expand Task")
+                .on("click", function (event) {
+                    self.openTask();
+                });
+            
+            // task contractor/close button
+            taskContractor = new Node("div", "kbs-details-close");
+            taskContractor.createChild("i", "fa fa-times");
+            taskContractor.on("click", function (event) {
+                self.closeTask();
+            });
+            
+            // write
+            taskExpander.writeTo($(".nav.main-nav")[0]);
+            taskContractor.writeTo($(".panelDetail")[0]);
         };
 
         // apply new styling to bugherd ui
@@ -961,181 +1248,6 @@ define(
         };
 
         return Http;
-    }
-);
-/*
-*   @type javascript
-*   @name node.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-/*
-*   TODO:
-*   + Add the ability to create a Node from a HTML Element
-*/
-
-define(
-    'src/components/node',['config', 'src/util'],
-    function (config, util) {
-        
-        
-        // node constructor
-        function Node(type, classes, id) {
-            // set props
-            this.settings = {
-                type: type,
-                classes: classes,
-                id: id
-            };
-            
-            // create element
-            this.element = document.createElement(type);
-            this.element.className = classes || "";
-            
-            if (id) {
-                this.element.id = id;
-            }
-        }
-        
-        // show node
-        Node.prototype.show = function () {
-            this.element.style.display = "block";
-        };
-        
-        // hide node
-        Node.prototype.hide = function () {
-            this.element.style.display = "none";
-        };
-        
-        // get parent node
-        Node.prototype.parent = function () {
-            return this.element.parentNode;
-        };
-        
-        // set attribute to node
-        Node.prototype.attr = function (name, value) {
-            this.element.setAttribute(name, value);
-        };
-        
-        // return current element classes
-        Node.prototype.getClasses = function () {
-            return this.element.className;
-        };
-        
-        // return current element id
-        Node.prototype.getId = function () {
-            return this.element.id;
-        };
-        
-        // return if node has a class
-        Node.prototype.hasClass = function (name) {
-            return this.element.className.indexOf(name) !== -1;
-        };
-        
-        // add class(es) to node
-        Node.prototype.addClass = function (classes) {
-            if (this.element.className === "") {
-                // no previous classes
-                this.element.className = classes;
-            } else {
-                // add whitespace
-                this.element.className += " " + classes;
-            }
-        };
-
-        // remove class(es) from node
-        Node.prototype.removeClass = function (classes) {
-            // declarations
-            var curr = this.element.className,
-                newclass,
-                i,
-                
-                remove = function (name) {
-                    if (curr.indexOf(" " + name) !== -1) {
-                        newclass = curr.replace(" " + name, "");
-                    } else if (curr.indexOf(name + " ") !== -1) {
-                        newclass = curr.replace(name + " ", "");
-                    } else {
-                        newclass = curr.replace(name, "");
-                    }
-                };
-            
-            // check if array or single string
-            if (util.isArray(classes)) {
-                // preserve current classes
-                newclass = curr;
-                
-                // remove all classes
-                for (i = 0; i < classes.length; i += 1) {
-                    remove(classes[i]);
-                }
-            } else {
-                remove(classes);
-            }
-            
-            // set new classes
-            this.element.className = newclass;
-        };
-        
-        // set class(es) to node
-        // removes all other classes
-        Node.prototype.setClass = function (classes) {
-            this.element.className = classes;
-        };
-        
-        // add a child to node
-        Node.prototype.addChild = function (node) {
-            // check if node is an instance of class Node
-            if (node.constructor === Node || node instanceof Node) {
-                this.element.appendChild(node.element);
-                return;
-            }
-            
-            // just a HTML node, append
-            this.element.appendChild(node);
-        };
-
-        // create and add child to node
-        Node.prototype.createChild = function (type, classes, id) {
-            var node = new Node(type, classes, id);
-            this.addChild(node.element);
-            return node;
-        };
-        
-        // detach from parent
-        Node.prototype.detach = function () {
-            this.element.parentNode.removeChild(this.element);
-        };
-        
-        // (re)attach to parent
-        Node.prototype.attach = function () {
-            this.element.parentNode.appendChild(this.element);
-        };
-        
-        // delete and reset node and it's children
-        Node.prototype.destroy = function () {
-            this.parent().removeChild(this.element);
-            this.element = null;
-        };
-        
-        // clone node instance and return
-        Node.prototype.clone = function () {
-            var clone = new Node(
-                this.settings.type,
-                this.getClasses(),
-                this.getId()
-            );
-            
-            // nullify the new node element and clone this
-            clone.element = null;
-            clone.element = this.element.cloneNode();
-            
-            return clone;
-        };
-        
-        return Node;
     }
 );
 /*
@@ -1830,10 +1942,6 @@ define(
                     // run event listeners
                     self.runEventListeners();
                     util.log("context:gui/init", "debug", "+ running event listeners");
-
-                    // gui is always last to load - publish loaded event
-                    util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
-                    events.publish("kbs/loaded");
                 };
 
             // events setup
@@ -2003,16 +2111,54 @@ define(
 
 /*global define: true */
 
-define('test/main.test',['require', 'src/util'], function (require, util) {
-    
-    
-    return {
-        exec: function (test) {
-            util.log("context:test/" + test, "exec", "executing test: \"" + test + "\"...");
-            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
+define(
+    'test/main.test',[
+        'require',
+        'src/util'
+    ],
+    function (require, util) {
+        
+
+        // instance pointer
+        var self;
+
+        // test controller constructor
+        function TestController() {
+            // modules
+            this.modules = [
+                "util",
+                "components/events"
+            ];
         }
-    };
-});
+
+        // executes a test
+        TestController.prototype.exec = function (test) {
+            // log
+            util.log(
+                "context:test/" + test,
+                "exec",
+                "executing test: \"" + test + "\"..."
+            );
+
+            // run
+            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
+        };
+
+        // executes all tests in the configured modules array
+        TestController.prototype.execAll = function () {
+            // declarations
+            var len = this.modules.length,
+                i = 0;
+
+            // execute all
+            for (i; i < len; i += 1) {
+                this.exec(this.modules[i]);
+            }
+        };
+
+        return new TestController();
+    }
+);
 /*
 *   @type javascript
 *   @name main.js
@@ -2099,7 +2245,7 @@ define(
 
             // tests
             if (config.test) {
-                tests.exec(['util']);
+                tests.execAll();
             }
         };
 
@@ -2119,10 +2265,9 @@ define(
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", end);
 
-        // if gui is disabled - publish the load event
-        if (!config.gui.enabled) {
-            events.publish("kbs/loaded");
-        }
+        // publish the load event
+        util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
+        events.publish("kbs/loaded");
     }
 );
 
@@ -2136,7 +2281,7 @@ define(
 if (!window.KBS_GLOBAL_SET) {
     var KBS_GLOBAL_SET = true,
         
-        KBS_START_TIME = new Date().getTime(),
+        KBS_START_TIME,
         KBS_DELTA_TIME,
 
         KBS_BASE_URL = "http://localhost/GitHub/";
@@ -2154,7 +2299,18 @@ if (!window.KBS_GLOBAL_SET) {
         }
     });
     
-    require(['src/main']);
+    // launch when doc is ready
+    if (document.readyState === "complete") {
+        window.KBS_START_TIME = new Date().getTime();
+        require(['src/main']);
+    } else {
+        document.onreadystatechange = function () {
+            if (this.readyState === "complete") {
+                window.KBS_START_TIME = new Date().getTime();
+                require(['src/main']);
+            }
+        };
+    }
 }(window));
 define("kanban", function(){});
 

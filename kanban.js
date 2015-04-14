@@ -8,7 +8,7 @@
 if (!window.KBS_GLOBAL_SET) {
     var KBS_GLOBAL_SET = true,
         
-        KBS_START_TIME = new Date().getTime(),
+        KBS_START_TIME,
         KBS_DELTA_TIME,
 
         KBS_BASE_URL = "http://localhost/GitHub/";
@@ -26,5 +26,16 @@ if (!window.KBS_GLOBAL_SET) {
         }
     });
     
-    require(['src/main']);
+    // launch when doc is ready
+    if (document.readyState === "complete") {
+        window.KBS_START_TIME = new Date().getTime();
+        require(['src/main']);
+    } else {
+        document.onreadystatechange = function () {
+            if (this.readyState === "complete") {
+                window.KBS_START_TIME = new Date().getTime();
+                require(['src/main']);
+            }
+        };
+    }
 }(window));

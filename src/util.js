@@ -66,11 +66,11 @@ define(
         // escapes regex meta characters from a string
         util.escapeRegEx = function (str) {
             var result;
-
-            result =
-                String(str).replace(/([\-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1');
-
-            result = result.replace(/\x08/g, '\\x08');
+            
+            // escape
+            result = String(str)
+                .replace(/([\-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1')
+                .replace(/\x08/g, '\\x08');
 
             return result;
         };
@@ -131,6 +131,19 @@ define(
             return obj.constructor.name === "Node";
         };
         
+        // checks if input is a dom element
+        util.isDomElement = function (obj) {
+            return (
+                (typeof window.HTMLElement === "object") ?
+                        obj instanceof window.HTMLElement :
+                        obj &&
+                            typeof obj === "object" &&
+                            obj !== null &&
+                            obj.nodeType === 1 &&
+                            typeof obj.nodeName === "string"
+            );
+        };
+        
         // checks if input is an array
         util.isArray = function (obj) {
             return obj instanceof Array || obj.constructor === "Array";
@@ -141,6 +154,7 @@ define(
             var i = 0,
                 occs = [],
                 regex,
+                chk,
                 temp;
             
             // make sure target and host are defined
@@ -155,7 +169,7 @@ define(
             }
             
             // checker function
-            function chk(host, target) {
+            chk = function (host, target) {
                 // if not strict - use indexOf to find substring
                 if (!strict) {
                     return host.indexOf(target) !== -1;
@@ -190,7 +204,7 @@ define(
                 }
 
                 return false;
-            }
+            };
 
             // default strict to false
             strict = strict || false;
@@ -208,6 +222,17 @@ define(
             }
             
             return false;
+        };
+        
+        // swap values in array at specified indexes
+        util.swap = function (array, i, j) {
+            // save array[i]
+            // so we can assign to array[j]
+            var tmp = array[i];
+            
+            // swap values
+            array[i] = array[j];
+            array[j] = tmp;
         };
 
         // log wrapper

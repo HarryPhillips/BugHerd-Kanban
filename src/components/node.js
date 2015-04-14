@@ -18,19 +18,24 @@ define(
         
         // node constructor
         function Node(type, classes, id) {
-            // set props
-            this.settings = {
-                type: type,
-                classes: classes,
-                id: id
-            };
-            
-            // create element
-            this.element = document.createElement(type);
-            this.element.className = classes || "";
-            
-            if (id) {
-                this.element.id = id;
+            // check if passed an HTML node
+            if (typeof type.appendChild !== "undefined") {
+                this.element = type;
+            } else {
+                // set props
+                this.settings = {
+                    type: type,
+                    classes: classes,
+                    id: id
+                };
+
+                // create element
+                this.element = document.createElement(type);
+                this.element.className = classes || "";
+
+                if (id) {
+                    this.element.id = id;
+                }
             }
         }
         
@@ -121,22 +126,22 @@ define(
         };
         
         // add a child to node
-        Node.prototype.addChild = function (node) {
+        Node.prototype.addChild = function (child) {
             // check if node is an instance of class Node
-            if (node.constructor === Node || node instanceof Node) {
-                this.element.appendChild(node.element);
+            if (child.constructor === Node || child instanceof Node) {
+                this.element.appendChild(child.element);
                 return;
             }
             
             // just a HTML node, append
-            this.element.appendChild(node);
+            this.element.appendChild(child);
         };
 
         // create and add child to node
         Node.prototype.createChild = function (type, classes, id) {
-            var node = new Node(type, classes, id);
-            this.addChild(node.element);
-            return node;
+            var child = new Node(type, classes, id);
+            this.addChild(child.element);
+            return child;
         };
         
         // detach from parent
@@ -168,6 +173,33 @@ define(
             clone.element = this.element.cloneNode();
             
             return clone;
+        };
+        
+        // write or return node text
+        Node.prototype.text = function (text) {
+            if (typeof text === "undefined") {
+                return this.element.textContent;
+            }
+            
+            text = document.createTextNode(text);
+            this.addChild(text);
+            return this;
+        };
+        
+        // Node event listeners
+        Node.prototype.on = function (event, listener) {
+            this.element.addEventListener(event, listener);
+            return this;
+        };
+        
+        // write node to specified element
+        // mostly used when function chaining node fn's
+        Node.prototype.writeTo = function (element) {
+            if (typeof element === "undefined") {
+                return;
+            }
+            
+            element.appendChild(this.element);
         };
         
         return Node;

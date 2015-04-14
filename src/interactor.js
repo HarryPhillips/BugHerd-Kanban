@@ -11,18 +11,22 @@ define(
         'config',
         'src/util',
         'src/components/events',
-        'src/components/status'
+        'src/components/status',
+        'src/components/node'
     ],
     function (
         config,
         util,
         events,
-        status
+        status,
+        Node
     ) {
         'use strict';
 
         // declarations
-        var $;
+        var $,
+            self,
+            inited = false;
 
         // interactor constructor
         function Interactor() {
@@ -31,11 +35,20 @@ define(
                 "info",
                 "Initialising Interactor..."
             );
+            
+            // set pointer
+            self = this;
+            
+            // initialise
             this.init();
         }
 
         // initialise the interactor
         Interactor.prototype.init = function () {
+            if (inited) {
+                return;
+            }
+            
             // check jquery
             if (typeof window.jQuery !== "undefined") {
                 // get
@@ -55,10 +68,17 @@ define(
             // apply elements and styling
             this.applyElements();
             this.applyStyles();
+            
+            inited = true;
         };
 
         // expand the currently active task or a specified task id
         Interactor.prototype.openTask = function (localId) {
+            if (typeof localId === "undefined") {
+                this.expandTaskDetails();
+                return;
+            }
+            
             // get global id of task number
             var globalId = this.findGlobalId(localId || "");
 
@@ -77,13 +97,18 @@ define(
 
         // expands the task details panel
         Interactor.prototype.expandTaskDetails = function () {
+            if (!$(".panelDetail").is(":visible")) {
+                return;
+            }
+            
             // check current status
             if (status.interactor.taskDetailsExpanded) {
                 return;
             }
             
-            // show overlay
-            $(".kbs-overlay").show();
+            // show elements
+            $(".kbs-overlay").fadeIn();
+            $(".kbs-details-close").fadeIn();
             
             // expand
             $(".taskDetails").addClass("kbs-details-expand");
@@ -98,8 +123,9 @@ define(
                 return;
             }
             
-            // hide overlay
-            $(".kbs-overlay").hide();
+            // hide elements
+            $(".kbs-overlay").fadeOut();
+            $(".kbs-details-close").fadeOut();
             
             // shrink
             $(".taskDetails").removeClass("kbs-details-expand");
@@ -110,15 +136,9 @@ define(
 
         // find a global task id from a local task id
         Interactor.prototype.findGlobalId = function (localId) {
-            /*
-            *   TODO:
-            *   + Because this will only search currently displayed elements,
-            *     it would be a good idea to perform an entire task search and
-            *     check the elements that are returned for a global id
-            */
-            
             // declarations
-            var child,
+            var children,
+                child,
                 parent,
                 globalId;
 
@@ -130,7 +150,22 @@ define(
             util.log("debug", "Finding global id for task #" + localId);
 
             // get elements
-            child = $(".task-id:contains(" + localId + ")");
+            children = $(".task-id");
+            
+            // find the right task
+            children.each(function (index) {
+                if ($(this)[0].textContent === localId.toString()) {
+                    child = $(this);
+                }
+            });
+            
+            // check if child was found
+            if (typeof child === "undefined") {
+                throw new Error("No task found with id: '" +
+                                localId +
+                                "'!");
+            }
+            
             parent = child.parent();
 
             // if couldn't find a .task-id
@@ -160,16 +195,36 @@ define(
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
+            // declarations
+            var taskExpander,
+                taskContractor;
+            
             util.log(
                 "context:inter/init",
                 "debug",
                 "+ appending elements to bugherd"
             );
 
-            // write an 'expand task' button to main nav
-            $(".nav.main-nav").append(
-                "<li><a href='javascript:void(0)'>Expand Task</a></li>"
-            );
+            // task expander list element
+            taskExpander = new Node("li");
+            
+            // task expander anchor element
+            taskExpander.createChild("a")
+                .text("Expand Task")
+                .on("click", function (event) {
+                    self.openTask();
+                });
+            
+            // task contractor/close button
+            taskContractor = new Node("div", "kbs-details-close");
+            taskContractor.createChild("i", "fa fa-times");
+            taskContractor.on("click", function (event) {
+                self.closeTask();
+            });
+            
+            // write
+            taskExpander.writeTo($(".nav.main-nav")[0]);
+            taskContractor.writeTo($(".panelDetail")[0]);
         };
 
         // apply new styling to bugherd ui

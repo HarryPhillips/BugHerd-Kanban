@@ -102,10 +102,6 @@ define(
                     // run event listeners
                     self.runEventListeners();
                     util.log("context:gui/init", "debug", "+ running event listeners");
-
-                    // gui is always last to load - publish loaded event
-                    util.log("context:gui/init", "debug", "+ publishing 'kbs/loaded'");
-                    events.publish("kbs/loaded");
                 };
 
             // events setup

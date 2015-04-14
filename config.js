@@ -8,13 +8,13 @@
 
 define({
     appName: "kbs",
-    version: 0.9,
+    version: "1.0.0",
     enabled: true,
     mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -27,7 +27,7 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
