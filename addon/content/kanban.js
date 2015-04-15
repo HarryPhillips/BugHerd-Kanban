@@ -4,7 +4,7 @@
 // @description BugHerd Kanban extensions and improvements
 // @include     http://www.bugherd.com/*
 // @include     https://www.bugherd.com/*
-// @version     1.0.1
+// @version     1.0.0
 // @grant       none
 // ==/UserScript==
 

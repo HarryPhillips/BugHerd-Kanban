@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+    <Description about="urn:mozilla:install-manifest">
+        <em:id>{d0f3b4b9-5d41-48bd-b193-f8f4da98109c}</em:id>
+        <em:name>Kanban</em:name>
+        <em:version>1.0.1</em:version>
+        <em:description>BugHerd Kanban extensions and improvements</em:description>
+        <em:creator>Harry Phillips</em:creator>
+        <em:homepageURL>https://github.com/HarryPhillips/Kanban</em:homepageURL>
+        <em:targetApplication>
+            <Description>
+                <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+                <em:minVersion>2.0</em:minVersion>
+                <em:maxVersion>19.*</em:maxVersion>
+            </Description>
+        </em:targetApplication>
+    </Description>    
+</RDF>

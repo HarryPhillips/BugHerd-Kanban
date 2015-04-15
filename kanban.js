@@ -6,12 +6,12 @@
 
 // check if globals are set
 if (!window.KBS_GLOBAL_SET) {
-    var KBS_GLOBAL_SET = true,
-        
-        KBS_START_TIME,
-        KBS_DELTA_TIME,
-
-        KBS_BASE_URL = "http://localhost/GitHub/";
+    // set globals
+    window.KBS_GLOBAL_SET = true;
+    window.KBS_START_TIME = new Date().getTime();
+    window.KBS_DELTA_TIME = "";
+    window.KBS_SERVER = "http://localhost";
+    window.KBS_BASE_URL = window.KBS_SERVER + "/GitHub/Kanban/";
 }
 
 (function (window) {
@@ -21,8 +21,8 @@ if (!window.KBS_GLOBAL_SET) {
     
     require.config({
         paths: {
-            src: KBS_BASE_URL + "src",
-            test: KBS_BASE_URL + "test"
+            src: window.KBS_BASE_URL + "src",
+            test: window.KBS_BASE_URL + "test"
         }
     });
     

@@ -383,3 +383,10 @@
     }
 }
 
+@media (max-width:804px) {
+    /* remove integrations control link */
+    .nav.main-nav li:nth-child(3),
+    .nav.main-nav li:nth-child(4){
+        display: none;
+    }
+}

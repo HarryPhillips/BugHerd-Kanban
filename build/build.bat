@@ -7,7 +7,13 @@ echo Compilation complete.
 echo.
 
 echo Building minified Kanban...
-START /WAIT "BUILDING_MIN" r.js.cmd -o config/build-minified.js
+START /WAIT "BUILDING MINIFIED" r.js.cmd -o config/build-minified.js
+echo Compilation complete.
+
+echo.
+
+echo Building Firefox Addon archive...
+START /WAIT "BUILDING ARCHIVE" 7z.exe a -tzip ../dist/kanban.xpi ../addon/* 
 echo Compilation complete.
 
 echo.
