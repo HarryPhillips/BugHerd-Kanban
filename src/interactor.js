@@ -224,7 +224,7 @@ define(
             
             // write
             taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($(".panelDetail")[0]);
+            taskContractor.writeTo($("body")[0]);
         };
 
         // apply new styling to bugherd ui

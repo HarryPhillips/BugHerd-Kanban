@@ -1,5 +1,5 @@
 function kanban_PrefManager() {
-	var startPoint="kanban.";
+	var startPoint="extensions.kanban.";
 
 	var pref=Components.classes["@mozilla.org/preferences-service;1"].
 		getService(Components.interfaces.nsIPrefService).

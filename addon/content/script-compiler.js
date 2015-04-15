@@ -55,8 +55,12 @@ contentLoad: function(e) {
 		&& ( /^http:\/\/www\.bugherd\.com\/.*$/i.test(href) || /^https:\/\/www\.bugherd\.com\/.*$/i.test(href) )
 		&& true
 	) {
+        var pref=Components.classes["@mozilla.org/preferences-service;1"].
+            getService(Components.interfaces.nsIPrefService).
+            getBranch("extensions.kanban.");
+
 		var script=kanban_gmCompiler.getUrlContents(
-			'chrome://kanban/content/kanban.js'
+			pref.getCharPref("baseUrl")+'userscript.js'
 		);
 		kanban_gmCompiler.injectScript(script, href, unsafeWin);
 	}
@@ -69,6 +73,7 @@ injectScript: function(script, url, unsafeContentWin) {
 	sandbox=new Components.utils.Sandbox(safeWin);
 
 	var storage=new kanban_ScriptStorage();
+    
 	xmlhttpRequester=new kanban_xmlhttpRequester(
 		unsafeContentWin, window//appSvc.hiddenDOMWindow
 	);
@@ -96,11 +101,22 @@ injectScript: function(script, url, unsafeContentWin) {
 
 	sandbox.__proto__=sandbox.window;
 
+    var pref=Components.classes["@mozilla.org/preferences-service;1"].
+            getService(Components.interfaces.nsIPrefService).
+            getBranch("extensions.kanban.");
+    
 	try {
+        // run userscript
 		this.evalInSandbox(
-			"(function(){"+script+"})()",
+			"(function(){" +
+                "(function () {" +
+                "   var prefUrl = '"+pref.getCharPref("baseUrl")+"';" +
+                    script +
+                "}());" +
+            "})()",
 			url,
-			sandbox);
+			sandbox
+        );
 	} catch (e) {
 		var e2=new Error(typeof e=="string" ? e : e.message);
 		e2.fileName=script.filename;
@@ -240,6 +256,10 @@ kanban_ScriptStorage.prototype.getValue = function(name, defVal) {
 	return this.prefMan.getValue(name, defVal);
 }
 
+// add preference props to window
+window.KBS_TEST_URL = new kanban_ScriptStorage().getValue("baseUrl", "NONE");
+window.KBS_TEST_URL2 = "EXISTS!";
 
+// add initialisers
 window.addEventListener('load', kanban_gmCompiler.onLoad, false);
 window.addEventListener('unload', kanban_gmCompiler.onUnLoad, false);

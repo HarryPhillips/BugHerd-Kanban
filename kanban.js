@@ -4,18 +4,15 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-// check if globals are set
-if (!window.KBS_GLOBAL_SET) {
+(function (window) {
+    'use strict';
+    
     // set globals
     window.KBS_GLOBAL_SET = true;
     window.KBS_START_TIME = new Date().getTime();
     window.KBS_DELTA_TIME = "";
     window.KBS_SERVER = "http://localhost";
     window.KBS_BASE_URL = window.KBS_SERVER + "/GitHub/Kanban/";
-}
-
-(function (window) {
-    'use strict';
     
     var require = window.require;
     

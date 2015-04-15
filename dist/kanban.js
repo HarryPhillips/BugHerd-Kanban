@@ -8,7 +8,7 @@
 
 define('config',{
     appName: "kbs",
-    version: "1.0.0",
+    version: "1.0.1",
     enabled: true,
     mode: "dev",
 //    offline: true,
@@ -1100,7 +1100,7 @@ define(
             
             // write
             taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($(".panelDetail")[0]);
+            taskContractor.writeTo($("body")[0]);
         };
 
         // apply new styling to bugherd ui
@@ -2276,18 +2276,15 @@ define(
 *   @copy Copyright 2015 Harry Phillips
 */
 
-// check if globals are set
-if (!window.KBS_GLOBAL_SET) {
+(function (window) {
+    
+    
     // set globals
     window.KBS_GLOBAL_SET = true;
     window.KBS_START_TIME = new Date().getTime();
     window.KBS_DELTA_TIME = "";
     window.KBS_SERVER = "http://localhost";
     window.KBS_BASE_URL = window.KBS_SERVER + "/GitHub/Kanban/";
-}
-
-(function (window) {
-    
     
     var require = window.require;
     

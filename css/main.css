@@ -389,4 +389,9 @@
     .nav.main-nav li:nth-child(4){
         display: none;
     }
+    
+    /* remove new task button */
+    #header .pane-right  {
+        display: none;
+    }
 }
