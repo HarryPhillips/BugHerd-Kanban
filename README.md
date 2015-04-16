@@ -13,6 +13,8 @@ scripts and inject them into the page.
 Using the raw GitHub links may be slower but it means you always get the latest
 updates automatically and all you need to do is install Kanban.xpi to Firefox.
 
+Head over to releases to download the latest version of the extension.
+
 ### Notice:
 Kanban will automatically access the source code via this url:
 
