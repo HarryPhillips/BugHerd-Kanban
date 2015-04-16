@@ -55,12 +55,16 @@ contentLoad: function(e) {
 		&& ( /^http:\/\/www\.bugherd\.com\/.*$/i.test(href) || /^https:\/\/www\.bugherd\.com\/.*$/i.test(href) )
 		&& true
 	) {
-        var pref=Components.classes["@mozilla.org/preferences-service;1"].
+        // preferences
+    var pref=Components.classes["@mozilla.org/preferences-service;1"].
             getService(Components.interfaces.nsIPrefService).
             getBranch("extensions.kanban.");
+    
+    // get url pref or default
+    var baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl"):"https://rawgit.com/HarryPhillips/Kanban/master/";
 
 		var script=kanban_gmCompiler.getUrlContents(
-			pref.getCharPref("baseUrl")+'userscript.js'
+			baseUrl+'userscript.js'
 		);
 		kanban_gmCompiler.injectScript(script, href, unsafeWin);
 	}
@@ -101,16 +105,20 @@ injectScript: function(script, url, unsafeContentWin) {
 
 	sandbox.__proto__=sandbox.window;
 
+    // preferences
     var pref=Components.classes["@mozilla.org/preferences-service;1"].
             getService(Components.interfaces.nsIPrefService).
             getBranch("extensions.kanban.");
+    
+    // get url pref or default
+    var baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl"):"https://rawgit.com/HarryPhillips/Kanban/master/";
     
 	try {
         // run userscript
 		this.evalInSandbox(
 			"(function(){" +
                 "(function () {" +
-                "   var prefUrl = '"+pref.getCharPref("baseUrl")+"';" +
+                "   var prefUrl = '"+baseUrl+"';" +
                     script +
                 "}());" +
             "})()",
@@ -255,10 +263,6 @@ kanban_ScriptStorage.prototype.setValue = function(name, val) {
 kanban_ScriptStorage.prototype.getValue = function(name, defVal) {
 	return this.prefMan.getValue(name, defVal);
 }
-
-// add preference props to window
-window.KBS_TEST_URL = new kanban_ScriptStorage().getValue("baseUrl", "NONE");
-window.KBS_TEST_URL2 = "EXISTS!";
 
 // add initialisers
 window.addEventListener('load', kanban_gmCompiler.onLoad, false);

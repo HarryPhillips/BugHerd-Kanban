@@ -7,5 +7,5 @@
        type="string"
        pref="extensions.kanban.baseUrl"
        title="Base Url"
-       desc="This is the path to your local kanban directory. PLEASE INCLUDE THE TRAILING SLASH! Example: 'http://localhost/code/Kanban/'" />
+       desc="Enter the path to your local Kanban repository if you wish to use that instead of the raw GitHub files. Leave empty if you wish to use the raw files. Please include the trailing slash, example: 'http://localhost/code/myKanbanRepo/'" />
 </vbox>
