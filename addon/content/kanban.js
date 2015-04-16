@@ -8,21 +8,26 @@
 // @grant       none
 // ==/UserScript==
 
+/*global prefUrl: true, prefSource: true */
+
 (function (window) {
     'use strict';
     
     // declarations
     var
         // configuration urls
+        baseUrl = prefUrl,
         reqUrl = "https://cdnjs.cloudflare.com/" +
         "ajax/libs/require.js/2.1.16/require.min.js",
 
         // document object
         document = window.document,
+        
+        // preference deposit
+        deposit = document.createElement("div"),
 
         // create node
-        rqs = document.createElement("script"),
-        test = document.createElement("div");
+        rqs = document.createElement("script");
 
     // set node props
     rqs.id = "kbs-require";
@@ -32,13 +37,18 @@
     // set the custom data-main attribute
     rqs.setAttribute(
         "data-main",
-        "http://localhost/GitHub/Kanban/" +
-            "kanban.js"
+        prefUrl + prefSource
     );
-
-    test.id = "kbs-window-test";
+    
+    // set kbs globals deposit
+    deposit.id = "kbs-deposit";
+    deposit.className = [true, new Date().getTime(), "", prefUrl].join(" ");
+    deposit.KBS_GLOBAL_SET = true;
+    deposit.KBS_START_TIME = new Date().getTime();
+    deposit.KBS_DELTA_TIME = "";
+    deposit.KBS_BASE_URL = prefUrl;
     
     // write out
+    document.body.appendChild(deposit);
     document.head.appendChild(rqs);
-    document.body.appendChild(test);
 }(window));

@@ -55,16 +55,8 @@ contentLoad: function(e) {
 		&& ( /^http:\/\/www\.bugherd\.com\/.*$/i.test(href) || /^https:\/\/www\.bugherd\.com\/.*$/i.test(href) )
 		&& true
 	) {
-        // preferences
-    var pref=Components.classes["@mozilla.org/preferences-service;1"].
-            getService(Components.interfaces.nsIPrefService).
-            getBranch("extensions.kanban.");
-    
-    // get url pref or default
-    var baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl"):"https://rawgit.com/HarryPhillips/Kanban/master/";
-
 		var script=kanban_gmCompiler.getUrlContents(
-			baseUrl+'userscript.js'
+			'chrome://kanban/content/kanban.js'
 		);
 		kanban_gmCompiler.injectScript(script, href, unsafeWin);
 	}
@@ -118,7 +110,7 @@ injectScript: function(script, url, unsafeContentWin) {
         var useDist = pref.getBoolPref("useDist");
         var sourceUrl = (useDist) ? "dist/kanban.min.js":"kanban.js"
     } catch (e) {
-        // failed - set to false
+        // failed - set to true
         pref.setBoolPref("useDist", true);
         var sourceUrl = "dist/kanban.min.js"
     }
