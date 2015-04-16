@@ -45,7 +45,7 @@
     // writes a log file to logs folder
     function write_log_file($log, $buffer) {
         echo "attempting to save log buffer to: 'logs/$log'\n";
-        write_file("logs", $log, $buffer);
+        write_file("http://localhost/kanban/logs", $log, $buffer);
     }
 
     // write a test result file
