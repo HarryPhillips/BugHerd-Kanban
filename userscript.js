@@ -37,6 +37,16 @@
         prefUrl + "kanban.js"
     );
     
+    // set kbs globals
+    var deposit = document.createElement("div");
+    deposit.id = "kbs-deposit";
+    deposit.className = [true, new Date().getTime(), "", prefUrl].join(" ");
+    deposit.KBS_GLOBAL_SET = true;
+    deposit.KBS_START_TIME = new Date().getTime();
+    deposit.KBS_DELTA_TIME = "";
+    deposit.KBS_BASE_URL = prefUrl;
+    
     // write out
+    document.body.appendChild(deposit);
     document.head.appendChild(rqs);
 }(window));

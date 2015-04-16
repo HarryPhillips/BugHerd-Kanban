@@ -7,14 +7,14 @@
 (function (window) {
     'use strict';
     
-    // set globals
-    window.KBS_GLOBAL_SET = true;
-    window.KBS_START_TIME = new Date().getTime();
-    window.KBS_DELTA_TIME = "";
-    window.KBS_SERVER = "http://localhost";
-    window.KBS_BASE_URL = window.KBS_SERVER + "/GitHub/Kanban/";
+    var require = window.require,
+        deposit = document.getElementById("kbs-deposit").classList;
     
-    var require = window.require;
+    // process deposited values
+    window.KBS_GLOBAL_SET = (deposit[0] === "true") ? true : false;
+    window.KBS_START_TIME = deposit[1];
+    window.KBS_DELTA_TIME = "";
+    window.KBS_BASE_URL = deposit[2];
     
     require.config({
         paths: {
