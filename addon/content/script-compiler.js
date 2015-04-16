@@ -1,3 +1,8 @@
+/*
+*   TODO:
+*   + Fix this god awful code quality...
+*/
+
 var kanban_gmCompiler={
 
 // getUrlContents adapted from Greasemonkey Compiler
