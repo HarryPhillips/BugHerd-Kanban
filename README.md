@@ -12,3 +12,8 @@ scripts and inject them into the page.
 
 Using the raw GitHub links may be slower but it means you always get the latest
 updates automatically and all you need to do is install Kanban.xpi to Firefox.
+
+### Notice:
+When using the raw GitHub links, please use this URL otherwise MIME Type errors may occur:
+
+https://rawgit.com/HarryPhillips/Kanban/master/
