@@ -14,6 +14,12 @@ Using the raw GitHub links may be slower but it means you always get the latest
 updates automatically and all you need to do is install Kanban.xpi to Firefox.
 
 ### Notice:
-When using the raw GitHub links, please use this URL otherwise MIME Type errors may occur:
+Kanban will automatically access the source code via this url:
 
 https://rawgit.com/HarryPhillips/Kanban/master/
+
+You will have to go into Firefox Add-ons Manager and change the Base Url preference
+for Kanban if you wish to use your own hosted source.
+
+Also, if you opt to keep using the raw links to the source, you will not be able to access
+Kanban's endpoint features such as the log saving function.

@@ -112,13 +112,25 @@ injectScript: function(script, url, unsafeContentWin) {
     
     // get url pref or default
     var baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl"):"https://rawgit.com/HarryPhillips/Kanban/master/";
+    //var sourceUrl = (pref.getBoolPref("useDist")) ? "dist/kanban.min.js":"kanban.js";
+    
+    try {
+        var useDist = pref.getBoolPref("useDist");
+        var sourceUrl = (useDist) ? "dist/kanban.min.js":"kanban.js"
+    } catch (e) {
+        // failed - set to false
+        pref.setBoolPref("useDist", true);
+        var sourceUrl = "dist/kanban.min.js"
+    }
     
 	try {
+        //alert(sourceUrl);
         // run userscript
 		this.evalInSandbox(
 			"(function(){" +
                 "(function () {" +
                 "   var prefUrl = '"+baseUrl+"';" +
+                "   var prefSource = '"+sourceUrl+"';" +
                     script +
                 "}());" +
             "})()",

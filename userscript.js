@@ -8,7 +8,7 @@
 // @grant       none
 // ==/UserScript==
 
-/*global prefUrl: true */
+/*global prefUrl: true, prefSource: true */
 
 (function (window) {
     'use strict';
@@ -22,6 +22,9 @@
 
         // document object
         document = window.document,
+        
+        // preference deposit
+        deposit = document.createElement("div"),
 
         // create node
         rqs = document.createElement("script");
@@ -34,11 +37,10 @@
     // set the custom data-main attribute
     rqs.setAttribute(
         "data-main",
-        prefUrl + "kanban.js"
+        prefUrl + prefSource
     );
     
-    // set kbs globals
-    var deposit = document.createElement("div");
+    // set kbs globals deposit
     deposit.id = "kbs-deposit";
     deposit.className = [true, new Date().getTime(), "", prefUrl].join(" ");
     deposit.KBS_GLOBAL_SET = true;

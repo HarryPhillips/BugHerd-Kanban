@@ -1800,12 +1800,14 @@ define(
                     }
                 };
             
-            // save tool
-            this.createTool("save")
-                .element.onclick = function () {
-                    self.save();
-                };
-
+            // save tool - only on localhost base url's
+            if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
+                this.createTool("save")
+                    .element.onclick = function () {
+                        self.save();
+                    };
+            }
+            
             // destroy tool
             this.createTool("destroy")
                 .element.onclick = function () {
