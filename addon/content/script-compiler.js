@@ -3,6 +3,63 @@
 *   + Fix this god awful code quality...
 */
 
+/*global Components: true */
+
+var kanban_gmCompiler = {
+    getUrlContents: function (aUrl) {
+        var
+            ioService = Components
+            .classes["@mozilla.org/network/io-service;1"]
+            .getService(Components.interfaces.nsIIOService),
+            
+            scriptableStream = Components
+            .classes["@mozilla.org/scriptableinputstream;1"]
+            .getService(Components.interfaces.nsIScriptableInputStream),
+            
+            unicodeConverter = Components
+            .classes["@mozilla.org/scriptableunicodeconverter;1"]
+            .createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
+            
+            channel = ioService.newChannel(aUrl, "UTF-8", null),
+            input = channel.open(),
+            str;
+        
+        // converter charset
+        unicodeConverter.charset = "UTF-8";
+        
+        // init stream and read
+        scriptableStream.init(input);
+        str = scriptableStream.read(input.available());
+        
+        // close
+        scriptableStream.close();
+        input.close();
+        
+        // return contents
+        try {
+            return unicodeConverter.ConvertToUnicode(str);
+        } catch(e) {
+            return str;
+        }
+    },
+    isGreasemonkeyable: function (url) {
+        var scheme = Components
+            .classes["@mozilla.org/network/io-service;1"]
+            .extractScheme(url);
+        
+        return (
+            /(http|https|file)/g.test(scheme) &&
+            !/hiddenWindow\.html$/.test(url)
+        );
+    },
+    contentLoad: function (e) {
+        var unsafeWin,
+            unsafeLoc,
+            href,
+            script;
+    }
+};
+
 var kanban_gmCompiler={
 
 // getUrlContents adapted from Greasemonkey Compiler
@@ -12,41 +69,6 @@ var kanban_gmCompiler={
 // most everything else below based heavily off of Greasemonkey
 // http://greasemonkey.devjavu.com/
 // used under GPL permission
-
-getUrlContents: function(aUrl){
-	var	ioService=Components.classes["@mozilla.org/network/io-service;1"]
-		.getService(Components.interfaces.nsIIOService);
-	var	scriptableStream=Components
-		.classes["@mozilla.org/scriptableinputstream;1"]
-		.getService(Components.interfaces.nsIScriptableInputStream);
-	var unicodeConverter=Components
-		.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-		.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-	unicodeConverter.charset="UTF-8";
-
-	var	channel=ioService.newChannel(aUrl, "UTF-8", null);
-	var	input=channel.open();
-	scriptableStream.init(input);
-	var	str=scriptableStream.read(input.available());
-	scriptableStream.close();
-	input.close();
-
-	try {
-		return unicodeConverter.ConvertToUnicode(str);
-	} catch (e) {
-		return str;
-	}
-},
-
-isGreasemonkeyable: function(url) {
-	var scheme=Components.classes["@mozilla.org/network/io-service;1"]
-		.getService(Components.interfaces.nsIIOService)
-		.extractScheme(url);
-	return (
-		(scheme == "http" || scheme == "https" || scheme == "file") &&
-		!/hiddenWindow\.html$/.test(url)
-	);
-},
 
 contentLoad: function(e) {
 	var unsafeWin=e.target.defaultView;
