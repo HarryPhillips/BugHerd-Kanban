@@ -942,10 +942,29 @@ define(
             }
 
             // apply elements and styling
+            this.applyWrapper();
             this.applyElements();
+            this.applyHandlers();
             this.applyStyles();
             
             inited = true;
+        };
+            
+        // returns if an object is or is apart of a task element
+        Interactor.prototype.isTask = function (element) {
+            // get jquery object
+            if (!element instanceof $) {
+                element = $(element);
+            }
+            
+            element = element.closest("[id^=task_]");
+            
+            return (element.length) ? element : false;
+        };
+        
+        // get the wrapper task element from a component
+        Interactor.prototype.getTaskFromComponent = function (component) {
+            return component.closest("[id^=task_]");
         };
 
         // expand the currently active task or a specified task id
@@ -1012,6 +1031,12 @@ define(
 
         // find a global task id from a local task id
         Interactor.prototype.findGlobalId = function (localId) {
+            /*
+                TODO:
+                - Need to perform a task search if not found, so that
+                tasks not currently rendered can be found
+            */
+            
             // declarations
             var children,
                 child,
@@ -1068,6 +1093,17 @@ define(
 
             return globalId;
         };
+            
+        // find a local task id from a global task id
+        Interactor.prototype.findLocalId = function (globalId) {
+            var element = $("#task_" + globalId);
+            console.log(element);
+        };
+            
+        // wrap bugherd content in a kbs-wrapper element
+        Interactor.prototype.applyWrapper = function () {
+            $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+        };
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
@@ -1101,6 +1137,17 @@ define(
             // write
             taskExpander.writeTo($(".nav.main-nav")[0]);
             taskContractor.writeTo($("body")[0]);
+        };
+            
+        // apply event handlers
+        Interactor.prototype.applyHandlers = function () {
+            $(".kbs-wrapper").on("click", function (event) {
+                var target = $(event.target),
+                    task = self.isTask(target);
+                if (task) {
+                    self.openTask();
+                }
+            });
         };
 
         // apply new styling to bugherd ui
