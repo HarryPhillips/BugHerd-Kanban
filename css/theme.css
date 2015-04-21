@@ -17,12 +17,13 @@ body {
 /* modals
 --------------------------------------------------------------------*/
 .kbs-modal {
-    background-color: #405662;
-    color: #fff;
+    background-color: #fff;
+    color: #1a1a1a;
 }
 
 .kbs-modal-title {
     background-color: #253964;
+    color: #fff;
 }
 
 .kbs-modal-close {
@@ -36,7 +37,7 @@ body {
 }
 
 .kbs-confirm, .kbs-cancel {
-    background-color: #fff;
+    background-color: #ddd;
     color: #000;
 }
 

@@ -97,11 +97,10 @@ define(
                 publish = function () {
                     // attach gui when styles have loaded
                     document.body.appendChild(self.tree.main.element);
-                    util.log("context:gui/init", "debug", "+ attached gui tree");
+                    util.log("context:gui/init", "okay", "+ attached gui tree");
 
                     // run event listeners
                     self.runEventListeners();
-                    util.log("context:gui/init", "debug", "+ running event listeners");
                 };
 
             // events setup
@@ -134,7 +133,7 @@ define(
 
             // main css link events
             mainlink.onload = function () {
-                util.log("context:gui/init", "debug", "+ main.css loaded");
+                util.log("context:gui/init", "okay", "+ main.css loaded");
                 loader.count += 1;
             };
 
@@ -145,7 +144,7 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "debug", "+ theme.css loaded");
+                util.log("context:gui/init", "okay", "+ theme.css loaded");
                 loader.count += 1;
             };
 
@@ -156,7 +155,7 @@ define(
 
             // font-awesome css link events
             falink.onload = function () {
-                util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
+                util.log("context:gui/init", "okay", "+ font-awesome.css loaded");
                 loader.count += 1;
             };
 
@@ -187,6 +186,8 @@ define(
 
         // run event listeners
         GUI.prototype.runEventListeners = function () {
+            util.log("context:gui/init", "okay", "+ running event listeners");
+            
             // handle log node of type 'exec' clicks
             var out = this.console.wrapper.cons.out.element,
                 current,

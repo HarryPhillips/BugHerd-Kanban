@@ -162,10 +162,14 @@ define(
             */
             
             // declarations
-            var children,
-                child,
-                parent,
-                globalId;
+            var setone = $(".task-id"), settwo = $(".taskID"),
+                child, parent,
+                globalId,
+                check = function (index) {
+                    if ($(this)[0].textContent === localId.toString()) {
+                        child = $(this);
+                    }
+                };
 
             // get current task id if none passed
             if (typeof localId === "undefined") {
@@ -175,14 +179,15 @@ define(
             util.log("debug", "Finding global id for task #" + localId);
 
             // get elements
-            children = $(".task-id");
+            setone = $(".task-id");
             
             // find the right task
-            children.each(function (index) {
-                if ($(this)[0].textContent === localId.toString()) {
-                    child = $(this);
-                }
-            });
+            setone.each(check);
+            
+            // check set two if no child found
+            if (!child) {
+                settwo.each(check);
+            }
             
             // check if child was found
             if (typeof child === "undefined") {
@@ -226,6 +231,13 @@ define(
             
         // wrap bugherd content in a kbs-wrapper element
         Interactor.prototype.applyWrapper = function () {
+            util.log(
+                "context:inter/init",
+                "okay",
+                "+ wrapping bugherd application"
+            );
+            
+            // wrap application wrapper in kbs-wrapper
             $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
         };
 
@@ -237,7 +249,7 @@ define(
             
             util.log(
                 "context:inter/init",
-                "debug",
+                "okay",
                 "+ appending elements to bugherd"
             );
 
@@ -265,6 +277,13 @@ define(
             
         // apply event handlers
         Interactor.prototype.applyHandlers = function () {
+            util.log(
+                "context:inter/init",
+                "okay",
+                "+ applying handlers to bugherd"
+            );
+            
+            // delegate clicks on kbs wrapper
             $(".kbs-wrapper").on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
@@ -278,7 +297,7 @@ define(
         Interactor.prototype.applyStyles = function () {
             util.log(
                 "context:inter/init",
-                "debug",
+                "okay",
                 "+ applying styles to bugherd"
             );
 

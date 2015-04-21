@@ -305,6 +305,8 @@
     position: fixed;
     top: 60px; bottom: 60px;
     left: 60px; right: 60px;
+    width: initial; height: initial !important;
+    overflow-y: scroll !important;
     z-index: 2147483645;
 }
 
