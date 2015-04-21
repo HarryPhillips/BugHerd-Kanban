@@ -13,7 +13,7 @@
 
 /* set transitions
 ------------------------------------------------------------------------------*/
-.kbs-cons-box, .kbs-cons, .kbs-object, .kbs-object-expand {
+.kbs-cons, .kbs-object, .kbs-object-expand {
     -webkit-transition: all 0.3s;
     -moz-transition: all 0.3s;
     -o-transition: all 0.3s;
@@ -128,12 +128,15 @@
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     z-index: 2147483646;
     overflow: hidden;
+    -webkit-transition: width 0.3s, height 0.3s 0.3s, border 0.3s;
+    -moz-transition: width 0.3s, height 0.3s 0.3s, border 0.3s;
+    -o-transition: width 0.3s, height 0.3s 0.3s, border 0.3s;
+    transition: width 0.3s, height 0.3s 0.3s, border 0.3s;
 }
 
 /* console status */
 .kbs-cons-box.kbs-open {
     width: 50%; height: 65%;
-    min-width: 450px; min-height: 300px;
     border-top: 0;
     border-right: 0;
     border-radius: 0 0 0 10px;
@@ -148,6 +151,10 @@
     width: 30px; height: 30px;
     min-width: 30px; min-height: 30px;
     border-radius: 0px;
+    -webkit-transition: width 0.3s 0.3s, height 0.3s, border 0.3s;
+    -moz-transition: width 0.3s 0.3s, height 0.3s, border 0.3s;
+    -o-transition: width 0.3s 0.3s, height 0.3s, border 0.3s;
+    transition: width 0.3s 0.3s, height 0.3s, border 0.3s;
 }
 
 /* console toolbar 
