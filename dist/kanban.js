@@ -1038,10 +1038,14 @@ define(
             */
             
             // declarations
-            var children,
-                child,
-                parent,
-                globalId;
+            var setone = $(".task-id"), settwo = $(".taskID"),
+                child, parent,
+                globalId,
+                check = function (index) {
+                    if ($(this)[0].textContent === localId.toString()) {
+                        child = $(this);
+                    }
+                };
 
             // get current task id if none passed
             if (typeof localId === "undefined") {
@@ -1051,14 +1055,15 @@ define(
             util.log("debug", "Finding global id for task #" + localId);
 
             // get elements
-            children = $(".task-id");
+            setone = $(".task-id");
             
             // find the right task
-            children.each(function (index) {
-                if ($(this)[0].textContent === localId.toString()) {
-                    child = $(this);
-                }
-            });
+            setone.each(check);
+            
+            // check set two if no child found
+            if (!child) {
+                settwo.each(check);
+            }
             
             // check if child was found
             if (typeof child === "undefined") {
@@ -1102,6 +1107,13 @@ define(
             
         // wrap bugherd content in a kbs-wrapper element
         Interactor.prototype.applyWrapper = function () {
+            util.log(
+                "context:inter/init",
+                "okay",
+                "+ wrapping bugherd application"
+            );
+            
+            // wrap application wrapper in kbs-wrapper
             $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
         };
 
@@ -1113,7 +1125,7 @@ define(
             
             util.log(
                 "context:inter/init",
-                "debug",
+                "okay",
                 "+ appending elements to bugherd"
             );
 
@@ -1141,6 +1153,13 @@ define(
             
         // apply event handlers
         Interactor.prototype.applyHandlers = function () {
+            util.log(
+                "context:inter/init",
+                "okay",
+                "+ applying handlers to bugherd"
+            );
+            
+            // delegate clicks on kbs wrapper
             $(".kbs-wrapper").on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
@@ -1154,7 +1173,7 @@ define(
         Interactor.prototype.applyStyles = function () {
             util.log(
                 "context:inter/init",
-                "debug",
+                "okay",
                 "+ applying styles to bugherd"
             );
 
@@ -1986,11 +2005,10 @@ define(
                 publish = function () {
                     // attach gui when styles have loaded
                     document.body.appendChild(self.tree.main.element);
-                    util.log("context:gui/init", "debug", "+ attached gui tree");
+                    util.log("context:gui/init", "okay", "+ attached gui tree");
 
                     // run event listeners
                     self.runEventListeners();
-                    util.log("context:gui/init", "debug", "+ running event listeners");
                 };
 
             // events setup
@@ -2023,7 +2041,7 @@ define(
 
             // main css link events
             mainlink.onload = function () {
-                util.log("context:gui/init", "debug", "+ main.css loaded");
+                util.log("context:gui/init", "okay", "+ main.css loaded");
                 loader.count += 1;
             };
 
@@ -2034,7 +2052,7 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "debug", "+ theme.css loaded");
+                util.log("context:gui/init", "okay", "+ theme.css loaded");
                 loader.count += 1;
             };
 
@@ -2045,7 +2063,7 @@ define(
 
             // font-awesome css link events
             falink.onload = function () {
-                util.log("context:gui/init", "debug", "+ font-awesome.css loaded");
+                util.log("context:gui/init", "okay", "+ font-awesome.css loaded");
                 loader.count += 1;
             };
 
@@ -2076,6 +2094,8 @@ define(
 
         // run event listeners
         GUI.prototype.runEventListeners = function () {
+            util.log("context:gui/init", "okay", "+ running event listeners");
+            
             // handle log node of type 'exec' clicks
             var out = this.console.wrapper.cons.out.element,
                 current,
