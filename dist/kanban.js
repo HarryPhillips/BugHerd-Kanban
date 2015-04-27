@@ -8,6 +8,7 @@
 
 define('config',{
     appName: "kbs",
+    appFullname: "Kanban",
     version: "1.1.0",
     enabled: true,
     mode: "dev",
@@ -40,8 +41,15 @@ define('config',{
             }
         }
     },
+    interactor: {
+        enabled: true
+    },
     events: {
         silent: false
+    },
+    cookies: {
+        enabled: true,
+        prefix: "__kbs_"
     },
     routes: {
         console: {
@@ -306,7 +314,7 @@ define(
         util.cookie = {
             // gets a cookie with name
             get: function (name) {
-                var cname = "_" + config.appName + "-" + name + "=",
+                var cname = config.cookies.prefix + name + "=",
                     ca = document.cookie.split(';'),
                     i,
                     c;
@@ -339,7 +347,7 @@ define(
 
                 // write cookie
                 document.cookie =
-                    "_" + config.appName + "-" + name +
+                    config.cookies.prefix + name +
                     "=" + value + expires + "; path=/";
             },
             // deletes a cookie by name
@@ -479,7 +487,8 @@ define(
                 guistr = "",
                 objstr = "",
                 bffstr = "",
-                ctxFlag = config.logs.contextFlag;
+                ctxFlag = config.logs.contextFlag,
+                ctxDelFlag = config.logs.contextClearFlag;
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -488,7 +497,7 @@ define(
                 }
             }
             
-            // adjust args after context check
+            // adjust args if no context
             function ctxArgsAdjust() {
                 // adjust arg vars
                 opt = msg;
@@ -513,6 +522,10 @@ define(
                             context = context.replace(ctxFlag, "");
                             args.shift();
                         }
+                    } else if (context.indexOf(ctxDelFlag) !== -1) {
+                        // we have a request to clear a context
+                        // preserve the delete flag so console knows
+                        args.shift();
                     } else {
                         ctxArgsAdjust();
                         context = util.log.currentContext;
@@ -660,6 +673,11 @@ define(
         util.log.endContext = function () {
             util.log.currentContext = false;
         };
+        
+        // clear/remove a logging context
+        util.log.clearContext = function (context) {
+            events.publish("gui/contexts/clear", context);
+        };
 
         util.log("+ util.js loaded");
 
@@ -740,7 +758,24 @@ define(
         
         // return if node has a class
         Node.prototype.hasClass = function (name) {
-            return this.element.className.indexOf(name) !== -1;
+            var i, len,
+                found = false;
+            
+            // is there an array of names to check?
+            if (util.isArray(name)) {
+                len = name.length;
+                for (i = 0; i < len; i += 1) {
+                    if (this.element.className.indexOf(name[i]) !== -1) {
+                        found = true;
+                    }
+                }
+            } else {
+                if (this.element.className.indexOf(name) !== -1) {
+                    found = true;
+                }
+            }
+            
+            return found;
         };
         
         // add class(es) to node
@@ -1053,9 +1088,6 @@ define(
             }
 
             util.log("debug", "Finding global id for task #" + localId);
-
-            // get elements
-            setone = $(".task-id");
             
             // find the right task
             setone.each(check);
@@ -1071,21 +1103,14 @@ define(
                                 localId +
                                 "'!");
             }
-            
-            parent = child.parent();
-
-            // if couldn't find a .task-id
-            // try .taskID
-            if (child.length < 1) {
-                child = $(".taskID:contains(" + localId + ")");
-                parent = child.parent().parent();
-            }
 
             // if still nothing return false
             if (child.length < 1) {
                 util.log("error", "Couldn't find task #" + localId);
                 return false;
             }
+            
+            parent = child.parent();
 
             globalId = parent[0].id.replace("task_", "");
 
@@ -1109,7 +1134,6 @@ define(
         Interactor.prototype.applyWrapper = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ wrapping bugherd application"
             );
             
@@ -1125,7 +1149,6 @@ define(
             
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ appending elements to bugherd"
             );
 
@@ -1155,7 +1178,6 @@ define(
         Interactor.prototype.applyHandlers = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ applying handlers to bugherd"
             );
             
@@ -1173,7 +1195,6 @@ define(
         Interactor.prototype.applyStyles = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ applying styles to bugherd"
             );
 
@@ -1530,6 +1551,11 @@ define(
             // log contexts
             this.setContexts();
             
+            // setup context clearance event
+            events.subscribe("gui/contexts/clear", function (context) {
+                self.clearContext(context);
+            });
+            
             // update console status
             events.publish("kbs/status", {
                 component: "console",
@@ -1589,6 +1615,18 @@ define(
             
             return element;
         };
+            
+        // clear/remove a logging context
+        Console.prototype.clearContext = function (context) {
+            var index;
+            
+            // don't allow clearing of def context
+            if (context === "def") {
+                return;
+            }
+            
+            delete self.contexts[context];
+        };
         
         // console output
         Console.prototype.write = function (args) {
@@ -1610,7 +1648,6 @@ define(
             
             // check for context param
             if (args.context) {
-                // check for subcontext
                 if (args.subcontext) {
                     // check if subcontext exists
                     if (self.getContext(args.subcontext)) {
@@ -1712,14 +1749,14 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            this.wrapper.removeClass("kbs-close");
-            this.wrapper.addClass("kbs-open");
+            self.wrapper.removeClass("kbs-close");
+            self.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
-            this.wrapper.removeClass("kbs-open");
-            this.wrapper.addClass("kbs-close");
+            self.wrapper.removeClass("kbs-open");
+            self.wrapper.addClass("kbs-close");
         };
         
         // refresh console
@@ -1731,8 +1768,8 @@ define(
          
         // clear output
         Console.prototype.clear = function () {
-            var cons = this.wrapper.cons.element,
-                out = this.wrapper.cons.out.element,
+            var cons = self.wrapper.cons.element,
+                out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
                 end;
 
@@ -1761,21 +1798,27 @@ define(
             var time = util.ftime(),
                 date = util.fdate(),
                 buffer = cache.console.getBuffer(),
-                
-                // setup request
-                req = new Http({
-                    url: router.getRoute("console", "save"),
-                    method: "POST",
-                    send: true,
-                    data: {
-                        type: "log",
-                        date: date,
-                        buffer: buffer
-                    },
-                    success: function (response) {
-                        util.log("okay", response);
-                    }
-                });
+                req;
+            
+            util.log.beginContext("log/save");
+            util.log("info", "saving log buffer...");
+            
+            // setup request
+            req = new Http({
+                url: router.getRoute("console", "save"),
+                method: "POST",
+                send: true,
+                data: {
+                    type: "log",
+                    date: date,
+                    buffer: buffer
+                },
+                success: function (response) {
+                    util.log("context:log/save", "okay", response);
+                    util.log.endContext();
+                    util.log.clearContext("log/save");
+                }
+            });
         };
         
         // destroy console instance (irreversible)
@@ -1838,7 +1881,8 @@ define(
             constitle = constools.constitle =
                 constools.createChild("div", "kbs-cons-title");
 
-            titlenode = document.createTextNode("Kanban v" + config.version);
+            titlenode = document.createTextNode(config.appFullname +
+                                                "v" + config.version);
             constitle.addChild(titlenode);
             
             // toggle tool
@@ -1869,28 +1913,20 @@ define(
             // save tool - only on localhost base url's
             if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
                 this.createTool("save")
-                    .element.onclick = function () {
-                        self.save();
-                    };
+                    .element.onclick = self.save;
             }
             
             // destroy tool
             this.createTool("destroy")
-                .element.onclick = function () {
-                    self.destroy();
-                };
+                .element.onclick = self.destroy;
 
             // clear tool
             this.createTool("clear")
-                .element.onclick = function () {
-                    self.clear();
-                };
+                .element.onclick = self.clear;
 
             // close tool
             this.createTool("close")
-                .element.onclick = function () {
-                    self.close();
-                };
+                .element.onclick = self.close;
 
             // console
             wrapper.cons = cons =
@@ -2005,7 +2041,7 @@ define(
                 publish = function () {
                     // attach gui when styles have loaded
                     document.body.appendChild(self.tree.main.element);
-                    util.log("context:gui/init", "okay", "+ attached gui tree");
+                    util.log("context:gui/init", "+ attached gui tree");
 
                     // run event listeners
                     self.runEventListeners();
@@ -2041,7 +2077,7 @@ define(
 
             // main css link events
             mainlink.onload = function () {
-                util.log("context:gui/init", "okay", "+ main.css loaded");
+                util.log("context:gui/init", "+ main.css loaded");
                 loader.count += 1;
             };
 
@@ -2052,7 +2088,7 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "okay", "+ theme.css loaded");
+                util.log("context:gui/init", "+ theme.css loaded");
                 loader.count += 1;
             };
 
@@ -2063,7 +2099,7 @@ define(
 
             // font-awesome css link events
             falink.onload = function () {
-                util.log("context:gui/init", "okay", "+ font-awesome.css loaded");
+                util.log("context:gui/init", "+ font-awesome.css loaded");
                 loader.count += 1;
             };
 
@@ -2094,7 +2130,7 @@ define(
 
         // run event listeners
         GUI.prototype.runEventListeners = function () {
-            util.log("context:gui/init", "okay", "+ running event listeners");
+            util.log("context:gui/init", "+ running event listeners");
             
             // handle log node of type 'exec' clicks
             var out = this.console.wrapper.cons.out.element,
@@ -2106,16 +2142,14 @@ define(
 
             // bind a click handler to the console out
             out.onclick = function (event) {
-                current = event.target;
-                if (util.contains(current.className, togglables) !== false) {
-                    // we clicked on an exec block
-                    if (!util.contains(current.className, "kbs-log-close")) {
+                current = new Node(event.target);
+                if (current.hasClass(togglables)) {
+                    if (!current.hasClass("kbs-log-close")) {
                         // we need to close the block
-                        current.className += " kbs-log-close";
+                        current.addClass("kbs-log-close");
                     } else {
                         // we need to open the block
-                        current.className =
-                            current.className.replace(" kbs-log-close", "");
+                        current.removeClass("kbs-log-close");
                     }
                 }
             };
@@ -2129,13 +2163,13 @@ define(
 
         // add a child node to the gui
         GUI.prototype.addChild = function (node) {
-            this.tree.main.element.appendChild(node);
+            this.tree.main.addChild(node);
         };
 
         // create a child and add to the gui
         GUI.prototype.createChild = function (type, classes, id) {
             var node = new Node(type, classes, id);
-            this.tree.main.element.appendChild(node.element);
+            this.addChild(node);
             return node;
         };
         // benchmarks the generation of 10000 log nodes
@@ -2280,8 +2314,10 @@ define(
         }
 
         // initialise interactor
-        interactor = new Interactor();
-
+        if (config.interactor.enabled) {
+            interactor = new Interactor();
+        }
+            
         // execute kanban
         end = function () {
             // get performance delta
