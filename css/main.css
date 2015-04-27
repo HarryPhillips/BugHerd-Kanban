@@ -415,6 +415,14 @@
     #header .pane-right  {
         display: none;
     }
+    
+    /* make console fill larger space */
+    .kbs-cons-box.kbs-open {
+        width: 80%;
+    }
+    .kbs-cons-box.kbs-full {
+        width: 100%;
+    }
 }
 
 @media (max-width:647px) {
