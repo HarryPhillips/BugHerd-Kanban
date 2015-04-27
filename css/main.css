@@ -313,7 +313,6 @@
     top: 60px; bottom: 60px;
     left: 60px; right: 60px;
     width: initial; height: initial !important;
-    overflow-y: scroll !important;
     z-index: 2147483645;
 }
 
@@ -349,7 +348,6 @@
 .kbs-details-expand .taskDescription,
 .kbs-details-expand .taskDescriptionHolder {
     position: relative !important;
-    left: 0; right: 0;
     width: inherit !important; min-height: 100px !important;
 }
 
@@ -360,7 +358,16 @@
 
 /* task meta data container */
 .kbs-details-expand .flexHeight {
-    box-shadow: inset 3px 3px 3px 3px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+/* task details overflow and scrolling fixes */
+.kbs-details-expand > div:first-child {
+    position: relative;
+}
+
+.kbs-details-expand .taskDetailContent {
+    position: relative;
 }
 
 /* fixed alterations */
