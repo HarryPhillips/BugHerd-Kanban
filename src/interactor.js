@@ -177,9 +177,6 @@ define(
             }
 
             util.log("debug", "Finding global id for task #" + localId);
-
-            // get elements
-            setone = $(".task-id");
             
             // find the right task
             setone.each(check);
@@ -195,21 +192,14 @@ define(
                                 localId +
                                 "'!");
             }
-            
-            parent = child.parent();
-
-            // if couldn't find a .task-id
-            // try .taskID
-            if (child.length < 1) {
-                child = $(".taskID:contains(" + localId + ")");
-                parent = child.parent().parent();
-            }
 
             // if still nothing return false
             if (child.length < 1) {
                 util.log("error", "Couldn't find task #" + localId);
                 return false;
             }
+            
+            parent = child.parent();
 
             globalId = parent[0].id.replace("task_", "");
 
@@ -233,7 +223,6 @@ define(
         Interactor.prototype.applyWrapper = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ wrapping bugherd application"
             );
             
@@ -249,7 +238,6 @@ define(
             
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ appending elements to bugherd"
             );
 
@@ -279,7 +267,6 @@ define(
         Interactor.prototype.applyHandlers = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ applying handlers to bugherd"
             );
             
@@ -297,7 +284,6 @@ define(
         Interactor.prototype.applyStyles = function () {
             util.log(
                 "context:inter/init",
-                "okay",
                 "+ applying styles to bugherd"
             );
 

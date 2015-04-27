@@ -97,7 +97,7 @@ define(
                 publish = function () {
                     // attach gui when styles have loaded
                     document.body.appendChild(self.tree.main.element);
-                    util.log("context:gui/init", "okay", "+ attached gui tree");
+                    util.log("context:gui/init", "+ attached gui tree");
 
                     // run event listeners
                     self.runEventListeners();
@@ -133,7 +133,7 @@ define(
 
             // main css link events
             mainlink.onload = function () {
-                util.log("context:gui/init", "okay", "+ main.css loaded");
+                util.log("context:gui/init", "+ main.css loaded");
                 loader.count += 1;
             };
 
@@ -144,7 +144,7 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "okay", "+ theme.css loaded");
+                util.log("context:gui/init", "+ theme.css loaded");
                 loader.count += 1;
             };
 
@@ -155,7 +155,7 @@ define(
 
             // font-awesome css link events
             falink.onload = function () {
-                util.log("context:gui/init", "okay", "+ font-awesome.css loaded");
+                util.log("context:gui/init", "+ font-awesome.css loaded");
                 loader.count += 1;
             };
 
@@ -186,7 +186,7 @@ define(
 
         // run event listeners
         GUI.prototype.runEventListeners = function () {
-            util.log("context:gui/init", "okay", "+ running event listeners");
+            util.log("context:gui/init", "+ running event listeners");
             
             // handle log node of type 'exec' clicks
             var out = this.console.wrapper.cons.out.element,
@@ -198,16 +198,14 @@ define(
 
             // bind a click handler to the console out
             out.onclick = function (event) {
-                current = event.target;
-                if (util.contains(current.className, togglables) !== false) {
-                    // we clicked on an exec block
-                    if (!util.contains(current.className, "kbs-log-close")) {
+                current = new Node(event.target);
+                if (current.hasClass(togglables)) {
+                    if (!current.hasClass("kbs-log-close")) {
                         // we need to close the block
-                        current.className += " kbs-log-close";
+                        current.addClass("kbs-log-close");
                     } else {
                         // we need to open the block
-                        current.className =
-                            current.className.replace(" kbs-log-close", "");
+                        current.removeClass("kbs-log-close");
                     }
                 }
             };
@@ -221,13 +219,13 @@ define(
 
         // add a child node to the gui
         GUI.prototype.addChild = function (node) {
-            this.tree.main.element.appendChild(node);
+            this.tree.main.addChild(node);
         };
 
         // create a child and add to the gui
         GUI.prototype.createChild = function (type, classes, id) {
             var node = new Node(type, classes, id);
-            this.tree.main.element.appendChild(node.element);
+            this.addChild(node);
             return node;
         };
         // benchmarks the generation of 10000 log nodes

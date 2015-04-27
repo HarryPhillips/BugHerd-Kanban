@@ -8,6 +8,7 @@
 
 define({
     appName: "kbs",
+    appFullname: "Kanban",
     version: "1.1.0",
     enabled: true,
     mode: "dev",
@@ -40,8 +41,15 @@ define({
             }
         }
     },
+    interactor: {
+        enabled: true
+    },
     events: {
         silent: false
+    },
+    cookies: {
+        enabled: true,
+        prefix: "__kbs_"
     },
     routes: {
         console: {

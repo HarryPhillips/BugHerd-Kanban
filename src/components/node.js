@@ -71,7 +71,24 @@ define(
         
         // return if node has a class
         Node.prototype.hasClass = function (name) {
-            return this.element.className.indexOf(name) !== -1;
+            var i, len,
+                found = false;
+            
+            // is there an array of names to check?
+            if (util.isArray(name)) {
+                len = name.length;
+                for (i = 0; i < len; i += 1) {
+                    if (this.element.className.indexOf(name[i]) !== -1) {
+                        found = true;
+                    }
+                }
+            } else {
+                if (this.element.className.indexOf(name) !== -1) {
+                    found = true;
+                }
+            }
+            
+            return found;
         };
         
         // add class(es) to node

@@ -79,7 +79,7 @@ define(
         util.cookie = {
             // gets a cookie with name
             get: function (name) {
-                var cname = "_" + config.appName + "-" + name + "=",
+                var cname = config.cookies.prefix + name + "=",
                     ca = document.cookie.split(';'),
                     i,
                     c;
@@ -112,7 +112,7 @@ define(
 
                 // write cookie
                 document.cookie =
-                    "_" + config.appName + "-" + name +
+                    config.cookies.prefix + name +
                     "=" + value + expires + "; path=/";
             },
             // deletes a cookie by name
@@ -252,7 +252,8 @@ define(
                 guistr = "",
                 objstr = "",
                 bffstr = "",
-                ctxFlag = config.logs.contextFlag;
+                ctxFlag = config.logs.contextFlag,
+                ctxDelFlag = config.logs.contextClearFlag;
 
             // process arguments into an actual array
             for (param in arguments) {
@@ -261,7 +262,7 @@ define(
                 }
             }
             
-            // adjust args after context check
+            // adjust args if no context
             function ctxArgsAdjust() {
                 // adjust arg vars
                 opt = msg;
@@ -286,6 +287,10 @@ define(
                             context = context.replace(ctxFlag, "");
                             args.shift();
                         }
+                    } else if (context.indexOf(ctxDelFlag) !== -1) {
+                        // we have a request to clear a context
+                        // preserve the delete flag so console knows
+                        args.shift();
                     } else {
                         ctxArgsAdjust();
                         context = util.log.currentContext;
@@ -432,6 +437,11 @@ define(
         // end a continuous logging context
         util.log.endContext = function () {
             util.log.currentContext = false;
+        };
+        
+        // clear/remove a logging context
+        util.log.clearContext = function (context) {
+            events.publish("gui/contexts/clear", context);
         };
 
         util.log("+ util.js loaded");

@@ -62,6 +62,11 @@ define(
             // log contexts
             this.setContexts();
             
+            // setup context clearance event
+            events.subscribe("gui/contexts/clear", function (context) {
+                self.clearContext(context);
+            });
+            
             // update console status
             events.publish("kbs/status", {
                 component: "console",
@@ -121,6 +126,18 @@ define(
             
             return element;
         };
+            
+        // clear/remove a logging context
+        Console.prototype.clearContext = function (context) {
+            var index;
+            
+            // don't allow clearing of def context
+            if (context === "def") {
+                return;
+            }
+            
+            delete self.contexts[context];
+        };
         
         // console output
         Console.prototype.write = function (args) {
@@ -142,7 +159,6 @@ define(
             
             // check for context param
             if (args.context) {
-                // check for subcontext
                 if (args.subcontext) {
                     // check if subcontext exists
                     if (self.getContext(args.subcontext)) {
@@ -244,14 +260,14 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            this.wrapper.removeClass("kbs-close");
-            this.wrapper.addClass("kbs-open");
+            self.wrapper.removeClass("kbs-close");
+            self.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
-            this.wrapper.removeClass("kbs-open");
-            this.wrapper.addClass("kbs-close");
+            self.wrapper.removeClass("kbs-open");
+            self.wrapper.addClass("kbs-close");
         };
         
         // refresh console
@@ -263,8 +279,8 @@ define(
          
         // clear output
         Console.prototype.clear = function () {
-            var cons = this.wrapper.cons.element,
-                out = this.wrapper.cons.out.element,
+            var cons = self.wrapper.cons.element,
+                out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
                 end;
 
@@ -293,21 +309,27 @@ define(
             var time = util.ftime(),
                 date = util.fdate(),
                 buffer = cache.console.getBuffer(),
-                
-                // setup request
-                req = new Http({
-                    url: router.getRoute("console", "save"),
-                    method: "POST",
-                    send: true,
-                    data: {
-                        type: "log",
-                        date: date,
-                        buffer: buffer
-                    },
-                    success: function (response) {
-                        util.log("okay", response);
-                    }
-                });
+                req;
+            
+            util.log.beginContext("log/save");
+            util.log("info", "saving log buffer...");
+            
+            // setup request
+            req = new Http({
+                url: router.getRoute("console", "save"),
+                method: "POST",
+                send: true,
+                data: {
+                    type: "log",
+                    date: date,
+                    buffer: buffer
+                },
+                success: function (response) {
+                    util.log("context:log/save", "okay", response);
+                    util.log.endContext();
+                    util.log.clearContext("log/save");
+                }
+            });
         };
         
         // destroy console instance (irreversible)
@@ -370,7 +392,8 @@ define(
             constitle = constools.constitle =
                 constools.createChild("div", "kbs-cons-title");
 
-            titlenode = document.createTextNode("Kanban v" + config.version);
+            titlenode = document.createTextNode(config.appFullname +
+                                                "v" + config.version);
             constitle.addChild(titlenode);
             
             // toggle tool
@@ -401,28 +424,20 @@ define(
             // save tool - only on localhost base url's
             if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
                 this.createTool("save")
-                    .element.onclick = function () {
-                        self.save();
-                    };
+                    .element.onclick = self.save;
             }
             
             // destroy tool
             this.createTool("destroy")
-                .element.onclick = function () {
-                    self.destroy();
-                };
+                .element.onclick = self.destroy;
 
             // clear tool
             this.createTool("clear")
-                .element.onclick = function () {
-                    self.clear();
-                };
+                .element.onclick = self.clear;
 
             // close tool
             this.createTool("close")
-                .element.onclick = function () {
-                    self.close();
-                };
+                .element.onclick = self.close;
 
             // console
             wrapper.cons = cons =

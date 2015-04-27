@@ -50,8 +50,10 @@ define(
         }
 
         // initialise interactor
-        interactor = new Interactor();
-
+        if (config.interactor.enabled) {
+            interactor = new Interactor();
+        }
+            
         // execute kanban
         end = function () {
             // get performance delta
