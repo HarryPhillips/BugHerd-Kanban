@@ -309,10 +309,12 @@
 ------------------------------------------------------------------------------*/
 /* task details expand */
 .kbs-details-expand {
+    background-color: #ebeff1;
     position: fixed;
     top: 60px; bottom: 60px;
     left: 60px; right: 60px;
     width: initial; height: initial !important;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     z-index: 2147483645;
 }
 
@@ -383,6 +385,23 @@
     
     /* stretch task board to left side */
     #tasks { left: 0px; }
+}
+
+@media (min-width:941px) {
+    /* keep width narrow and box centred */
+    .kbs-details-expand {
+        width: 820px;
+        left: 50%;
+        margin-left: -410px;
+    }
+    
+    /* position close btn */
+    .kbs-details-close {
+        left: 50%;
+        
+        /* (kbs-detail:width / 2) - (btn:width / 2) */
+        margin-left: 395px;
+    }
 }
 
 @media (max-width:940px) {

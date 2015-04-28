@@ -66,7 +66,7 @@ define(
             }
 
             // apply elements and styling
-            this.applyWrapper();
+            //this.applyWrapper();
             this.applyElements();
             this.applyHandlers();
             this.applyStyles();
@@ -125,16 +125,20 @@ define(
                 return;
             }
             
-            // show elements
+            // show overlay
             $(".kbs-overlay").fadeIn();
-            $(".kbs-details-close").fadeIn();
             
-            // expand
-            $(".taskDetails").addClass("kbs-details-expand");
+            // add expansion class
+            $(".taskDetails").hide().addClass("kbs-details-expand");
             
-            // trigger a resize event
-            // so BugHerd can set the content height
-            $(window).trigger("resize");
+            // show elements
+            setTimeout(function () {
+                $(".taskDetails, .kbs-details-close").fadeIn();
+            
+                // trigger a resize event
+                // so BugHerd can set the content height
+                $(window).trigger("resize");
+            }, 250);
             
             // set status
             status.interactor.taskDetailsExpanded = true;
@@ -142,29 +146,59 @@ define(
 
         // shrinks the task details panel
         Interactor.prototype.shrinkTaskDetails = function () {
+            var task = $(".taskDetails"),
+                overlay = $(".kbs-overlay"),
+                btn = $(".kbs-details-close");
+            
             if (!status.interactor.taskDetailsExpanded) {
                 return;
             }
             
             // hide elements
-            $(".kbs-overlay").fadeOut();
-            $(".kbs-details-close").fadeOut();
-            
-            // shrink
-            $(".taskDetails").removeClass("kbs-details-expand");
+            task.removeClass("kbs-details-expand");
+            btn.fadeOut();
+            overlay.fadeOut();
             
             // set status
             status.interactor.taskDetailsExpanded = false;
         };
+            
+        // perform a task search
+        Interactor.prototype.searchForTask = function (localId) {
+            var search = $(".VS-search-inner input"),
+                facet = $(".search_facet_input"),
+                event = $.Event("keydown"),
+                clear = $("div.VS-icon:nth-child(4)"),
+                result;
+            
+            // down arrow
+            event.keyCode = 40;
+            
+            // focus and nav to id
+            search
+                .focus()
+                .trigger(event) // created
+                .trigger(event) // filter
+                .trigger(event); // id - bingo!
+            
+            // return key
+            event.keyCode = 13;
+            
+            // press enter key to select id
+            search.focus().trigger(event);
+            
+            // enter localId into input and hit enter again
+            facet
+                .val(localId.toString())
+                .trigger("keydown")
+                .trigger(event);
+            
+            // return result from recursive search
+            return result;
+        };
 
         // find a global task id from a local task id
         Interactor.prototype.findGlobalId = function (localId) {
-            /*
-                TODO:
-                - Need to perform a task search if not found, so that
-                tasks not currently rendered can be found
-            */
-            
             // declarations
             var setone = $(".task-id"), settwo = $(".taskID"),
                 child, parent,
@@ -179,8 +213,6 @@ define(
             if (typeof localId === "undefined") {
                 localId = $(".local_task_id")[0].textContent;
             }
-
-            util.log("debug", "Finding global id for task #" + localId);
             
             // find the right task
             setone.each(check);
@@ -189,30 +221,16 @@ define(
             if (!child) {
                 settwo.each(check);
             }
-            
-            // check if child was found
-            if (typeof child === "undefined") {
-                throw new Error("No task found with id: '" +
-                                localId +
-                                "'!");
-            }
 
-            // if still nothing return false
-            if (child.length < 1) {
-                util.log("error", "Couldn't find task #" + localId);
-                return false;
+            // if still nothing - perform a task search
+            if (typeof child === "undefined" || child.length < 1) {
+                util.log("debug", "Searching for task #" + localId + "...");
+                this.searchForTask(localId);
             }
             
-            parent = child.parent();
-
+            parent = child.closest(".task");
+            
             globalId = parent[0].id.replace("task_", "");
-
-            util.log(
-                "debug",
-                parent,
-                "Found parent element for task #" + localId +
-                    " and got global id #" + globalId
-            );
 
             return globalId;
         };
@@ -220,18 +238,20 @@ define(
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
             var element = $("#task_" + globalId);
-            console.log(element);
         };
             
         // wrap bugherd content in a kbs-wrapper element
         Interactor.prototype.applyWrapper = function () {
-            util.log(
-                "context:inter/init",
-                "+ wrapping bugherd application"
-            );
-            
-            // wrap application wrapper in kbs-wrapper
-            $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+            // wait until main content is ready
+            $(".pane-wrap").ready(function () {
+                util.log(
+                    "context:inter/init",
+                    "+ wrapping bugherd application"
+                );
+
+                // wrap application wrapper in kbs-wrapper
+                $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+            });
         };
 
         // append elements to bugherd ui
@@ -275,7 +295,7 @@ define(
             );
             
             // delegate clicks on kbs wrapper
-            $(".kbs-wrapper").on("click", function (event) {
+            $(".app-wrap").on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
                 if (task) {

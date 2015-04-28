@@ -1,2 +1,2 @@
 content	kanban	content/
-overlay	chrome://browser/content/browser.xul	chrome://kanban/content/script-compiler-overlay.xul
+overlay	chrome://browser/content/browser.xul	chrome://kanban/content/KanbanOverlay.xul

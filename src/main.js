@@ -44,7 +44,7 @@ define(
             status[data.component] = data.status;
         });
 
-        // initialise gui
+        // initialise gui first so log buffer is constructed
         if (config.gui.enabled) {
             gui = new GUI();
         }

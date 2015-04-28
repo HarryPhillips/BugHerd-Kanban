@@ -113,7 +113,6 @@ define(
             }
             
             if (util.isNode(element)) {
-                // use create proto of Node
                 logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
@@ -393,7 +392,7 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode(config.appFullname +
-                                                "v" + config.version);
+                                                " v" + config.version);
             constitle.addChild(titlenode);
             
             // toggle tool

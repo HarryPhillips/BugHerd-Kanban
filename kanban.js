@@ -23,16 +23,9 @@
         }
     });
     
-    // launch when doc is ready
-    if (document.readyState === "complete") {
+    // launch when window is loaded
+    window.onload = function () {
         window.KBS_START_TIME = new Date().getTime();
         require(['src/main']);
-    } else {
-        document.onreadystatechange = function () {
-            if (this.readyState === "complete") {
-                window.KBS_START_TIME = new Date().getTime();
-                require(['src/main']);
-            }
-        };
-    }
+    };
 }(window));

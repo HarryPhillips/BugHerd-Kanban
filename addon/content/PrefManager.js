@@ -1,4 +1,9 @@
-function kanban_PrefManager() {
+/*
+*   TODO:
+*   + Fix this god awful code quality...
+*/
+
+function PrefManager() {
 	var startPoint="extensions.kanban.";
 
 	var pref=Components.classes["@mozilla.org/preferences-service;1"].

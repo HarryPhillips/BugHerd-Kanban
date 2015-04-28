@@ -1131,18 +1131,20 @@ define(
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
             var element = $("#task_" + globalId);
-            console.log(element);
         };
             
         // wrap bugherd content in a kbs-wrapper element
         Interactor.prototype.applyWrapper = function () {
-            util.log(
-                "context:inter/init",
-                "+ wrapping bugherd application"
-            );
-            
-            // wrap application wrapper in kbs-wrapper
-            $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+            // wait until main content is ready
+            $(".pane-wrap").ready(function () {
+                util.log(
+                    "context:inter/init",
+                    "+ wrapping bugherd application"
+                );
+
+                // wrap application wrapper in kbs-wrapper
+                $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+            });
         };
 
         // append elements to bugherd ui
@@ -1606,7 +1608,6 @@ define(
             }
             
             if (util.isNode(element)) {
-                // use create proto of Node
                 logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
@@ -1886,7 +1887,7 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode(config.appFullname +
-                                                "v" + config.version);
+                                                " v" + config.version);
             constitle.addChild(titlenode);
             
             // toggle tool
@@ -2312,14 +2313,14 @@ define(
             status[data.component] = data.status;
         });
 
-        // initialise gui
-        if (config.gui.enabled) {
-            gui = new GUI();
-        }
-
         // initialise interactor
         if (config.interactor.enabled) {
             interactor = new Interactor();
+        }
+
+        // initialise gui
+        if (config.gui.enabled) {
+            gui = new GUI();
         }
             
         // execute kanban
@@ -2404,18 +2405,11 @@ define(
         }
     });
     
-    // launch when doc is ready
-    if (document.readyState === "complete") {
+    // launch when window is loaded
+    window.onload = function () {
         window.KBS_START_TIME = new Date().getTime();
         require(['src/main']);
-    } else {
-        document.onreadystatechange = function () {
-            if (this.readyState === "complete") {
-                window.KBS_START_TIME = new Date().getTime();
-                require(['src/main']);
-            }
-        };
-    }
+    };
 }(window));
 define("kanban", function(){});
 

@@ -1,13 +1,3 @@
-// ==UserScript==
-// @name        Kanban
-// @namespace   Kanban
-// @description BugHerd Kanban extensions and improvements
-// @include     http://www.bugherd.com/*
-// @include     https://www.bugherd.com/*
-// @version     1.1.0
-// @grant       none
-// ==/UserScript==
-
 /*global prefUrl: true, prefSource: true */
 
 (function (window) {
