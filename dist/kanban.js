@@ -1043,6 +1043,10 @@ define(
             // expand
             $(".taskDetails").addClass("kbs-details-expand");
             
+            // trigger a resize event
+            // so BugHerd can set the content height
+            $(window).trigger("resize");
+            
             // set status
             status.interactor.taskDetailsExpanded = true;
         };
