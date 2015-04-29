@@ -15,7 +15,7 @@ define({
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -28,7 +28,7 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -37,6 +37,7 @@ define({
                 close: "times",
                 destroy: "unlink",
                 example: "plus-circle",
+                benchmark: "tachometer",
                 expand: "caret-square-o-right"
             }
         }
@@ -61,6 +62,7 @@ define({
         clear: "Clear all logs",
         toggle: "GUI Console State",
         close: "Close the console",
-        destroy: "Destroy this console instance"
+        destroy: "Destroy this console instance",
+        benchmark: "Run the benchmark"
     }
 });

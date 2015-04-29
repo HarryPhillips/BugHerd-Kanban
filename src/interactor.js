@@ -12,14 +12,16 @@ define(
         'src/util',
         'src/components/events',
         'src/components/status',
-        'src/components/node'
+        'src/components/node',
+        'src/ui/modal'
     ],
     function (
         config,
         util,
         events,
         status,
-        Node
+        Node,
+        Modal
     ) {
         'use strict';
 
@@ -174,6 +176,8 @@ define(
             // down arrow
             event.keyCode = 40;
             
+            //debugger;
+            
             // focus and nav to id
             search
                 .focus()
@@ -189,7 +193,7 @@ define(
             
             // enter localId into input and hit enter again
             facet
-                .val(localId.toString())
+                .text(localId.toString())
                 .trigger("keydown")
                 .trigger(event);
             
@@ -258,7 +262,8 @@ define(
         Interactor.prototype.applyElements = function () {
             // declarations
             var taskExpander,
-                taskContractor;
+                taskContractor,
+                taskSearch;
             
             util.log(
                 "context:inter/init",
@@ -272,7 +277,12 @@ define(
             taskExpander.createChild("a")
                 .text("Expand Task")
                 .on("click", function (event) {
-                    self.openTask();
+                    taskSearch = new Modal("input", {
+                        init: true,
+                        title: "Search for a task",
+                        message: "Enter the ID of the task you want to find:",
+                        input: "number"
+                    });
                 });
             
             // task contractor/close button
@@ -294,7 +304,7 @@ define(
                 "+ applying handlers to bugherd"
             );
             
-            // delegate clicks on kbs wrapper
+            // delegate clicks on app wrapper
             $(".app-wrap").on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);

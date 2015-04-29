@@ -18,7 +18,7 @@ define(
     function (config, util, events, Http, status, Node) {
         'use strict';
 
-        // instance pointer
+        // instance references
         var self, gui;
         
         function Modal(type, instance, params) {
@@ -33,11 +33,22 @@ define(
                 type = null;
             }
             
+            // check if gui instance has been passed
+            if (instance.constructor.name !== "GUI") {
+                // adjust arguments
+                params = instance;
+                instance = null;
+            }
+            
+            if (!gui && !instance) {
+                throw new Error("Modal has no GUI instance!");
+            }
+            
             // set props
-            gui = instance;
+            gui = gui || instance;
             this.type = type;
             this.node = new Node("div", "kbs-modal");
-            this.node.element.style.display = "none";
+            this.node.hide();
             
             if (type) {
                 this.node.addClass("kbs-" + type);
@@ -69,6 +80,7 @@ define(
                 close =
                 this.node.createChild("i", "fa fa-times kbs-modal-close"),
                 
+                input,
                 confirm,
                 cancel;
             
@@ -88,22 +100,25 @@ define(
             if (this.type === "prompt") {
                 // confirm
                 confirm = this.node.createChild("span", "kbs-confirm");
-                confirm.element.textContent = "confirm";
+                confirm.text("confirm");
                 confirm.element.onclick = this.onConfirm;
                 
                 // cancel
                 cancel = this.node.createChild("span", "kbs-cancel");
-                cancel.element.textContent = "cancel";
+                cancel.text("cancel");
                 cancel.element.onclick = this.onCancel;
-                
-                // click event handlers
                 
                 this.node.addChild(confirm);
                 this.node.addChild(cancel);
             }
             
+            // add user input for input modals
+            if (this.type === "input") {
+                input = this.node.createChild("input", "kbs-input-field");
+            }
+            
             // add our node to gui
-            gui.addChild(this.node.element);
+            gui.addChild(this.node);
             
             // open the modal
             this.open();

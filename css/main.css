@@ -64,8 +64,20 @@
 
 .kbs-modal.kbs-prompt {
     width: 400px; height: 200px;
+    margin-top: -100px;
     margin-left: -200px;
     margin-right: -100px;
+}
+
+.kbs-modal.kbs-input {
+    width: 400px; height: 160px;
+    margin-top: -80px;
+    margin-left: -200px;
+    margin-right: -100px;
+}
+
+.kbs-modal.kbs-input .kbs-modal-msg {
+    height: auto;
 }
 
 .kbs-modal-msg {
@@ -222,7 +234,6 @@
     padding: 6px;
     font-weight: 300;
     text-transform: initial;
-    word-break: break-all;
     white-space: normal;
     overflow: hidden;
 }
@@ -283,16 +294,17 @@
 }
 
 /* togglable nodes */
-.kbs-exec, .kbs-test {
+.kbs-exec, .kbs-test, .kbs-buffer {
     cursor: pointer !important;
 }
 
-.kbs-exec .kbs-test {
+.kbs-exec .kbs-test, .kbs-buffer {
     border-bottom: solid #000 1px;
 }
 
 .kbs-exec .kbs-log-node,
-.kbs-test .kbs-log-node {
+.kbs-test .kbs-log-node,
+.kbs-buffer .kbs-log-node {
     cursor: default;
 }
 

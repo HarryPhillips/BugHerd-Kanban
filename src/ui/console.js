@@ -116,7 +116,7 @@ define(
                 logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", context);
+                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
                 element.appendChild(logContext.element);
             }
             
@@ -214,12 +214,14 @@ define(
             }
             
             // check if test node within exec node
-            contextParent = context.parentNode.className;
-            if (args.type === "test" &&
-                    util.contains(contextParent, "kbs-exec")) {
-                log.addClass("kbs-log-close");
+            if (context.parentNode) {
+                contextParent = context.parentNode.className;
+                if ((args.type.match(/(test)|(buffer)/)) &&
+                        util.contains(contextParent, "kbs-exec")) {
+                    log.addClass("kbs-log-close");
+                }
             }
-
+                
             // write to context
             context.appendChild(log.element);
             
@@ -281,25 +283,27 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
-                end;
+                deltaTime,
+                count = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
             while (out.firstChild) {
+                count += 1;
                 out.removeChild(out.firstChild);
             }
 
             // reattach
             cons.appendChild(out);
             
+            // bench
+            deltaTime = new Date().getTime() - start;
+            util.log("okay", "cleared " + count + " logs in " + deltaTime + " ms");
+            
             // clear buffer
             cache.console.clearBuffer();
-
-            // bench
-            end = new Date().getTime() - start;
-            util.log("okay", "cleared all logs in " + end + " ms");
         };
         
         // save the output buffer to a text file on the local system
@@ -426,6 +430,10 @@ define(
                     .element.onclick = self.save;
             }
             
+            // benchmark tool
+            this.createTool("benchmark")
+                .element.onclick = self.benchmark;
+            
             // destroy tool
             this.createTool("destroy")
                 .element.onclick = self.destroy;
@@ -447,6 +455,57 @@ define(
 
             // return wrapper element
             return wrapper;
+        };
+            
+        // benchmarks the generation of log nodes
+        Console.prototype.benchmark = function () {
+            var cons = self.wrapper.cons.element,
+                out = self.wrapper.cons.out.element,
+                amount = 10000,
+                start = new Date().getTime(),
+                deltaTime,
+                deltaSpeed,
+                result,
+                i = 0;
+
+            // new benchmark context
+            util.log("context:benchmark", "exec", "executing benchmark...");
+            util.log.beginContext("benchmark");
+            
+            // detach
+            cons.removeChild(out);
+            
+            // log specified amount
+            util.log("context:benchmark/output", "buffer", "benchmark output...");
+            while (i <= amount) {
+                util.log("context:benchmark/output", "debug", "log #" + i);
+                i += 1;
+            }
+
+            // reattach
+            cons.appendChild(out);
+
+            // get results
+            deltaTime = new Date().getTime() - start;
+            deltaSpeed = Math.floor(amount / deltaTime * 1000);
+            result = "Logged " + amount + " messages in " + deltaTime + "ms";
+            
+            // log delta time
+            util.log(
+                "context:benchmark",
+                "okay",
+                result
+            );
+            
+            // log delta speed
+            util.log(
+                "okay",
+                deltaSpeed + " logs per second."
+            );
+            
+            // clear the benchmark context
+            util.log.endContext();
+            self.clearContext("benchmark");
         };
         
         return Console;

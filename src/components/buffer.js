@@ -71,8 +71,11 @@ define(function () {
     Buffer.prototype.clearBuffer = function () {
         var buffer = this.index;
         
-        // splice our buffer index from global buffer
-        global.splice(buffer, 1);
+        // nullify buffer
+        global[buffer] = null;
+        
+        // generate new buffer
+        global[buffer] = "";
     };
     
     return Buffer;

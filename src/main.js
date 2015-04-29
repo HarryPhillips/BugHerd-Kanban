@@ -105,8 +105,5 @@ define(
 
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", end);
-
-        // publish the load event
-        events.publish("kbs/loaded");
     }
 );

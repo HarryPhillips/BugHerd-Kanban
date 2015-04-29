@@ -145,6 +145,10 @@ body {
     color: #b82c2c;
 }
 
+.kbs-benchmark {
+    background-color: ;
+}
+
 .kbs-example {
     background-color: #1a1a1a;
     color: #fff;
@@ -247,4 +251,18 @@ body {
     background-color: #580b84;
 }
 
+/* type: 'buffer' */
+.kbs-buffer {
+    background-color: #e8df68;
+    color: #1a1a1a;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
 
+.kbs-buffer:hover {
+    background-color: #1a1a1a;
+    color: #e8df68;
+}

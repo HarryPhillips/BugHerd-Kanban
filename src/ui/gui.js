@@ -51,12 +51,10 @@ define(
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
-
-            // test modal!
-            this.modal = new Modal(this, {
-                init: false,
-                title: "Test Modal - Title",
-                message: "Test paragraph / modal content."
+            this.dummyModal = new Modal(this, {
+                title: "Dummy Modal",
+                message: "This modal is only used to pass the GUI instance " +
+                    "to the Modal class"
             });
 
             // init
@@ -101,6 +99,9 @@ define(
 
                     // run event listeners
                     self.runEventListeners();
+
+                    // publish the loaded event
+                    events.publish("kbs/loaded");
                 };
 
             // events setup
@@ -194,7 +195,12 @@ define(
                 togglables;
 
             // set togglables based on context state
-            togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
+            togglables = (config.logs.contexts) ?
+                    [
+                        "kbs-exec",
+                        "kbs-test",
+                        "kbs-buffer"
+                    ] : "";
 
             // bind a click handler to the console out
             out.onclick = function (event) {
@@ -227,28 +233,6 @@ define(
             var node = new Node(type, classes, id);
             this.addChild(node);
             return node;
-        };
-        // benchmarks the generation of 10000 log nodes
-        GUI.prototype.benchmark = function () {
-            var cons = self.console.wrapper.cons.element,
-                out = self.console.wrapper.cons.out.element,
-                start = new Date().getTime(),
-                end,
-                i = 0;
-
-            // detach
-            cons.removeChild(out);
-
-            while (i < 10000) {
-                util.log("debug", "log #" + i);
-                i += 1;
-            }
-
-            // reattach
-            cons.appendChild(out);
-
-            end = new Date().getTime() - start;
-            util.log("debug", "opt: " + end + "ms");
         };
 
         // return the current gui instance
