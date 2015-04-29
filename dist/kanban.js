@@ -15,7 +15,7 @@ define('config',{
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-//    test: true,
+    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -28,7 +28,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-close",
+            state: "kbs-open",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -37,6 +37,7 @@ define('config',{
                 close: "times",
                 destroy: "unlink",
                 example: "plus-circle",
+                benchmark: "tachometer",
                 expand: "caret-square-o-right"
             }
         }
@@ -61,7 +62,8 @@ define('config',{
         clear: "Clear all logs",
         toggle: "GUI Console State",
         close: "Close the console",
-        destroy: "Destroy this console instance"
+        destroy: "Destroy this console instance",
+        benchmark: "Run the benchmark"
     }
 });
 
@@ -208,8 +210,11 @@ define('src/components/buffer',[],function () {
     Buffer.prototype.clearBuffer = function () {
         var buffer = this.index;
         
-        // splice our buffer index from global buffer
-        global.splice(buffer, 1);
+        // nullify buffer
+        global[buffer] = null;
+        
+        // generate new buffer
+        global[buffer] = "";
     };
     
     return Buffer;
@@ -911,308 +916,6 @@ define(
 );
 /*
 *   @type javascript
-*   @name interactor.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define(
-    'src/interactor',[
-        'config',
-        'src/util',
-        'src/components/events',
-        'src/components/status',
-        'src/components/node'
-    ],
-    function (
-        config,
-        util,
-        events,
-        status,
-        Node
-    ) {
-        
-
-        // declarations
-        var $,
-            self,
-            inited = false;
-
-        // interactor constructor
-        function Interactor() {
-            util.log(
-                "context:inter/init",
-                "info",
-                "Initialising Interactor..."
-            );
-            
-            // set pointer
-            self = this;
-            
-            // initialise
-            this.init();
-        }
-
-        // initialise the interactor
-        Interactor.prototype.init = function () {
-            if (inited) {
-                return;
-            }
-            
-            // check jquery
-            if (typeof window.jQuery !== "undefined") {
-                // get
-                $ = window.jQuery;
-            } else {
-                // no jquery, log error
-                util.log(
-                    "context:inter/init",
-                    "error",
-                    "Interactor could not initialise, jQuery not found!"
-                );
-
-                // and exit interactor
-                return;
-            }
-
-            // apply elements and styling
-            this.applyWrapper();
-            this.applyElements();
-            this.applyHandlers();
-            this.applyStyles();
-            
-            inited = true;
-        };
-            
-        // returns if an object is or is apart of a task element
-        Interactor.prototype.isTask = function (element) {
-            // get jquery object
-            if (!element instanceof $) {
-                element = $(element);
-            }
-            
-            element = element.closest("[id^=task_]");
-            
-            return (element.length) ? element : false;
-        };
-        
-        // get the wrapper task element from a component
-        Interactor.prototype.getTaskFromComponent = function (component) {
-            return component.closest("[id^=task_]");
-        };
-
-        // expand the currently active task or a specified task id
-        Interactor.prototype.openTask = function (localId) {
-            if (typeof localId === "undefined") {
-                this.expandTaskDetails();
-                return;
-            }
-            
-            // get global id of task number
-            var globalId = this.findGlobalId(localId || "");
-
-            // get task if specified
-            $("#task_" + globalId).trigger("click");
-
-            // expand task details
-            this.expandTaskDetails();
-        };
-
-        // close the currently expanded task
-        Interactor.prototype.closeTask = function () {
-            // shrink task details
-            this.shrinkTaskDetails();
-        };
-
-        // expands the task details panel
-        Interactor.prototype.expandTaskDetails = function () {
-            if (!$(".panelDetail").is(":visible")) {
-                return;
-            }
-            
-            // check current status
-            if (status.interactor.taskDetailsExpanded) {
-                return;
-            }
-            
-            // show elements
-            $(".kbs-overlay").fadeIn();
-            $(".kbs-details-close").fadeIn();
-            
-            // expand
-            $(".taskDetails").addClass("kbs-details-expand");
-            
-            // trigger a resize event
-            // so BugHerd can set the content height
-            $(window).trigger("resize");
-            
-            // set status
-            status.interactor.taskDetailsExpanded = true;
-        };
-
-        // shrinks the task details panel
-        Interactor.prototype.shrinkTaskDetails = function () {
-            if (!status.interactor.taskDetailsExpanded) {
-                return;
-            }
-            
-            // hide elements
-            $(".kbs-overlay").fadeOut();
-            $(".kbs-details-close").fadeOut();
-            
-            // shrink
-            $(".taskDetails").removeClass("kbs-details-expand");
-            
-            // set status
-            status.interactor.taskDetailsExpanded = false;
-        };
-
-        // find a global task id from a local task id
-        Interactor.prototype.findGlobalId = function (localId) {
-            /*
-                TODO:
-                - Need to perform a task search if not found, so that
-                tasks not currently rendered can be found
-            */
-            
-            // declarations
-            var setone = $(".task-id"), settwo = $(".taskID"),
-                child, parent,
-                globalId,
-                check = function (index) {
-                    if ($(this)[0].textContent === localId.toString()) {
-                        child = $(this);
-                    }
-                };
-
-            // get current task id if none passed
-            if (typeof localId === "undefined") {
-                localId = $(".local_task_id")[0].textContent;
-            }
-
-            util.log("debug", "Finding global id for task #" + localId);
-            
-            // find the right task
-            setone.each(check);
-            
-            // check set two if no child found
-            if (!child) {
-                settwo.each(check);
-            }
-            
-            // check if child was found
-            if (typeof child === "undefined") {
-                throw new Error("No task found with id: '" +
-                                localId +
-                                "'!");
-            }
-
-            // if still nothing return false
-            if (child.length < 1) {
-                util.log("error", "Couldn't find task #" + localId);
-                return false;
-            }
-            
-            parent = child.parent();
-
-            globalId = parent[0].id.replace("task_", "");
-
-            util.log(
-                "debug",
-                parent,
-                "Found parent element for task #" + localId +
-                    " and got global id #" + globalId
-            );
-
-            return globalId;
-        };
-            
-        // find a local task id from a global task id
-        Interactor.prototype.findLocalId = function (globalId) {
-            var element = $("#task_" + globalId);
-        };
-            
-        // wrap bugherd content in a kbs-wrapper element
-        Interactor.prototype.applyWrapper = function () {
-            // wait until main content is ready
-            $(".pane-wrap").ready(function () {
-                util.log(
-                    "context:inter/init",
-                    "+ wrapping bugherd application"
-                );
-
-                // wrap application wrapper in kbs-wrapper
-                $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
-            });
-        };
-
-        // append elements to bugherd ui
-        Interactor.prototype.applyElements = function () {
-            // declarations
-            var taskExpander,
-                taskContractor;
-            
-            util.log(
-                "context:inter/init",
-                "+ appending elements to bugherd"
-            );
-
-            // task expander list element
-            taskExpander = new Node("li");
-            
-            // task expander anchor element
-            taskExpander.createChild("a")
-                .text("Expand Task")
-                .on("click", function (event) {
-                    self.openTask();
-                });
-            
-            // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-close");
-            taskContractor.createChild("i", "fa fa-times");
-            taskContractor.on("click", function (event) {
-                self.closeTask();
-            });
-            
-            // write
-            taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($("body")[0]);
-        };
-            
-        // apply event handlers
-        Interactor.prototype.applyHandlers = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying handlers to bugherd"
-            );
-            
-            // delegate clicks on kbs wrapper
-            $(".kbs-wrapper").on("click", function (event) {
-                var target = $(event.target),
-                    task = self.isTask(target);
-                if (task) {
-                    self.openTask();
-                }
-            });
-        };
-
-        // apply new styling to bugherd ui
-        Interactor.prototype.applyStyles = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying styles to bugherd"
-            );
-
-            // add a margin to user nav to accompany console controls
-            $(".nav.user-menu").css("margin-right", "10px");
-        };
-
-        return Interactor;
-    }
-);
-/*
-*   @type javascript
 *   @name counter.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -1345,24 +1048,6 @@ define(
 );
 /*
 *   @type javascript
-*   @name router.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define('src/components/router',['config'], function (config) {
-    
-    
-    return {
-        // return a route to a component controller
-        getRoute: function (component, fn) {
-            return window.KBS_BASE_URL + config.routes[component][fn];
-        }
-    };
-});
-/*
-*   @type javascript
 *   @name modal.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -1381,7 +1066,7 @@ define(
     function (config, util, events, Http, status, Node) {
         
 
-        // instance pointer
+        // instance references
         var self, gui;
         
         function Modal(type, instance, params) {
@@ -1396,11 +1081,22 @@ define(
                 type = null;
             }
             
+            // check if gui instance has been passed
+            if (instance.constructor.name !== "GUI") {
+                // adjust arguments
+                params = instance;
+                instance = null;
+            }
+            
+            if (!gui && !instance) {
+                throw new Error("Modal has no GUI instance!");
+            }
+            
             // set props
-            gui = instance;
+            gui = gui || instance;
             this.type = type;
             this.node = new Node("div", "kbs-modal");
-            this.node.element.style.display = "none";
+            this.node.hide();
             
             if (type) {
                 this.node.addClass("kbs-" + type);
@@ -1432,6 +1128,7 @@ define(
                 close =
                 this.node.createChild("i", "fa fa-times kbs-modal-close"),
                 
+                input,
                 confirm,
                 cancel;
             
@@ -1451,22 +1148,25 @@ define(
             if (this.type === "prompt") {
                 // confirm
                 confirm = this.node.createChild("span", "kbs-confirm");
-                confirm.element.textContent = "confirm";
+                confirm.text("confirm");
                 confirm.element.onclick = this.onConfirm;
                 
                 // cancel
                 cancel = this.node.createChild("span", "kbs-cancel");
-                cancel.element.textContent = "cancel";
+                cancel.text("cancel");
                 cancel.element.onclick = this.onCancel;
-                
-                // click event handlers
                 
                 this.node.addChild(confirm);
                 this.node.addChild(cancel);
             }
             
+            // add user input for input modals
+            if (this.type === "input") {
+                input = this.node.createChild("input", "kbs-input-field");
+            }
+            
             // add our node to gui
-            gui.addChild(this.node.element);
+            gui.addChild(this.node);
             
             // open the modal
             this.open();
@@ -1493,6 +1193,354 @@ define(
         return Modal;
     }
 );
+/*
+*   @type javascript
+*   @name interactor.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define(
+    'src/interactor',[
+        'config',
+        'src/util',
+        'src/components/events',
+        'src/components/status',
+        'src/components/node',
+        'src/ui/modal'
+    ],
+    function (
+        config,
+        util,
+        events,
+        status,
+        Node,
+        Modal
+    ) {
+        
+
+        // declarations
+        var $,
+            self,
+            inited = false;
+
+        // interactor constructor
+        function Interactor() {
+            util.log(
+                "context:inter/init",
+                "info",
+                "Initialising Interactor..."
+            );
+            
+            // set pointer
+            self = this;
+            
+            // initialise
+            this.init();
+        }
+
+        // initialise the interactor
+        Interactor.prototype.init = function () {
+            if (inited) {
+                return;
+            }
+            
+            // check jquery
+            if (typeof window.jQuery !== "undefined") {
+                // get
+                $ = window.jQuery;
+            } else {
+                // no jquery, log error
+                util.log(
+                    "context:inter/init",
+                    "error",
+                    "Interactor could not initialise, jQuery not found!"
+                );
+
+                // and exit interactor
+                return;
+            }
+
+            // apply elements and styling
+            //this.applyWrapper();
+            this.applyElements();
+            this.applyHandlers();
+            this.applyStyles();
+            
+            inited = true;
+        };
+            
+        // returns if an object is or is apart of a task element
+        Interactor.prototype.isTask = function (element) {
+            // get jquery object
+            if (!element instanceof $) {
+                element = $(element);
+            }
+            
+            element = element.closest("[id^=task_]");
+            
+            return (element.length) ? element : false;
+        };
+        
+        // get the wrapper task element from a component
+        Interactor.prototype.getTaskFromComponent = function (component) {
+            return component.closest("[id^=task_]");
+        };
+
+        // expand the currently active task or a specified task id
+        Interactor.prototype.openTask = function (localId) {
+            if (typeof localId === "undefined") {
+                this.expandTaskDetails();
+                return;
+            }
+            
+            // get global id of task number
+            var globalId = this.findGlobalId(localId || "");
+
+            // get task if specified
+            $("#task_" + globalId).trigger("click");
+
+            // expand task details
+            this.expandTaskDetails();
+        };
+
+        // close the currently expanded task
+        Interactor.prototype.closeTask = function () {
+            // shrink task details
+            this.shrinkTaskDetails();
+        };
+
+        // expands the task details panel
+        Interactor.prototype.expandTaskDetails = function () {
+            if (!$(".panelDetail").is(":visible")) {
+                return;
+            }
+            
+            // check current status
+            if (status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            // show overlay
+            $(".kbs-overlay").fadeIn();
+            
+            // add expansion class
+            $(".taskDetails").hide().addClass("kbs-details-expand");
+            
+            // show elements
+            setTimeout(function () {
+                $(".taskDetails, .kbs-details-close").fadeIn();
+            
+                // trigger a resize event
+                // so BugHerd can set the content height
+                $(window).trigger("resize");
+            }, 250);
+            
+            // set status
+            status.interactor.taskDetailsExpanded = true;
+        };
+
+        // shrinks the task details panel
+        Interactor.prototype.shrinkTaskDetails = function () {
+            var task = $(".taskDetails"),
+                overlay = $(".kbs-overlay"),
+                btn = $(".kbs-details-close");
+            
+            if (!status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            // hide elements
+            task.removeClass("kbs-details-expand");
+            btn.fadeOut();
+            overlay.fadeOut();
+            
+            // set status
+            status.interactor.taskDetailsExpanded = false;
+        };
+            
+        // perform a task search
+        Interactor.prototype.searchForTask = function (localId) {
+            var search = $(".VS-search-inner input"),
+                facet = $(".search_facet_input"),
+                event = $.Event("keydown"),
+                clear = $("div.VS-icon:nth-child(4)"),
+                result;
+            
+            // down arrow
+            event.keyCode = 40;
+            
+            //debugger;
+            
+            // focus and nav to id
+            search
+                .focus()
+                .trigger(event) // created
+                .trigger(event) // filter
+                .trigger(event); // id - bingo!
+            
+            // return key
+            event.keyCode = 13;
+            
+            // press enter key to select id
+            search.focus().trigger(event);
+            
+            // enter localId into input and hit enter again
+            facet
+                .text(localId.toString())
+                .trigger("keydown")
+                .trigger(event);
+            
+            // return result from recursive search
+            return result;
+        };
+
+        // find a global task id from a local task id
+        Interactor.prototype.findGlobalId = function (localId) {
+            // declarations
+            var setone = $(".task-id"), settwo = $(".taskID"),
+                child, parent,
+                globalId,
+                check = function (index) {
+                    if ($(this)[0].textContent === localId.toString()) {
+                        child = $(this);
+                    }
+                };
+
+            // get current task id if none passed
+            if (typeof localId === "undefined") {
+                localId = $(".local_task_id")[0].textContent;
+            }
+            
+            // find the right task
+            setone.each(check);
+            
+            // check set two if no child found
+            if (!child) {
+                settwo.each(check);
+            }
+
+            // if still nothing - perform a task search
+            if (typeof child === "undefined" || child.length < 1) {
+                util.log("debug", "Searching for task #" + localId + "...");
+                this.searchForTask(localId);
+            }
+            
+            parent = child.closest(".task");
+            
+            globalId = parent[0].id.replace("task_", "");
+
+            return globalId;
+        };
+            
+        // find a local task id from a global task id
+        Interactor.prototype.findLocalId = function (globalId) {
+            var element = $("#task_" + globalId);
+        };
+            
+        // wrap bugherd content in a kbs-wrapper element
+        Interactor.prototype.applyWrapper = function () {
+            // wait until main content is ready
+            $(".pane-wrap").ready(function () {
+                util.log(
+                    "context:inter/init",
+                    "+ wrapping bugherd application"
+                );
+
+                // wrap application wrapper in kbs-wrapper
+                $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
+            });
+        };
+
+        // append elements to bugherd ui
+        Interactor.prototype.applyElements = function () {
+            // declarations
+            var taskExpander,
+                taskContractor,
+                taskSearch;
+            
+            util.log(
+                "context:inter/init",
+                "+ appending elements to bugherd"
+            );
+
+            // task expander list element
+            taskExpander = new Node("li");
+            
+            // task expander anchor element
+            taskExpander.createChild("a")
+                .text("Expand Task")
+                .on("click", function (event) {
+                    taskSearch = new Modal("input", {
+                        init: true,
+                        title: "Search for a task",
+                        message: "Enter the ID of the task you want to find:",
+                        input: "number"
+                    });
+                });
+            
+            // task contractor/close button
+            taskContractor = new Node("div", "kbs-details-close");
+            taskContractor.createChild("i", "fa fa-times");
+            taskContractor.on("click", function (event) {
+                self.closeTask();
+            });
+            
+            // write
+            taskExpander.writeTo($(".nav.main-nav")[0]);
+            taskContractor.writeTo($("body")[0]);
+        };
+            
+        // apply event handlers
+        Interactor.prototype.applyHandlers = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying handlers to bugherd"
+            );
+            
+            // delegate clicks on app wrapper
+            $(".app-wrap").on("click", function (event) {
+                var target = $(event.target),
+                    task = self.isTask(target);
+                if (task) {
+                    self.openTask();
+                }
+            });
+        };
+
+        // apply new styling to bugherd ui
+        Interactor.prototype.applyStyles = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying styles to bugherd"
+            );
+
+            // add a margin to user nav to accompany console controls
+            $(".nav.user-menu").css("margin-right", "10px");
+        };
+
+        return Interactor;
+    }
+);
+/*
+*   @type javascript
+*   @name router.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('src/components/router',['config'], function (config) {
+    
+    
+    return {
+        // return a route to a component controller
+        getRoute: function (component, fn) {
+            return window.KBS_BASE_URL + config.routes[component][fn];
+        }
+    };
+});
 /*
 *   @type javascript
 *   @name console.js
@@ -1611,7 +1659,7 @@ define(
                 logContext = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", context);
+                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
                 element.appendChild(logContext.element);
             }
             
@@ -1709,12 +1757,14 @@ define(
             }
             
             // check if test node within exec node
-            contextParent = context.parentNode.className;
-            if (args.type === "test" &&
-                    util.contains(contextParent, "kbs-exec")) {
-                log.addClass("kbs-log-close");
+            if (context.parentNode) {
+                contextParent = context.parentNode.className;
+                if ((args.type.match(/(test)|(buffer)/)) &&
+                        util.contains(contextParent, "kbs-exec")) {
+                    log.addClass("kbs-log-close");
+                }
             }
-
+                
             // write to context
             context.appendChild(log.element);
             
@@ -1776,25 +1826,27 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
-                end;
+                deltaTime,
+                count = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
             while (out.firstChild) {
+                count += 1;
                 out.removeChild(out.firstChild);
             }
 
             // reattach
             cons.appendChild(out);
             
+            // bench
+            deltaTime = new Date().getTime() - start;
+            util.log("okay", "cleared " + count + " logs in " + deltaTime + " ms");
+            
             // clear buffer
             cache.console.clearBuffer();
-
-            // bench
-            end = new Date().getTime() - start;
-            util.log("okay", "cleared all logs in " + end + " ms");
         };
         
         // save the output buffer to a text file on the local system
@@ -1921,6 +1973,10 @@ define(
                     .element.onclick = self.save;
             }
             
+            // benchmark tool
+            this.createTool("benchmark")
+                .element.onclick = self.benchmark;
+            
             // destroy tool
             this.createTool("destroy")
                 .element.onclick = self.destroy;
@@ -1942,6 +1998,57 @@ define(
 
             // return wrapper element
             return wrapper;
+        };
+            
+        // benchmarks the generation of log nodes
+        Console.prototype.benchmark = function () {
+            var cons = self.wrapper.cons.element,
+                out = self.wrapper.cons.out.element,
+                amount = 10000,
+                start = new Date().getTime(),
+                deltaTime,
+                deltaSpeed,
+                result,
+                i = 0;
+
+            // new benchmark context
+            util.log("context:benchmark", "exec", "executing benchmark...");
+            util.log.beginContext("benchmark");
+            
+            // detach
+            cons.removeChild(out);
+            
+            // log specified amount
+            util.log("context:benchmark/output", "buffer", "benchmark output...");
+            while (i <= amount) {
+                util.log("context:benchmark/output", "debug", "log #" + i);
+                i += 1;
+            }
+
+            // reattach
+            cons.appendChild(out);
+
+            // get results
+            deltaTime = new Date().getTime() - start;
+            deltaSpeed = Math.floor(amount / deltaTime * 1000);
+            result = "Logged " + amount + " messages in " + deltaTime + "ms";
+            
+            // log delta time
+            util.log(
+                "context:benchmark",
+                "okay",
+                result
+            );
+            
+            // log delta speed
+            util.log(
+                "okay",
+                deltaSpeed + " logs per second."
+            );
+            
+            // clear the benchmark context
+            util.log.endContext();
+            self.clearContext("benchmark");
         };
         
         return Console;
@@ -2000,12 +2107,10 @@ define(
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
-
-            // test modal!
-            this.modal = new Modal(this, {
-                init: false,
-                title: "Test Modal - Title",
-                message: "Test paragraph / modal content."
+            this.dummyModal = new Modal(this, {
+                title: "Dummy Modal",
+                message: "This modal is only used to pass the GUI instance " +
+                    "to the Modal class"
             });
 
             // init
@@ -2050,6 +2155,9 @@ define(
 
                     // run event listeners
                     self.runEventListeners();
+
+                    // publish the loaded event
+                    events.publish("kbs/loaded");
                 };
 
             // events setup
@@ -2143,7 +2251,12 @@ define(
                 togglables;
 
             // set togglables based on context state
-            togglables = (config.logs.contexts) ? ["kbs-exec", "kbs-test"] : "";
+            togglables = (config.logs.contexts) ?
+                    [
+                        "kbs-exec",
+                        "kbs-test",
+                        "kbs-buffer"
+                    ] : "";
 
             // bind a click handler to the console out
             out.onclick = function (event) {
@@ -2176,28 +2289,6 @@ define(
             var node = new Node(type, classes, id);
             this.addChild(node);
             return node;
-        };
-        // benchmarks the generation of 10000 log nodes
-        GUI.prototype.benchmark = function () {
-            var cons = self.console.wrapper.cons.element,
-                out = self.console.wrapper.cons.out.element,
-                start = new Date().getTime(),
-                end,
-                i = 0;
-
-            // detach
-            cons.removeChild(out);
-
-            while (i < 10000) {
-                util.log("debug", "log #" + i);
-                i += 1;
-            }
-
-            // reattach
-            cons.appendChild(out);
-
-            end = new Date().getTime() - start;
-            util.log("debug", "opt: " + end + "ms");
         };
 
         // return the current gui instance
@@ -2313,14 +2404,14 @@ define(
             status[data.component] = data.status;
         });
 
+        // initialise gui first so log buffer is constructed
+        if (config.gui.enabled) {
+            gui = new GUI();
+        }
+
         // initialise interactor
         if (config.interactor.enabled) {
             interactor = new Interactor();
-        }
-
-        // initialise gui
-        if (config.gui.enabled) {
-            gui = new GUI();
         }
             
         // execute kanban
@@ -2374,9 +2465,6 @@ define(
 
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", end);
-
-        // publish the load event
-        events.publish("kbs/loaded");
     }
 );
 
