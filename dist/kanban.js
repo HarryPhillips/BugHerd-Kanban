@@ -11,11 +11,11 @@ define('config',{
     appFullname: "Kanban",
     version: "1.2.0",
     enabled: true,
-    mode: "dev",
+    mode: "prod",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -28,7 +28,7 @@ define('config',{
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",
@@ -1309,6 +1309,7 @@ define(
             this.applyElements();
             this.applyHandlers();
             this.applyStyles();
+            this.applyContext();
             
             inited = true;
         };
@@ -1332,6 +1333,12 @@ define(
 
         // expand the currently active task or a specified task id
         Interactor.prototype.openTask = function (localId) {
+            util.log(
+                "context:interactor",
+                "debug",
+                "Opening task #" + localId + "..."
+            );
+            
             if (typeof localId === "undefined") {
                 this.expandTaskDetails();
                 return;
@@ -1361,7 +1368,7 @@ define(
             }
             
             // show overlay
-            $(".kbs-overlay").fadeIn();
+            $(".kbs-overlay").show();
             
             // add expansion class
             $(".taskDetails").hide().addClass("kbs-details-expand");
@@ -1405,6 +1412,12 @@ define(
                 clear = $("div.VS-icon:nth-child(4)"),
                 facet,
                 result;
+            
+            util.log(
+                "context:interactor",
+                "debug",
+                "Searching for task #" + localId
+            );
             
             // down arrow
             event.keyCode = 40;
@@ -1450,9 +1463,12 @@ define(
         // find a global task id from a local task id
         Interactor.prototype.findGlobalId = function (localId, callback) {
             // declarations
-            var setone = $(".task-id"), settwo = $(".taskID"),
-                child, parent,
+            var tasks = $(".task-id, .taskID"),
+                child,
+                parent,
                 globalId,
+                errModal,
+                errMsg,
                 check = function (index) {
                     if ($(this)[0].textContent === localId.toString()) {
                         child = $(this);
@@ -1465,32 +1481,38 @@ define(
             }
             
             // find the right task
-            setone.each(check);
-            
-            // check set two if no child found
-            if (!child) {
-                settwo.each(check);
-            }
+            tasks.each(check);
 
-            // if still nothing - perform a task search (async!)
+            // if nothing found - perform a task search (async!)
             if (typeof child === "undefined") {
                 if (typeof callback === "undefined") {
                     util.log(
+                        "context:interactor",
                         "error",
-                        "Couldn't find global id for #" + localId +
+                        "Couldn't find global id for task #" + localId +
                             " Provide a callback function to allow " +
                             "async task searches!"
                     );
                 }
                 
                 // async search for task - calls callback with result
-                util.log("debug", "Searching for task #" + localId + "...");
                 this.searchForTask(localId, function (task) {
                     if (self.findLocalIdFromTask(task) === localId) {
                         callback(task);
                     } else {
-                        util.log("error", "Couldn't find global id for task " +
-                                "#" + localId);
+                        errMsg = "Couldn't find task #" + localId;
+                        
+                        util.log(
+                            "context:interactor",
+                            "error",
+                            errMsg
+                        );
+                        
+                        errModal = new Modal("small", {
+                            init: true,
+                            title: "Task search failed!",
+                            message: errMsg
+                        });
                     }
                 });
                 
@@ -1501,6 +1523,9 @@ define(
             parent = child.closest(".task");
             globalId = parent[0].id.replace("task_", "");
 
+            // run callback with task/parent
+            callback(parent);
+            
             return globalId;
         };
             
@@ -1566,8 +1591,8 @@ define(
                         input: "number",
                         continueText: "Go",
                         proceed: function (localId) {
-                            self.openTask(localId);
                             taskSearch.destroy();
+                            self.openTask(localId);
                         }
                     });
                 });
@@ -1595,8 +1620,9 @@ define(
             $(".app-wrap").on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
+                
                 if (task) {
-                    self.openTask();
+                    self.expandTaskDetails();
                 }
             });
         };
@@ -1610,6 +1636,15 @@ define(
 
             // add a margin to user nav to accompany console controls
             $(".nav.user-menu").css("margin-right", "10px");
+        };
+            
+        // apply interactor logging context / output
+        Interactor.prototype.applyContext = function () {
+            util.log(
+                "context:interactor",
+                "info",
+                "Interactor log output..."
+            );
         };
 
         return Interactor;
