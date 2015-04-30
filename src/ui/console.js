@@ -364,7 +364,7 @@ define(
                         modal.destroy();
                     },
                     cancel: function () {
-                        modal.close();
+                        modal.destroy();
                     }
                 });
         };

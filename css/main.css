@@ -70,7 +70,7 @@
 }
 
 .kbs-modal.kbs-input {
-    width: 400px; height: 160px;
+    width: 400px; height: 200px;
     margin-top: -80px;
     margin-left: -200px;
     margin-right: -100px;
@@ -78,6 +78,10 @@
 
 .kbs-modal.kbs-input .kbs-modal-msg {
     height: auto;
+}
+
+.kbs-modal.kbs-input .kbs-input-field {
+    -moz-appearance: textfield;
 }
 
 .kbs-modal-msg {
@@ -117,19 +121,28 @@
     text-align: center;
     font-size: 14px;
     cursor: pointer;
-    
+}
+
+.kbs-continue {
+    position: relative;
+    left: 50%;
+    width: 150px;
+    margin: 0 2px;
+    margin-left: -75px;
+    border: solid transparent 0px;
+    padding: 5px 15px;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.kbs-confirm,
+.kbs-cancel,
+.kbs-continue {
     -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
     -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
     -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
     transition: background-color 0.3s, color 0.3s, border 0.3s;
-}
-
-.kbs-confirm:hover {
-    border-bottom: ;
-}
-
-.kbs-cancel:hover {
-    border-bottom: ;
 }
 
 /* gui console wrapper 

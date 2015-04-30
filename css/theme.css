@@ -36,7 +36,9 @@ body {
     color: #fff;
 }
 
-.kbs-confirm, .kbs-cancel {
+.kbs-confirm,
+.kbs-cancel,
+.kbs-continue {
     background-color: #ddd;
     color: #000;
 }
@@ -48,6 +50,11 @@ body {
 
 .kbs-cancel:hover {
     background-color: #8e2929;
+    color: #fff;
+}
+
+.kbs-continue:hover {
+    background-color: #6a8e29;
     color: #fff;
 }
 

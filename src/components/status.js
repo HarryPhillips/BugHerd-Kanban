@@ -12,5 +12,6 @@ define({
         taskDetailsExpanded: false
     },
     gui: false,
-    console: false
+    console: false,
+    modal: false
 });

@@ -19,11 +19,11 @@ define(
         'use strict';
 
         // instance references
-        var self, gui;
+        var gui;
         
         function Modal(type, instance, params) {
             // set pointer
-            self = this;
+            var self = this;
             
             // check if a type has been passed
             if (typeof type !== "string") {
@@ -56,10 +56,21 @@ define(
             
             this.onConfirm = params.confirm || function () {};
             this.onCancel = params.cancel || function () {};
+            this.onProceed = function () {};
+            
+            // wrap the on proceed event to pass args
+            if (params.proceed) {
+                this.onProceed = function (args) {
+                    params.proceed(args);
+                };
+            }
             
             // text content
             this.title = params.title;
             this.message = params.message;
+            
+            // input
+            this.inputType = params.input || "text";
             
             // initialise
             if (params.init) {
@@ -71,54 +82,66 @@ define(
         Modal.prototype.init = function () {
             // declarations
             var
+                self = this,
+            
+                modal = this.node,
+            
                 title =
-                this.node.createChild("h2", "kbs-modal-title"),
-                
-                message =
-                this.node.createChild("p", "kbs-modal-msg"),
+                modal.createChild("h2", "kbs-modal-title"),
                 
                 close =
-                this.node.createChild("i", "fa fa-times kbs-modal-close"),
+                modal.createChild("i", "fa fa-times kbs-modal-close"),
+                
+                message =
+                modal.createChild("p", "kbs-modal-msg"),
                 
                 input,
                 confirm,
-                cancel;
+                cancel,
+                proceed;
             
             title.element.textContent = this.title;
             message.element.textContent = this.message;
             
             close.element.onclick = function () {
-                self.close();
+                self.destroy();
             };
-            
-            // append components
-            this.node.addChild(title);
-            this.node.addChild(close);
-            this.node.addChild(message);
             
             // add confirm/cancel buttons for prompt modals
             if (this.type === "prompt") {
                 // confirm
-                confirm = this.node.createChild("span", "kbs-confirm");
+                confirm = modal.createChild("span", "kbs-confirm");
                 confirm.text("confirm");
                 confirm.element.onclick = this.onConfirm;
                 
                 // cancel
-                cancel = this.node.createChild("span", "kbs-cancel");
+                cancel = modal.createChild("span", "kbs-cancel");
                 cancel.text("cancel");
                 cancel.element.onclick = this.onCancel;
-                
-                this.node.addChild(confirm);
-                this.node.addChild(cancel);
             }
             
             // add user input for input modals
             if (this.type === "input") {
+                // input field
                 input = this.node.createChild("input", "kbs-input-field");
+                input.element.type = this.inputType;
+                
+                // continue button
+                proceed = modal.createChild("div", "kbs-continue");
+                proceed.text("Go");
+                proceed.element.onclick = function () {
+                    self.onProceed(input.element.value);
+                };
+                
             }
             
             // add our node to gui
-            gui.addChild(this.node);
+            gui.addChild(modal);
+            
+            // focus on input
+            if (this.type === "input") {
+                input.focus();
+            }
             
             // open the modal
             this.open();
@@ -126,18 +149,25 @@ define(
         
         // reveal modal and overlay
         Modal.prototype.open = function () {
+            if (status.modal) {
+                return;
+            }
+            
+            status.modal = true;
             gui.tree.main.overlay.show();
             this.node.show();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
+            status.modal = false;
             gui.tree.main.overlay.hide();
             this.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
+            status.modal = false;
             gui.tree.main.overlay.hide();
             this.node.destroy();
         };

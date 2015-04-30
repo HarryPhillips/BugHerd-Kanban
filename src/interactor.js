@@ -4,6 +4,11 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
+/*
+*   TODO:
+*   + Handle async task searches with callbacks to find_Id calls
+*/
+
 /*global define: true */
 
 define(
@@ -100,19 +105,15 @@ define(
                 return;
             }
             
-            // get global id of task number
-            var globalId = this.findGlobalId(localId || "");
-
-            // get task if specified
-            $("#task_" + globalId).trigger("click");
-
-            // expand task details
-            this.expandTaskDetails();
+            // get global id
+            this.findGlobalId(localId, function (task) {
+                // once found - click the task
+                task.trigger("click");
+            });
         };
 
         // close the currently expanded task
         Interactor.prototype.closeTask = function () {
-            // shrink task details
             this.shrinkTaskDetails();
         };
 
@@ -166,17 +167,15 @@ define(
         };
             
         // perform a task search
-        Interactor.prototype.searchForTask = function (localId) {
+        Interactor.prototype.searchForTask = function (localId, callback) {
             var search = $(".VS-search-inner input"),
-                facet = $(".search_facet_input"),
                 event = $.Event("keydown"),
                 clear = $("div.VS-icon:nth-child(4)"),
+                facet,
                 result;
             
             // down arrow
             event.keyCode = 40;
-            
-            //debugger;
             
             // focus and nav to id
             search
@@ -191,18 +190,33 @@ define(
             // press enter key to select id
             search.focus().trigger(event);
             
-            // enter localId into input and hit enter again
+            // enter localId into input
+            facet = $(".search_facet_input");
             facet
-                .text(localId.toString())
-                .trigger("keydown")
-                .trigger(event);
+                .val(localId)
+                .trigger("keydown");
+
+            setTimeout(function () {
+                // press enter
+                facet.trigger(event);
             
-            // return result from recursive search
-            return result;
+                setTimeout(function () {
+                    // callback with task
+                    callback($(".task"));
+                    
+                    // unfocus from search
+                    document.activeElement.blur();
+                    
+                    setTimeout(function () {
+                        // clear search field
+                        $("div.VS-icon:nth-child(4)").trigger("click");
+                    }, 1000);
+                }, 500);
+            });
         };
 
         // find a global task id from a local task id
-        Interactor.prototype.findGlobalId = function (localId) {
+        Interactor.prototype.findGlobalId = function (localId, callback) {
             // declarations
             var setone = $(".task-id"), settwo = $(".taskID"),
                 child, parent,
@@ -226,14 +240,33 @@ define(
                 settwo.each(check);
             }
 
-            // if still nothing - perform a task search
-            if (typeof child === "undefined" || child.length < 1) {
+            // if still nothing - perform a task search (async!)
+            if (typeof child === "undefined") {
+                if (typeof callback === "undefined") {
+                    util.log(
+                        "error",
+                        "Couldn't find global id for #" + localId +
+                            " Provide a callback function to allow " +
+                            "async task searches!"
+                    );
+                }
+                
+                // async search for task - calls callback with result
                 util.log("debug", "Searching for task #" + localId + "...");
-                this.searchForTask(localId);
+                this.searchForTask(localId, function (task) {
+                    if (self.findLocalIdFromTask(task) === localId) {
+                        callback(task);
+                    } else {
+                        util.log("error", "Couldn't find global id for task " +
+                                "#" + localId);
+                    }
+                });
+                
+                return;
             }
             
+            // if found without asyn search - get and return
             parent = child.closest(".task");
-            
             globalId = parent[0].id.replace("task_", "");
 
             return globalId;
@@ -241,7 +274,24 @@ define(
             
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
-            var element = $("#task_" + globalId);
+            $("#task_" + globalId).find(".task-id, .taskID").text();
+        };
+            
+            
+        // find a global task id from task element
+        Interactor.prototype.findGlobalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                globalId = parent[0].id.replace("task_", "");
+            
+            return globalId;
+        };
+            
+        // find a local task id from task element
+        Interactor.prototype.findLocalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                localId = task.find(".task-id, .taskID").text();
+            
+            return localId;
         };
             
         // wrap bugherd content in a kbs-wrapper element
@@ -275,13 +325,18 @@ define(
             
             // task expander anchor element
             taskExpander.createChild("a")
-                .text("Expand Task")
+                .text("Search Task")
                 .on("click", function (event) {
                     taskSearch = new Modal("input", {
                         init: true,
-                        title: "Search for a task",
+                        title: "Find a task",
                         message: "Enter the ID of the task you want to find:",
-                        input: "number"
+                        input: "number",
+                        continueText: "Go",
+                        proceed: function (localId) {
+                            self.openTask(localId);
+                            taskSearch.destroy();
+                        }
                     });
                 });
             

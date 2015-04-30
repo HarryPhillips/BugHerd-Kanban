@@ -296,7 +296,7 @@ var KanbanLoader = {
     },
 
     onLoad: function () {
-        var	appcontent = window.document.getElementById("appcontent");
+        var    appcontent = window.document.getElementById("appcontent");
         
         if (appcontent && !appcontent.greased_KanbanLoader) {
             appcontent.greased_KanbanLoader = true;
@@ -315,15 +315,15 @@ var KanbanLoader = {
 
 
 function KanbanPref() {
-	this.prefMan = new PrefManager();
+    this.prefMan = new PrefManager();
 }
 
 KanbanPref.prototype.setValue = function (name, val) {
-	this.prefMan.setValue(name, val);
+    this.prefMan.setValue(name, val);
 };
 
 KanbanPref.prototype.getValue = function (name, defVal) {
-	return this.prefMan.getValue(name, defVal);
+    return this.prefMan.getValue(name, defVal);
 };
 
 // add initialisers

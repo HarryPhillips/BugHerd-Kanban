@@ -49,24 +49,14 @@ define(
             this.element.style.display = "none";
         };
         
-        // get parent node
-        Node.prototype.parent = function () {
-            return this.element.parentNode;
-        };
-        
-        // set attribute to node
-        Node.prototype.attr = function (name, value) {
-            this.element.setAttribute(name, value);
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
         };
         
         // return current element classes
         Node.prototype.getClasses = function () {
             return this.element.className;
-        };
-        
-        // return current element id
-        Node.prototype.getId = function () {
-            return this.element.id;
         };
         
         // return if node has a class
@@ -142,6 +132,11 @@ define(
             this.element.className = classes;
         };
         
+        // get parent node
+        Node.prototype.parent = function () {
+            return this.element.parentNode;
+        };
+        
         // add a child to node
         Node.prototype.addChild = function (child) {
             // check if node is an instance of class Node
@@ -190,6 +185,17 @@ define(
             clone.element = this.element.cloneNode();
             
             return clone;
+        };
+        
+        // focus on node
+        Node.prototype.focus = function () {
+            this.element.focus();
+            return this;
+        };
+        
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            this.element.setAttribute(name, value);
         };
         
         // write or return node text
