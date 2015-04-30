@@ -373,6 +373,9 @@ define(
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
+                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
+                        "local" : "remote",
+            
                 // console nodes
                 wrapper,
                 consclass,
@@ -396,7 +399,7 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode(config.appFullname +
-                                                " v" + config.version);
+                    " v" + config.version + " - " + connection);
             constitle.addChild(titlenode);
             
             // toggle tool

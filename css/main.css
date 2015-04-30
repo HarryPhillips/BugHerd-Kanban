@@ -381,7 +381,9 @@
 .kbs-details-expand .taskDescription,
 .kbs-details-expand .taskDescriptionHolder {
     position: relative !important;
-    width: inherit !important; min-height: 100px !important;
+    width: inherit !important; height: 100%;
+    min-height: 100px !important;
+    max-height: 250px !important;
 }
 
 /* force near full-width */
