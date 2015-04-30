@@ -4,11 +4,6 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-/*
-*   TODO:
-*   + Handle async task searches with callbacks to find_Id calls
-*/
-
 /*global define: true */
 
 define(

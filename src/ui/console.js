@@ -6,12 +6,6 @@
 
 /*global define: true */
 
-/*
-*   TODO:
-*   + White space in log strings aren't formatting correctly when passed
-*     into a log / text node
-*/
-
 define(
     [
         'config',

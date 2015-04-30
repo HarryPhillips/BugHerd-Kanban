@@ -6,11 +6,6 @@
 
 /*global define: true */
 
-/*
-*   TODO:
-*   + Add the ability to create a Node from a HTML Element
-*/
-
 define(
     ['config', 'src/util'],
     function (config, util) {
