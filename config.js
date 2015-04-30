@@ -9,7 +9,7 @@
 define({
     appName: "kbs",
     appFullname: "Kanban",
-    version: "1.2.0",
+    version: "1.2.1",
     enabled: true,
     mode: "prod",
 //    offline: true,
