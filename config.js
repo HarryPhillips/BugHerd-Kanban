@@ -11,11 +11,11 @@ define({
     appFullname: "Kanban",
     version: "1.2.0",
     enabled: true,
-    mode: "dev",
+    mode: "prod",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
-    test: true,
+//    test: true,
     logs: {
         enabled: true,
         gui: true,
@@ -28,7 +28,7 @@ define({
         enabled: true,
         autorefresh: true,
         console: {
-            state: "kbs-open",
+            state: "kbs-close",
             autoscroll: true,
             icons: {
                 save: "file-text",

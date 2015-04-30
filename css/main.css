@@ -62,6 +62,12 @@
     text-align: left;
 }
 
+.kbs-modal.kbs-small {
+    width: 350px; height: 200px;
+    margin-left: -175px;
+    margin-top: -100px;
+}
+
 .kbs-modal.kbs-prompt {
     width: 400px; height: 200px;
     margin-top: -100px;
