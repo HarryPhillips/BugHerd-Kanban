@@ -135,7 +135,8 @@ define('src/components/status',{
         taskDetailsExpanded: false
     },
     gui: false,
-    console: false
+    console: false,
+    modal: false
 });
 /*
 *   @type javascript
@@ -741,24 +742,14 @@ define(
             this.element.style.display = "none";
         };
         
-        // get parent node
-        Node.prototype.parent = function () {
-            return this.element.parentNode;
-        };
-        
-        // set attribute to node
-        Node.prototype.attr = function (name, value) {
-            this.element.setAttribute(name, value);
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
         };
         
         // return current element classes
         Node.prototype.getClasses = function () {
             return this.element.className;
-        };
-        
-        // return current element id
-        Node.prototype.getId = function () {
-            return this.element.id;
         };
         
         // return if node has a class
@@ -834,6 +825,11 @@ define(
             this.element.className = classes;
         };
         
+        // get parent node
+        Node.prototype.parent = function () {
+            return this.element.parentNode;
+        };
+        
         // add a child to node
         Node.prototype.addChild = function (child) {
             // check if node is an instance of class Node
@@ -882,6 +878,17 @@ define(
             clone.element = this.element.cloneNode();
             
             return clone;
+        };
+        
+        // focus on node
+        Node.prototype.focus = function () {
+            this.element.focus();
+            return this;
+        };
+        
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            this.element.setAttribute(name, value);
         };
         
         // write or return node text
@@ -1067,11 +1074,11 @@ define(
         
 
         // instance references
-        var self, gui;
+        var gui;
         
         function Modal(type, instance, params) {
             // set pointer
-            self = this;
+            var self = this;
             
             // check if a type has been passed
             if (typeof type !== "string") {
@@ -1104,10 +1111,21 @@ define(
             
             this.onConfirm = params.confirm || function () {};
             this.onCancel = params.cancel || function () {};
+            this.onProceed = function () {};
+            
+            // wrap the on proceed event to pass args
+            if (params.proceed) {
+                this.onProceed = function (args) {
+                    params.proceed(args);
+                };
+            }
             
             // text content
             this.title = params.title;
             this.message = params.message;
+            
+            // input
+            this.inputType = params.input || "text";
             
             // initialise
             if (params.init) {
@@ -1119,54 +1137,66 @@ define(
         Modal.prototype.init = function () {
             // declarations
             var
+                self = this,
+            
+                modal = this.node,
+            
                 title =
-                this.node.createChild("h2", "kbs-modal-title"),
-                
-                message =
-                this.node.createChild("p", "kbs-modal-msg"),
+                modal.createChild("h2", "kbs-modal-title"),
                 
                 close =
-                this.node.createChild("i", "fa fa-times kbs-modal-close"),
+                modal.createChild("i", "fa fa-times kbs-modal-close"),
+                
+                message =
+                modal.createChild("p", "kbs-modal-msg"),
                 
                 input,
                 confirm,
-                cancel;
+                cancel,
+                proceed;
             
             title.element.textContent = this.title;
             message.element.textContent = this.message;
             
             close.element.onclick = function () {
-                self.close();
+                self.destroy();
             };
-            
-            // append components
-            this.node.addChild(title);
-            this.node.addChild(close);
-            this.node.addChild(message);
             
             // add confirm/cancel buttons for prompt modals
             if (this.type === "prompt") {
                 // confirm
-                confirm = this.node.createChild("span", "kbs-confirm");
+                confirm = modal.createChild("span", "kbs-confirm");
                 confirm.text("confirm");
                 confirm.element.onclick = this.onConfirm;
                 
                 // cancel
-                cancel = this.node.createChild("span", "kbs-cancel");
+                cancel = modal.createChild("span", "kbs-cancel");
                 cancel.text("cancel");
                 cancel.element.onclick = this.onCancel;
-                
-                this.node.addChild(confirm);
-                this.node.addChild(cancel);
             }
             
             // add user input for input modals
             if (this.type === "input") {
+                // input field
                 input = this.node.createChild("input", "kbs-input-field");
+                input.element.type = this.inputType;
+                
+                // continue button
+                proceed = modal.createChild("div", "kbs-continue");
+                proceed.text("Go");
+                proceed.element.onclick = function () {
+                    self.onProceed(input.element.value);
+                };
+                
             }
             
             // add our node to gui
-            gui.addChild(this.node);
+            gui.addChild(modal);
+            
+            // focus on input
+            if (this.type === "input") {
+                input.focus();
+            }
             
             // open the modal
             this.open();
@@ -1174,18 +1204,25 @@ define(
         
         // reveal modal and overlay
         Modal.prototype.open = function () {
+            if (status.modal) {
+                return;
+            }
+            
+            status.modal = true;
             gui.tree.main.overlay.show();
             this.node.show();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
+            status.modal = false;
             gui.tree.main.overlay.hide();
             this.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
+            status.modal = false;
             gui.tree.main.overlay.hide();
             this.node.destroy();
         };
@@ -1197,6 +1234,11 @@ define(
 *   @type javascript
 *   @name interactor.js
 *   @copy Copyright 2015 Harry Phillips
+*/
+
+/*
+*   TODO:
+*   + Handle async task searches with callbacks to find_Id calls
 */
 
 /*global define: true */
@@ -1295,19 +1337,15 @@ define(
                 return;
             }
             
-            // get global id of task number
-            var globalId = this.findGlobalId(localId || "");
-
-            // get task if specified
-            $("#task_" + globalId).trigger("click");
-
-            // expand task details
-            this.expandTaskDetails();
+            // get global id
+            this.findGlobalId(localId, function (task) {
+                // once found - click the task
+                task.trigger("click");
+            });
         };
 
         // close the currently expanded task
         Interactor.prototype.closeTask = function () {
-            // shrink task details
             this.shrinkTaskDetails();
         };
 
@@ -1361,17 +1399,15 @@ define(
         };
             
         // perform a task search
-        Interactor.prototype.searchForTask = function (localId) {
+        Interactor.prototype.searchForTask = function (localId, callback) {
             var search = $(".VS-search-inner input"),
-                facet = $(".search_facet_input"),
                 event = $.Event("keydown"),
                 clear = $("div.VS-icon:nth-child(4)"),
+                facet,
                 result;
             
             // down arrow
             event.keyCode = 40;
-            
-            //debugger;
             
             // focus and nav to id
             search
@@ -1386,18 +1422,33 @@ define(
             // press enter key to select id
             search.focus().trigger(event);
             
-            // enter localId into input and hit enter again
+            // enter localId into input
+            facet = $(".search_facet_input");
             facet
-                .text(localId.toString())
-                .trigger("keydown")
-                .trigger(event);
+                .val(localId)
+                .trigger("keydown");
+
+            setTimeout(function () {
+                // press enter
+                facet.trigger(event);
             
-            // return result from recursive search
-            return result;
+                setTimeout(function () {
+                    // callback with task
+                    callback($(".task"));
+                    
+                    // unfocus from search
+                    document.activeElement.blur();
+                    
+                    setTimeout(function () {
+                        // clear search field
+                        $("div.VS-icon:nth-child(4)").trigger("click");
+                    }, 1000);
+                }, 500);
+            });
         };
 
         // find a global task id from a local task id
-        Interactor.prototype.findGlobalId = function (localId) {
+        Interactor.prototype.findGlobalId = function (localId, callback) {
             // declarations
             var setone = $(".task-id"), settwo = $(".taskID"),
                 child, parent,
@@ -1421,14 +1472,33 @@ define(
                 settwo.each(check);
             }
 
-            // if still nothing - perform a task search
-            if (typeof child === "undefined" || child.length < 1) {
+            // if still nothing - perform a task search (async!)
+            if (typeof child === "undefined") {
+                if (typeof callback === "undefined") {
+                    util.log(
+                        "error",
+                        "Couldn't find global id for #" + localId +
+                            " Provide a callback function to allow " +
+                            "async task searches!"
+                    );
+                }
+                
+                // async search for task - calls callback with result
                 util.log("debug", "Searching for task #" + localId + "...");
-                this.searchForTask(localId);
+                this.searchForTask(localId, function (task) {
+                    if (self.findLocalIdFromTask(task) === localId) {
+                        callback(task);
+                    } else {
+                        util.log("error", "Couldn't find global id for task " +
+                                "#" + localId);
+                    }
+                });
+                
+                return;
             }
             
+            // if found without asyn search - get and return
             parent = child.closest(".task");
-            
             globalId = parent[0].id.replace("task_", "");
 
             return globalId;
@@ -1436,7 +1506,24 @@ define(
             
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
-            var element = $("#task_" + globalId);
+            $("#task_" + globalId).find(".task-id, .taskID").text();
+        };
+            
+            
+        // find a global task id from task element
+        Interactor.prototype.findGlobalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                globalId = parent[0].id.replace("task_", "");
+            
+            return globalId;
+        };
+            
+        // find a local task id from task element
+        Interactor.prototype.findLocalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                localId = task.find(".task-id, .taskID").text();
+            
+            return localId;
         };
             
         // wrap bugherd content in a kbs-wrapper element
@@ -1470,13 +1557,18 @@ define(
             
             // task expander anchor element
             taskExpander.createChild("a")
-                .text("Expand Task")
+                .text("Search Task")
                 .on("click", function (event) {
                     taskSearch = new Modal("input", {
                         init: true,
-                        title: "Search for a task",
+                        title: "Find a task",
                         message: "Enter the ID of the task you want to find:",
-                        input: "number"
+                        input: "number",
+                        continueText: "Go",
+                        proceed: function (localId) {
+                            self.openTask(localId);
+                            taskSearch.destroy();
+                        }
                     });
                 });
             
@@ -1907,7 +1999,7 @@ define(
                         modal.destroy();
                     },
                     cancel: function () {
-                        modal.close();
+                        modal.destroy();
                     }
                 });
         };
