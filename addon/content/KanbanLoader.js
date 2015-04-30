@@ -149,12 +149,12 @@ var KanbanLoader = {
         baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl") : "https://rawgit.com/HarryPhillips/Kanban/master/";
 
         try {
-            useDist = pref.getBoolPref("useDist", true);
+            useDist = pref.getBoolPref("useDist", false);
             sourceUrl = (useDist) ? "dist/kanban.min.js" : "kanban.js";
         } catch (e) {
-            // failed for some reason, fallback and set to true
-            pref.setBoolPref("useDist", true);
-            sourceUrl = "dist/kanban.min.js";
+            // failed for some reason, fallback and set to false
+            pref.setBoolPref("useDist", false);
+            sourceUrl = "kanban.js";
         }
 
         try {

@@ -699,11 +699,6 @@ define(
 
 /*global define: true */
 
-/*
-*   TODO:
-*   + Add the ability to create a Node from a HTML Element
-*/
-
 define(
     'src/components/node',['config', 'src/util'],
     function (config, util) {
@@ -1257,11 +1252,6 @@ define(
 *   @copy Copyright 2015 Harry Phillips
 */
 
-/*
-*   TODO:
-*   + Handle async task searches with callbacks to find_Id calls
-*/
-
 /*global define: true */
 
 define(
@@ -1696,12 +1686,6 @@ define('src/components/router',['config'], function (config) {
 */
 
 /*global define: true */
-
-/*
-*   TODO:
-*   + White space in log strings aren't formatting correctly when passed
-*     into a log / text node
-*/
 
 define(
     'src/ui/console',[
@@ -2214,13 +2198,6 @@ define(
 /*jslint devel: true */
 
 /*global define: true */
-
-/*
-*   TODO:
-*   + Handle overlay status and events, for example if a modal is open/closed
-*     while a task is expanded, there either needs to be an additional overlay
-*     or the current overlay needs to be preserved.
-*/
 
 define(
     'src/ui/gui',[
