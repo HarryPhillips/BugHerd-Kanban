@@ -154,21 +154,21 @@ define(
             }
             
             status.modal = true;
-            gui.tree.main.overlay.show();
-            this.node.show();
+            gui.tree.main.overlay.fadeIn();
+            this.node.fadeIn();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
             status.modal = false;
-            gui.tree.main.overlay.hide();
-            this.node.hide();
+            gui.tree.main.overlay.fadeOut();
+            this.node.fadeOut();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
             status.modal = false;
-            gui.tree.main.overlay.hide();
+            gui.tree.main.overlay.fadeOut();
             this.node.destroy();
         };
 

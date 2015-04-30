@@ -58,7 +58,37 @@
     width: 90%; height: 40px;
     margin: 0;
     padding: 5px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
     font-size: 20px;
+    text-align: left;
+}
+
+.kbs-modal-close {
+    float: left;
+    width: 10%; height: 40px;
+    margin: 0; padding: 0;
+    border: solid transparent 0px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    font-size: 22px;
+    line-height: 1.6em;
+    text-align: center;
+    cursor: pointer;
+    
+    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
+    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
+    -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
+    transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+.kbs-modal-close:hover {
+    border-bottom: solid #ff0000 40px;
+}
+
+.kbs-modal-msg {
+    display: inline-block;
+    width: 100%; height: 80px;
+    padding: 10px;
+    font-size: 14px;
     text-align: left;
 }
 
@@ -88,34 +118,6 @@
 
 .kbs-modal.kbs-input .kbs-input-field {
     -moz-appearance: textfield;
-}
-
-.kbs-modal-msg {
-    display: inline-block;
-    width: 100%; height: 80px;
-    padding: 10px;
-    font-size: 14px;
-    text-align: left;
-}
-
-.kbs-modal-close {
-    float: left;
-    width: 10%; height: 40px;
-    margin: 0; padding: 0;
-    border: solid transparent 0px;
-    font-size: 22px;
-    line-height: 1.6em;
-    text-align: center;
-    cursor: pointer;
-    
-    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    transition: background-color 0.3s, color 0.3s, border 0.3s;
-}
-
-.kbs-modal-close:hover {
-    border-bottom: solid #ff0000 40px;
 }
 
 .kbs-confirm,
