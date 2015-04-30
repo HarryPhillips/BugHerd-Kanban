@@ -742,6 +742,27 @@ define(
             this.element.style.display = "none";
         };
         
+        // fade in node
+        Node.prototype.fadeIn = function () {
+            if (typeof window.jQuery === "undefined") {
+                this.show();
+            }
+            
+            // jquery fade in
+            window.jQuery(this.element).fadeIn();
+        };
+        
+        // fade out node
+        Node.prototype.fadeOut = function () {
+            if (typeof window.jQuery === "undefined") {
+                this.hide();
+                return;
+            }
+            
+            // jquery fade out
+            window.jQuery(this.element).fadeOut();
+        };
+        
         // return current element id
         Node.prototype.getId = function () {
             return this.element.id;
@@ -1209,8 +1230,8 @@ define(
             }
             
             status.modal = true;
-            gui.tree.main.overlay.show();
-            this.node.show();
+            gui.tree.main.overlay.fadeIn();
+            this.node.fadeIn();
         };
         
         // close modal and overlay
@@ -2043,6 +2064,9 @@ define(
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
+                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
+                        "local" : "remote",
+            
                 // console nodes
                 wrapper,
                 consclass,
@@ -2066,7 +2090,7 @@ define(
                 constools.createChild("div", "kbs-cons-title");
 
             titlenode = document.createTextNode(config.appFullname +
-                                                " v" + config.version);
+                    " v" + config.version + " - " + connection);
             constitle.addChild(titlenode);
             
             // toggle tool
