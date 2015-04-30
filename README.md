@@ -6,13 +6,13 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 
 ## Installation
 There are two ways to install Kanban, hosting the source on your local server or
-using the raw GitHub direct links.
+using the rawgit links.
 
 Installing and hosting the source from your local system requires you to host the repository in a directory
 accessible via a http://localhost/ URL. This is so Kanban can pull the required
 scripts and inject them into the page.
 
-Using the raw GitHub links may be slower but it means you always get the latest
+Using the rawgit links may be slower but it means you always get the latest
 updates automatically and all you need to do is install Kanban.xpi to Firefox. Nothing else.
 
 Head over to releases to download the latest version of the extension. Or download the source and install kanban.xpi found under the dist/ directory.
@@ -25,5 +25,5 @@ https://rawgit.com/HarryPhillips/Kanban/master/
 You will have to go into Firefox Add-ons Manager and change the Base Url preference
 for Kanban if you wish to use your own hosted source.
 
-Also, if you opt to keep using the raw links, you will not be able to access
+Also, if you opt to keep using the rawgit links, you will not be able to access
 Kanban's endpoint features such as the log saving function, found on the GUI console.
