@@ -161,14 +161,14 @@ define(
         // close modal and overlay
         Modal.prototype.close = function () {
             status.modal = false;
-            gui.tree.main.overlay.fadeOut();
-            this.node.fadeOut();
+            gui.tree.main.overlay.hide();
+            this.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
             status.modal = false;
-            gui.tree.main.overlay.fadeOut();
+            gui.tree.main.overlay.hide();
             this.node.destroy();
         };
 

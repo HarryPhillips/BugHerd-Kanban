@@ -47,7 +47,7 @@
     width: 600px; height: 400px;
     margin-left: -300px;
     margin-top: -200px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     text-align: center;
     z-index: 2147483647;
     overflow: hidden;
@@ -347,7 +347,8 @@
     top: 60px; bottom: 60px;
     left: 60px; right: 60px;
     width: initial; height: initial !important;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     z-index: 2147483645;
 }
 
@@ -360,6 +361,7 @@
     width: 30px; height: 30px;
     margin: 0; padding: 0;
     border-bottom: solid transparent 0px;
+    box-shadow: 0 0 4px rgba(0, 0, 0 ,0.4);
     line-height: 1.3em;
     font-size: 21px;
     text-align: center;
@@ -490,5 +492,24 @@
     
     .user-menu {
         display: none !important;
+    }
+}
+
+@media (max-width:525px) {
+    /* remove project settings */
+    #header .pane-left {
+        display: none;
+    }
+    
+    /* relocate head actions */
+    #header .pane-center {
+        left: 10px;
+    }
+}
+
+@media (max-width:480px) {
+    /* remove settings control link */
+    .nav.main-nav li:nth-child(5) {
+        display: none;
     }
 }
