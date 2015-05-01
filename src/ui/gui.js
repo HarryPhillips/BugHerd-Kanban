@@ -41,14 +41,12 @@ define(
             // set pointer
             self = this;
 
+            // pass our instance to Modal closure
+            Modal.prototype.setInstance(this);
+            
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
-            this.dummyModal = new Modal(this, {
-                title: "Dummy Modal",
-                message: "This modal is only used to pass the GUI instance " +
-                    "to the Modal class"
-            });
 
             // init
             this.init();

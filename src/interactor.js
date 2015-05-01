@@ -68,11 +68,11 @@ define(
             }
 
             // apply elements and styling
-            //this.applyWrapper();
             this.applyElements();
             this.applyHandlers();
             this.applyStyles();
             this.applyContext();
+            this.applyHash();
             
             inited = true;
         };
@@ -313,19 +313,10 @@ define(
             
             return localId;
         };
-            
-        // wrap bugherd content in a kbs-wrapper element
-        Interactor.prototype.applyWrapper = function () {
-            // wait until main content is ready
-            $(".pane-wrap").ready(function () {
-                util.log(
-                    "context:inter/init",
-                    "+ wrapping bugherd application"
-                );
 
-                // wrap application wrapper in kbs-wrapper
-                $(".app-wrap").wrap("<div class='kbs-wrapper'></div>");
-            });
+        // return current hash
+        Interactor.prototype.getHash = function () {
+            return window.location.hash;
         };
 
         // append elements to bugherd ui
@@ -354,6 +345,11 @@ define(
                         input: "number",
                         continueText: "Go",
                         proceed: function (localId) {
+                            if (!localId) {
+                                // return if no id passed
+                                return;
+                            }
+                            
                             taskSearch.destroy();
                             self.openTask(localId);
                         }
@@ -408,6 +404,23 @@ define(
                 "info",
                 "Interactor log output..."
             );
+        };
+            
+        // apply hash lookup and event listeners
+        Interactor.prototype.applyHash = function () {
+            // listening for hash events
+            util.log("context:hash", "info", "Listening for hash changes...");
+            $(window).on("hashchange", function (event) {
+                util.log(
+                    "context:hash",
+                    "debug",
+                    "hash changed: " + self.getHash()
+                );
+            });
+            
+            if (this.getHash()) {
+                util.log("context:hash", "debug", "found hash: " + this.getHash());
+            }
         };
 
         return Interactor;

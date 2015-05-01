@@ -171,6 +171,11 @@ define(
             gui.tree.main.overlay.hide();
             this.node.destroy();
         };
+        
+        // set gui instance
+        Modal.prototype.setInstance = function (instance) {
+            gui = instance;
+        };
 
         return Modal;
     }
