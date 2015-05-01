@@ -11,7 +11,7 @@ define({
     appFullname: "Kanban",
     version: "1.2.1",
     enabled: true,
-    mode: "prod",
+    mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",

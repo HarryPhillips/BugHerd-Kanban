@@ -11,7 +11,7 @@ define('config',{
     appFullname: "Kanban",
     version: "1.2.1",
     enabled: true,
-    mode: "prod",
+    mode: "dev",
 //    offline: true,
     httpToken: "Fw43Iueh87aw7",
 //    theme: "black",
@@ -77,7 +77,7 @@ define('config',{
 
 /*global define: true */
 
-define('src/components/events',['config'], function (config) {
+define('main/components/events',['config'], function (config) {
     
     
     function Events() {
@@ -129,7 +129,7 @@ define('src/components/events',['config'], function (config) {
 
 /*global define: true */
 
-define('src/components/status',{
+define('main/components/status',{
     app: false,
     interactor: {
         taskDetailsExpanded: false
@@ -146,7 +146,7 @@ define('src/components/status',{
 
 /*global define: true */
 
-define('src/components/buffer',[],function () {
+define('main/components/buffer',[],function () {
     
     
     var global = [];
@@ -228,7 +228,7 @@ define('src/components/buffer',[],function () {
 
 /*global define: true */
 
-define('src/components/cache',['./buffer'], function (Buffer) {
+define('main/components/cache',['main/components/buffer'], function (Buffer) {
     
     
     // cache object
@@ -248,7 +248,7 @@ define('src/components/cache',['./buffer'], function (Buffer) {
 /*global define: true */
 
 define(
-    'src/util',[
+    'main/util',[
         'config',
         './components/events',
         './components/status',
@@ -700,7 +700,7 @@ define(
 /*global define: true */
 
 define(
-    'src/components/node',['config', 'src/util'],
+    'main/components/node',['config', 'main/util'],
     function (config, util) {
         
         
@@ -945,7 +945,7 @@ define(
 
 /*global define: true */
 
-define('src/components/counter',[],function () {
+define('main/components/counter',[],function () {
     
     
     function Counter(target, callback) {
@@ -981,10 +981,10 @@ define('src/components/counter',[],function () {
 /*global define: true */
 
 define(
-    'src/components/http',[
+    'main/components/http',[
         'config',
-        'src/util',
-        './counter'
+        'main/util',
+        'main/components/counter'
     ],
     function (config, util, Counter) {
         
@@ -1078,13 +1078,13 @@ define(
 /*global define: true */
 
 define(
-    'src/ui/modal',[
+    'main/ui/modal',[
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/http',
-        'src/components/status',
-        'src/components/node'
+        'main/util',
+        'main/components/events',
+        'main/components/http',
+        'main/components/status',
+        'main/components/node'
     ],
     function (config, util, events, Http, status, Node) {
         
@@ -1260,13 +1260,13 @@ define(
 /*global define: true */
 
 define(
-    'src/interactor',[
+    'main/interactor',[
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/status',
-        'src/components/node',
-        'src/ui/modal'
+        'main/util',
+        'main/components/events',
+        'main/components/status',
+        'main/components/node',
+        'main/ui/modal'
     ],
     function (
         config,
@@ -1351,7 +1351,6 @@ define(
         Interactor.prototype.openTask = function (localId) {
             util.log(
                 "context:interactor",
-                "debug",
                 "Opening task #" + localId + "..."
             );
             
@@ -1431,7 +1430,6 @@ define(
             
             util.log(
                 "context:interactor",
-                "debug",
                 "Searching for task #" + localId
             );
             
@@ -1580,7 +1578,6 @@ define(
             
             util.log(
                 "context:hash",
-                "debug",
                 "parsing new hash: " + hash
             );
 
@@ -1703,14 +1700,15 @@ define(
             // open task if hash is prefixed
             // or suffixed with a task
             if (this.getHash()) {
-                this.parseHash();
+                setTimeout(function () {
+                   self.parseHash(); 
+                }, 500);
             }
             
             // listening for hash events
             $(window).on("hashchange", function (event) {
                 util.log(
                     "context:hash",
-                    "debug",
                     "hash changed: " + self.getHash()
                 );
                 
@@ -1718,7 +1716,7 @@ define(
             });
             
             if (this.getHash()) {
-                util.log("context:hash", "debug", "found hash: " + this.getHash());
+                util.log("context:hash", "found hash: " + this.getHash());
             }
         };
 
@@ -1733,7 +1731,7 @@ define(
 
 /*global define: true */
 
-define('src/components/router',['config'], function (config) {
+define('main/components/router',['config'], function (config) {
     
     
     return {
@@ -1752,16 +1750,16 @@ define('src/components/router',['config'], function (config) {
 /*global define: true */
 
 define(
-    'src/ui/console',[
+    'main/ui/console',[
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/http',
-        'src/components/status',
-        'src/components/router',
-        'src/components/cache',
-        'src/components/node',
-        'src/ui/modal'
+        'main/util',
+        'main/components/events',
+        'main/components/http',
+        'main/components/status',
+        'main/components/router',
+        'main/components/cache',
+        'main/components/node',
+        'main/ui/modal'
     ],
     function (
         config,
@@ -2264,15 +2262,15 @@ define(
 /*global define: true */
 
 define(
-    'src/ui/gui',[
+    'main/ui/gui',[
         'config',
-        'src/util',
-        'src/interactor',
-        'src/components/events',
-        'src/components/counter',
-        'src/components/node',
-        'src/ui/console',
-        'src/ui/modal'
+        'main/util',
+        'main/interactor',
+        'main/components/events',
+        'main/components/counter',
+        'main/components/node',
+        'main/ui/console',
+        'main/ui/modal'
     ],
     function (
         config,
@@ -2503,7 +2501,7 @@ define(
 define(
     'test/main.test',[
         'require',
-        'src/util'
+        'main/util'
     ],
     function (require, util) {
         
@@ -2550,7 +2548,7 @@ define(
 );
 /*
 *   @type javascript
-*   @name main.js
+*   @name init.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -2564,15 +2562,15 @@ define(
 */
 
 define(
-    'src/main',[
+    'main/init',[
         'config',
-        'src/util',
-        'src/interactor',
-        'src/components/events',
-        'src/components/status',
-        'src/components/cache',
-        'src/components/http',
-        'src/ui/gui',
+        'main/util',
+        'main/interactor',
+        'main/components/events',
+        'main/components/status',
+        'main/components/cache',
+        'main/components/http',
+        'main/ui/gui',
         'test/main.test'
     ],
     function (
@@ -2685,15 +2683,15 @@ define(
     
     require.config({
         paths: {
-            src: window.KBS_BASE_URL + "src",
-            test: window.KBS_BASE_URL + "test"
+            main: window.KBS_BASE_URL + "src/main",
+            test: window.KBS_BASE_URL + "src/test"
         }
     });
     
     // launch when window is loaded
     window.onload = function () {
         window.KBS_START_TIME = new Date().getTime();
-        require(['src/main']);
+        require(['main/init']);
     };
 }(window));
 define("kanban", function(){});

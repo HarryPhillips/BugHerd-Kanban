@@ -98,7 +98,6 @@ define(
         Interactor.prototype.openTask = function (localId) {
             util.log(
                 "context:interactor",
-                "debug",
                 "Opening task #" + localId + "..."
             );
             
@@ -178,7 +177,6 @@ define(
             
             util.log(
                 "context:interactor",
-                "debug",
                 "Searching for task #" + localId
             );
             
@@ -327,7 +325,6 @@ define(
             
             util.log(
                 "context:hash",
-                "debug",
                 "parsing new hash: " + hash
             );
 
@@ -450,14 +447,15 @@ define(
             // open task if hash is prefixed
             // or suffixed with a task
             if (this.getHash()) {
-                this.parseHash();
+                setTimeout(function () {
+                   self.parseHash(); 
+                }, 500);
             }
             
             // listening for hash events
             $(window).on("hashchange", function (event) {
                 util.log(
                     "context:hash",
-                    "debug",
                     "hash changed: " + self.getHash()
                 );
                 
@@ -465,7 +463,7 @@ define(
             });
             
             if (this.getHash()) {
-                util.log("context:hash", "debug", "found hash: " + this.getHash());
+                util.log("context:hash", "found hash: " + this.getHash());
             }
         };
 

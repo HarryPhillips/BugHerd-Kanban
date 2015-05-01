@@ -1,8 +1,8 @@
 ({
     baseUrl: "../../",
     paths: {
-        src: "src",
-        test: "test"
+        main: "src/main",
+        test: "src/test"
     },
     name: "kanban",
     out: "../../dist/kanban.min.js",
