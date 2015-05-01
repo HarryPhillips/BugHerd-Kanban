@@ -430,6 +430,10 @@ define(
         // apply interactor logging context / output
         Interactor.prototype.applyContext = function () {
             util.log(
+                "context:inter/init",
+                "+ applying interactor context"
+            );
+            util.log(
                 "context:interactor",
                 "info",
                 "Interactor log output..."
@@ -438,6 +442,11 @@ define(
             
         // apply hash lookup and event listeners
         Interactor.prototype.applyHash = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying hash parser"
+            );
+            
             var hash,
                 href = window.location.href,
                 hashId;
