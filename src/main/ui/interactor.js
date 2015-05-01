@@ -251,9 +251,10 @@ define(
                         "context:interactor",
                         "error",
                         "Couldn't find global id for task #" + localId +
-                            " Provide a callback function to allow " +
+                            ". Provide a callback function to allow " +
                             "async task searches!"
                     );
+                    return;
                 }
                 
                 // async search for task - calls callback with result
@@ -284,8 +285,10 @@ define(
             parent = child.closest(".task");
             globalId = parent[0].id.replace("task_", "");
 
-            // run callback with task/parent
-            callback(parent);
+            // run callback with task/parent if defined
+            if (callback) {
+                callback(parent);
+            }
             
             return globalId;
         };
@@ -457,7 +460,7 @@ define(
             // or suffixed with a task
             if (this.getHash()) {
                 setTimeout(function () {
-                   self.parseHash(); 
+                    self.parseHash();
                 }, 500);
             }
             
