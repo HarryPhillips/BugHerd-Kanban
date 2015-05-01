@@ -123,7 +123,7 @@ define('main/components/events',['config'], function (config) {
 });
 /*
 *   @type javascript
-*   @name states.js
+*   @name status.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -257,10 +257,14 @@ define(
     function (config, events, status, cache) {
         
 
-        var util = {};
-
+        // util class
+        function Util() {}
+        
+        // set instance
+        var instance = new Util();
+        
         // amend zeros to a number until a length is met
-        util.zerofy = function (num, len) {
+        Util.prototype.zerofy = function (num, len) {
             while (num.toString().length < (len || 2)) {
                 num = '0' + num;
             }
@@ -269,7 +273,7 @@ define(
         };
 
         // amend spaces to a string/number until a length is met
-        util.spacify = function (str, len) {
+        Util.prototype.spacify = function (str, len) {
             if (typeof str !== "string") {
                 str = str.toString();
             }
@@ -282,30 +286,30 @@ define(
         };
 
         // returns current time as formatted string
-        util.ftime = function () {
+        Util.prototype.ftime = function () {
             var time = new Date(),
 
-                hours = util.zerofy(time.getHours()),
-                minutes = util.zerofy(time.getMinutes()),
-                seconds = util.zerofy(time.getSeconds()),
-                millis = util.zerofy(time.getMilliseconds(), 3);
+                hours = instance.zerofy(time.getHours()),
+                minutes = instance.zerofy(time.getMinutes()),
+                seconds = instance.zerofy(time.getSeconds()),
+                millis = instance.zerofy(time.getMilliseconds(), 3);
 
             return hours + ":" + minutes + ":" + seconds + "." + millis;
         };
 
         // returns current date as formatted string
-        util.fdate = function () {
+        Util.prototype.fdate = function () {
             var time = new Date(),
 
-                year = util.zerofy(time.getFullYear(), 4),
-                month = util.zerofy(time.getMonth(), 2),
-                date = util.zerofy(time.getDate(), 2);
+                year = instance.zerofy(time.getFullYear(), 4),
+                month = instance.zerofy(time.getMonth(), 2),
+                date = instance.zerofy(time.getDate(), 2);
 
             return year + "-" + month + "-" + date;
         };
 
         // escapes regex meta characters from a string
-        util.escapeRegEx = function (str) {
+        Util.prototype.escapeRegEx = function (str) {
             var result;
             
             // escape
@@ -317,7 +321,7 @@ define(
         };
         
         // cookie lib
-        util.cookie = {
+        Util.prototype.cookie = {
             // gets a cookie with name
             get: function (name) {
                 var cname = config.cookies.prefix + name + "=",
@@ -358,22 +362,22 @@ define(
             },
             // deletes a cookie by name
             del: function (name) {
-                util.cookie.set(name, "", -1);
+                instance.cookie.set(name, "", -1);
             },
             // returns true if cookie exists
             exists: function (name) {
-                var cookie = util.cookie.get(name);
+                var cookie = instance.cookie.get(name);
                 return cookie !== "" && cookie !== null && cookie !== undefined;
             }
         };
         
         // checks if obj is a Node
-        util.isNode = function (obj) {
+        Util.prototype.isNode = function (obj) {
             return obj.constructor.name === "Node";
         };
         
         // checks if input is a dom element
-        util.isDomElement = function (obj) {
+        Util.prototype.isDomElement = function (obj) {
             return (
                 (typeof window.HTMLElement === "object") ?
                         obj instanceof window.HTMLElement :
@@ -386,12 +390,12 @@ define(
         };
         
         // checks if input is an array
-        util.isArray = function (obj) {
+        Util.prototype.isArray = function (obj) {
             return obj instanceof Array || obj.constructor === "Array";
         };
 
         // returns true or the index
-        util.contains = function (host, target, strict) {
+        Util.prototype.contains = function (host, target, strict) {
             var i = 0,
                 occs = [],
                 regex,
@@ -418,13 +422,13 @@ define(
 
                 // escape regex meta chars from target
                 // before generating a new RegEx
-                target = util.escapeRegEx(target);
+                target = instance.escapeRegEx(target);
 
                 // regex will match whole word of target only
                 regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
 
                 // is host an array?
-                if (util.isArray(host)) {
+                if (instance.isArray(host)) {
                    // add to occurences array
                     while (i < host.length) {
                         if (regex.test(host[i])) {
@@ -451,7 +455,7 @@ define(
             strict = strict || false;
 
             // is target an array of targets?
-            if (util.isArray(target)) {
+            if (instance.isArray(target)) {
                 for (i = 0; i < target.length; i += 1) {
                     temp = chk(host, target[i]);
                     if (temp !== false) {
@@ -466,7 +470,7 @@ define(
         };
         
         // swap values in array at specified indexes
-        util.swap = function (array, i, j) {
+        Util.prototype.swap = function (array, i, j) {
             // save array[i]
             // so we can assign to array[j]
             var tmp = array[i];
@@ -477,7 +481,7 @@ define(
         };
 
         // log wrapper
-        util.log = function (context, type, msg, opt) {
+        Util.prototype.log = function (context, type, msg, opt) {
             // check if logs are enabled
             if (!config.logs.enabled) {
                 return;
@@ -517,11 +521,11 @@ define(
                 if (typeof context === "string") {
                     if (context.indexOf(ctxFlag) !== -1) {
                         // we have a valid context param
-                        if (util.log.currentContext !== false) {
+                        if (instance.log.currentContext !== false) {
                             // we have an active context
                             // create a subcontext
                             subcontext = context.replace(ctxFlag, "");
-                            context = util.log.currentContext;
+                            context = instance.log.currentContext;
                             args.shift();
                         } else {
                             // set new context
@@ -534,11 +538,11 @@ define(
                         args.shift();
                     } else {
                         ctxArgsAdjust();
-                        context = util.log.currentContext;
+                        context = instance.log.currentContext;
                     }
                 } else {
                     ctxArgsAdjust();
-                    context = util.log.currentContext;
+                    context = instance.log.currentContext;
                 }
             } else {
                 // check if we were passed a context
@@ -593,13 +597,13 @@ define(
             // check if we need to filter the type
             if (filter) {
                 // apply filter
-                if (util.contains(filter, type, true) !== false) {
+                if (instance.contains(filter, type, true) !== false) {
                     return;
                 }
             }
 
             // format and push output
-            str += util.ftime();
+            str += instance.ftime();
             str += " [" + (subcontext || context || config.appName) + "]";
             str += " [" + type + "]" + ":> ";
             str += msg;
@@ -658,36 +662,38 @@ define(
         };
         
         // current logging context - defaults to false boolean
-        util.log.currentContext = util.log.currentContext || false;
+        Util.prototype.log.currentContext = instance.log.currentContext || false;
         
         // begin a continuous logging context
-        util.log.beginContext = function (context) {
+        Util.prototype.log.beginContext = function (context) {
             // return if disabled
             if (!config.logs.contexts) {
                 return;
             }
             
             if (context.indexOf(config.logs.contextFlag) !== -1) {
-                util.log("error", "You shouldn't pass the context flag " +
+                instance.log("error", "You shouldn't pass the context flag " +
                                "when using beginContext()");
                 return;
             }
-            util.log.currentContext = context;
+            instance.log.currentContext = context;
         };
         
         // end a continuous logging context
-        util.log.endContext = function () {
-            util.log.currentContext = false;
+        Util.prototype.log.endContext = function () {
+            instance.log.currentContext = false;
         };
         
         // clear/remove a logging context
-        util.log.clearContext = function (context) {
+        Util.prototype.log.clearContext = function (context) {
             events.publish("gui/contexts/clear", context);
         };
 
-        util.log("+ util.js loaded");
+        // create instance
+        instance = new Util();
+        instance.log("+ instance.js loaded");
 
-        return util;
+        return instance;
     }
 );
 
@@ -1504,9 +1510,10 @@ define(
                         "context:interactor",
                         "error",
                         "Couldn't find global id for task #" + localId +
-                            " Provide a callback function to allow " +
+                            ". Provide a callback function to allow " +
                             "async task searches!"
                     );
+                    return;
                 }
                 
                 // async search for task - calls callback with result
@@ -1537,8 +1544,10 @@ define(
             parent = child.closest(".task");
             globalId = parent[0].id.replace("task_", "");
 
-            // run callback with task/parent
-            callback(parent);
+            // run callback with task/parent if defined
+            if (callback) {
+                callback(parent);
+            }
             
             return globalId;
         };
@@ -1683,6 +1692,10 @@ define(
         // apply interactor logging context / output
         Interactor.prototype.applyContext = function () {
             util.log(
+                "context:inter/init",
+                "+ applying interactor context"
+            );
+            util.log(
                 "context:interactor",
                 "info",
                 "Interactor log output..."
@@ -1691,6 +1704,11 @@ define(
             
         // apply hash lookup and event listeners
         Interactor.prototype.applyHash = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying hash parser"
+            );
+            
             var hash,
                 href = window.location.href,
                 hashId;
@@ -1701,7 +1719,7 @@ define(
             // or suffixed with a task
             if (this.getHash()) {
                 setTimeout(function () {
-                   self.parseHash(); 
+                    self.parseHash();
                 }, 500);
             }
             
@@ -2555,7 +2573,8 @@ define(
 /*
 *   TODO
 *   + On the fly user configuration tool
-*   + Related to above, style/theme preferences
+      (maybe refactor config to use a class with setters/getters?)
+*   + Related to config, style/theme preference changes?
 *   + Add ability to set wallpapers
 *   + Add a comments interface/modal (with a spellchecker?)
 */
