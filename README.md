@@ -6,8 +6,11 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 + Quickly share and open tasks straight from the URL using hashes. Example: http://www.bugherd.com/projects/12345#open123 or http://www.bugherd.com/projects/47756/tasks/123#open.
 + Clearer task id's to hopefully mitigate human errors!
 
-#### Expand task details
-![Task Expanded](/img/readme/task-expanded.jpg?raw=true "Optional Title")
+##### Expand the task details panel
+![Task Expanded](/img/readme/task-expanded.jpg?raw=true "Expanded Task")
+
+##### Responsive dashboard
+![Task Expanded](/img/readme/responsive.jpg?raw=true "Responsive")
 
 ## Installation
 For quick installation, head to releases and download the latest kanban.xpi from the latest release.
