@@ -5,6 +5,8 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 + Enables you to quickly search for a task and bring it up.
 
 ## Installation
+For quick installation, head to releases and download the latest kanban.xpi from the latest release.
+
 There are two ways to install Kanban, hosting the source on your local server or
 using the rawgit links.
 
