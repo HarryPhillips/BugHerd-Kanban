@@ -414,6 +414,15 @@
     min-width: initial;
 }
 
+/* make task id more prominent */
+.taskDetailId {
+    background-color: #000;
+}
+
+.taskDetailId:after {
+    border-left-color: #000;
+}
+
 /* responsive media queries
 ------------------------------------------------------------------------------*/
 @media (max-width:1100px) {
