@@ -9,7 +9,8 @@
 /*
 *   TODO
 *   + On the fly user configuration tool
-*   + Related to above, style/theme preferences
+      (maybe refactor config to use a class with setters/getters?)
+*   + Related to config, style/theme preference changes?
 *   + Add ability to set wallpapers
 *   + Add a comments interface/modal (with a spellchecker?)
 */

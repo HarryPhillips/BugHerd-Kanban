@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name states.js
+*   @name status.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
