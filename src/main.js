@@ -6,6 +6,13 @@
 
 /*global define: true */
 
+/*
+*   TODO
+*   + On the fly user configuration tool
+*   + Related to above, style/theme preferences
+*   + Add ability to set wallpapers (Dashboard+ port)
+*/
+
 define(
     [
         'config',
@@ -63,7 +70,7 @@ define(
             // log
             util.log(
                 "okay",
-                //kanban,
+                kanban,
                 "Kanban initialised in " +
                     window.KBS_DELTA_TIME
             );
