@@ -9,7 +9,7 @@
 define('config',{
     appName: "kbs",
     appFullname: "Kanban",
-    version: "1.2.1",
+    version: "1.2.2",
     enabled: true,
     mode: "dev",
 //    offline: true,
@@ -1260,7 +1260,7 @@ define(
 /*global define: true */
 
 define(
-    'main/interactor',[
+    'main/ui/interactor',[
         'config',
         'main/util',
         'main/components/events',
@@ -2265,7 +2265,6 @@ define(
     'main/ui/gui',[
         'config',
         'main/util',
-        'main/interactor',
         'main/components/events',
         'main/components/counter',
         'main/components/node',
@@ -2275,7 +2274,6 @@ define(
     function (
         config,
         util,
-        interactor,
         events,
         Counter,
         Node,
@@ -2558,14 +2556,15 @@ define(
 *   TODO
 *   + On the fly user configuration tool
 *   + Related to above, style/theme preferences
-*   + Add ability to set wallpapers (Dashboard+ port)
+*   + Add ability to set wallpapers
+*   + Add a comments interface/modal (with a spellchecker?)
 */
 
 define(
     'main/init',[
         'config',
         'main/util',
-        'main/interactor',
+        'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',

@@ -11,6 +11,7 @@
 *   + On the fly user configuration tool
 *   + Related to above, style/theme preferences
 *   + Add ability to set wallpapers
+*   + Add a comments interface/modal (with a spellchecker?)
 */
 
 define(
