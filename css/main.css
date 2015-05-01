@@ -347,8 +347,10 @@
     top: 60px; bottom: 60px;
     left: 60px; right: 60px;
     width: initial; height: initial !important;
-    border-radius: 10px;
-    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    border: solid #6C8492 3px;
+    border-top: solid #6C8492 5px;
+    border-radius: 0px 0px 10px 10px;
+    box-shadow: 6px 6px 25px rgba(0, 0, 0, 0.8);
     z-index: 2147483645;
 }
 
@@ -361,9 +363,10 @@
     width: 30px; height: 30px;
     margin: 0; padding: 0;
     border-bottom: solid transparent 0px;
+    border-radius: 100%;
     box-shadow: 0 0 4px rgba(0, 0, 0 ,0.4);
     line-height: 1.3em;
-    font-size: 21px;
+    font-size: 20px;
     text-align: center;
     z-index: 2147483645;
     display: none;
@@ -378,7 +381,8 @@
 .kbs-details-close:hover {
     background-color: #fff;
     color: #fff;
-    border-bottom: solid #728A97 30px;
+    border-bottom: solid #972a2a 30px;
+    border-radius: 100%;
 }
 
 /* description entry boxes */
