@@ -10,14 +10,14 @@
 *   TODO
 *   + On the fly user configuration tool
 *   + Related to above, style/theme preferences
-*   + Add ability to set wallpapers (Dashboard+ port)
+*   + Add ability to set wallpapers
 */
 
 define(
     [
         'config',
         'main/util',
-        'main/interactor',
+        'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',

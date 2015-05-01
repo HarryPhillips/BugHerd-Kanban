@@ -12,7 +12,6 @@ define(
     [
         'config',
         'main/util',
-        'main/interactor',
         'main/components/events',
         'main/components/counter',
         'main/components/node',
@@ -22,7 +21,6 @@ define(
     function (
         config,
         util,
-        interactor,
         events,
         Counter,
         Node,
