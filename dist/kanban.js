@@ -1571,6 +1571,39 @@ define(
         Interactor.prototype.getHash = function () {
             return window.location.hash;
         };
+            
+        // apply hash command
+        Interactor.prototype.parseHash = function () {
+            var hash = this.getHash(),
+                href = window.location.href,
+                hashId;
+            
+            util.log(
+                "context:hash",
+                "debug",
+                "parsing new hash: " + hash
+            );
+
+            // prefixed
+            if (hash === "#open") {
+                // check if prefixed
+                if (href.indexOf("tasks/") !== -1) {
+                    hashId = parseInt(href.split("tasks/")[1], 10);
+
+                    // open
+                    if (hashId) {
+                        this.openTask(hashId);
+                    }
+                }
+            }
+
+            // suffixed
+            hashId = parseInt(hash.replace("#open", ""), 10);
+
+            if (hashId) {
+                this.openTask(hashId);
+            }
+        };
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
@@ -1661,14 +1694,27 @@ define(
             
         // apply hash lookup and event listeners
         Interactor.prototype.applyHash = function () {
+            var hash,
+                href = window.location.href,
+                hashId;
+            
+            util.log("context:hash", "info", "Hash events...");
+            
+            // open task if hash is prefixed
+            // or suffixed with a task
+            if (this.getHash()) {
+                this.parseHash();
+            }
+            
             // listening for hash events
-            util.log("context:hash", "info", "Listening for hash changes...");
             $(window).on("hashchange", function (event) {
                 util.log(
                     "context:hash",
                     "debug",
                     "hash changed: " + self.getHash()
                 );
+                
+                self.parseHash();
             });
             
             if (this.getHash()) {
@@ -2510,6 +2556,13 @@ define(
 
 /*global define: true */
 
+/*
+*   TODO
+*   + On the fly user configuration tool
+*   + Related to above, style/theme preferences
+*   + Add ability to set wallpapers (Dashboard+ port)
+*/
+
 define(
     'src/main',[
         'config',
@@ -2567,7 +2620,7 @@ define(
             // log
             util.log(
                 "okay",
-                //kanban,
+                kanban,
                 "Kanban initialised in " +
                     window.KBS_DELTA_TIME
             );
