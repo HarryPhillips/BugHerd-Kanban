@@ -9,14 +9,14 @@
 define(
     [
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/http',
-        'src/components/status',
-        'src/components/router',
-        'src/components/cache',
-        'src/components/node',
-        'src/ui/modal'
+        'main/util',
+        'main/components/events',
+        'main/components/http',
+        'main/components/status',
+        'main/components/router',
+        'main/components/cache',
+        'main/components/node',
+        'main/ui/modal'
     ],
     function (
         config,

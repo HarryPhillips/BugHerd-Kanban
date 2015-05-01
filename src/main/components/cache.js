@@ -6,7 +6,7 @@
 
 /*global define: true */
 
-define(['./buffer'], function (Buffer) {
+define(['main/components/buffer'], function (Buffer) {
     'use strict';
     
     // cache object

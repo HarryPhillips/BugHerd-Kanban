@@ -7,7 +7,7 @@
 /*global define: true */
 
 define(
-    ['config', 'src/util'],
+    ['config', 'main/util'],
     function (config, util) {
         'use strict';
         

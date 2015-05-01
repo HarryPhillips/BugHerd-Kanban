@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name main.js
+*   @name init.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -16,13 +16,13 @@
 define(
     [
         'config',
-        'src/util',
-        'src/interactor',
-        'src/components/events',
-        'src/components/status',
-        'src/components/cache',
-        'src/components/http',
-        'src/ui/gui',
+        'main/util',
+        'main/interactor',
+        'main/components/events',
+        'main/components/status',
+        'main/components/cache',
+        'main/components/http',
+        'main/ui/gui',
         'test/main.test'
     ],
     function (

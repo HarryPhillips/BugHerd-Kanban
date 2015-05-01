@@ -9,8 +9,8 @@
 define(
     [
         'config',
-        'src/util',
-        './counter'
+        'main/util',
+        'main/components/counter'
     ],
     function (config, util, Counter) {
         'use strict';

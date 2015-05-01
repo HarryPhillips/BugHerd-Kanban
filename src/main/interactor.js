@@ -9,11 +9,11 @@
 define(
     [
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/status',
-        'src/components/node',
-        'src/ui/modal'
+        'main/util',
+        'main/components/events',
+        'main/components/status',
+        'main/components/node',
+        'main/ui/modal'
     ],
     function (
         config,

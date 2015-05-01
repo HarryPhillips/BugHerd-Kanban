@@ -9,11 +9,11 @@
 define(
     [
         'config',
-        'src/util',
-        'src/components/events',
-        'src/components/http',
-        'src/components/status',
-        'src/components/node'
+        'main/util',
+        'main/components/events',
+        'main/components/http',
+        'main/components/status',
+        'main/components/node'
     ],
     function (config, util, events, Http, status, Node) {
         'use strict';

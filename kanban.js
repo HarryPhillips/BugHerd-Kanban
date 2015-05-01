@@ -18,14 +18,14 @@
     
     require.config({
         paths: {
-            src: window.KBS_BASE_URL + "src",
-            test: window.KBS_BASE_URL + "test"
+            main: window.KBS_BASE_URL + "src/main",
+            test: window.KBS_BASE_URL + "src/test"
         }
     });
     
     // launch when window is loaded
     window.onload = function () {
         window.KBS_START_TIME = new Date().getTime();
-        require(['src/main']);
+        require(['main/init']);
     };
 }(window));

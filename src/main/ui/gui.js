@@ -11,13 +11,13 @@
 define(
     [
         'config',
-        'src/util',
-        'src/interactor',
-        'src/components/events',
-        'src/components/counter',
-        'src/components/node',
-        'src/ui/console',
-        'src/ui/modal'
+        'main/util',
+        'main/interactor',
+        'main/components/events',
+        'main/components/counter',
+        'main/components/node',
+        'main/ui/console',
+        'main/ui/modal'
     ],
     function (
         config,

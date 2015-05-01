@@ -9,7 +9,7 @@
 define(
     [
         'require',
-        'src/util'
+        'main/util'
     ],
     function (require, util) {
         'use strict';

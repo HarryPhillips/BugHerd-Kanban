@@ -6,7 +6,7 @@
 
 /*global define: true */
 
-define(['src/util'], function (util) {
+define(['main/util'], function (util) {
     'use strict';
     
     // test object

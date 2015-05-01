@@ -8,8 +8,8 @@
 
 define(
     [
-        'src/util',
-        'src/components/events'
+        'main/util',
+        'main/components/events'
     ],
     function (util, events) {
         'use strict';
