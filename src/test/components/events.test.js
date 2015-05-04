@@ -8,7 +8,7 @@
 
 define(
     [
-        'main/util',
+        'main/components/util',
         'main/components/events'
     ],
     function (util, events) {

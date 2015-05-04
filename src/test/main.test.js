@@ -9,7 +9,7 @@
 define(
     [
         'require',
-        'main/util'
+        'main/components/util'
     ],
     function (require, util) {
         'use strict';
@@ -21,7 +21,7 @@ define(
         function TestController() {
             // modules
             this.modules = [
-                "util",
+                "components/util",
                 "components/events"
             ];
         }

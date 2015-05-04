@@ -9,7 +9,7 @@
 define(
     [
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/events',
         'main/components/http',
         'main/components/status',

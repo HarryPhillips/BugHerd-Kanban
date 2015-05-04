@@ -6,7 +6,7 @@
 
 /*global define: true */
 
-define(['main/util'], function (util) {
+define(['main/components/util'], function (util) {
     'use strict';
     
     // test object

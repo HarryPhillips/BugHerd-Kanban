@@ -9,9 +9,9 @@
 define(
     [
         'config',
-        './components/events',
-        './components/status',
-        './components/cache'
+        'main/components/events',
+        'main/components/status',
+        'main/components/cache'
     ],
     function (config, events, status, cache) {
         'use strict';
@@ -19,7 +19,7 @@ define(
         // util class
         function Util() {}
         
-        // set instance
+        // set instance for internal references
         var instance = new Util();
         
         // amend zeros to a number until a length is met
@@ -148,9 +148,34 @@ define(
             );
         };
         
+        // checks if input is a date object
+        Util.prototype.isDate = function (obj) {
+            return obj instanceof Date;
+        };
+        
         // checks if input is an array
         Util.prototype.isArray = function (obj) {
-            return obj instanceof Array || obj.constructor === "Array";
+            return obj instanceof Array || obj.constructor.name === "Array";
+        };
+        
+        // checks if input is an object
+        Util.prototype.isObject = function (obj) {
+            return obj instanceof Object;
+        };
+        
+        // checks if input is a string
+        Util.prototype.isString = function (obj) {
+            return typeof obj === "string";
+        };
+        
+        // checks if input is a number
+        Util.prototype.isNumber = function (obj) {
+            return typeof obj === "number";
+        };
+        
+        // checks if input is a boolean (strictly of boolean type)
+        Util.prototype.isBoolean = function (obj) {
+            return typeof obj === "boolean";
         };
 
         // returns true or the index
@@ -237,6 +262,66 @@ define(
             // swap values
             array[i] = array[j];
             array[j] = tmp;
+        };
+        
+        // clone an object of type Array, Object or Date
+        // will also copy simple types (string, boolean etc)
+        // WILL BREAK WITH CYCLIC OBJECT REFERENCES!
+        Util.prototype.clone = function (obj) {
+            var copy,
+                attr,
+                len,
+                i;
+            
+            // handle dates
+            if (instance.isDate(obj)) {
+                copy = new Date();
+                copy.setTime(obj.getTime());
+                return copy;
+            }
+            
+            // handle arrays
+            if (instance.isArray(obj)) {
+                copy = [];
+                len = obj.length;
+                i = 0;
+                
+                // recursive copy
+                for (i; i < len; i += 1) {
+                    copy[i] = instance.clone(obj[i]);
+                }
+                
+                return copy;
+            }
+            
+            // handle objects
+            if (instance.isObject(obj)) {
+                copy = {};
+                
+                // recursive copy
+                for (attr in obj) {
+                    if (obj.hasOwnProperty(attr)) {
+                        copy[attr] = instance.clone(obj[attr]);
+                    }
+                }
+                     
+                return copy;
+            }
+            
+            // handle simple types
+            if (instance.isString(obj)
+                    || instance.isNumber(obj)
+                    || instance.isBoolean(obj)) {
+                copy = obj;
+                return copy;
+            }
+            
+            // error if uncaught type
+            instance.log(
+                "error",
+                "Couldn't clone object of unsupported type: " +
+                    typeof obj
+            );
         };
 
         // log wrapper

@@ -9,21 +9,34 @@
 /*
 *   TODO
 *   + On the fly user configuration tool
-      (maybe refactor config to use a class with setters/getters?)
-*   + Related to config, style/theme preference changes?
-*   + Add ability to set wallpapers
-*   + Add a comments interface/modal (with a spellchecker?)
+*     (maybe refactor config to use a class with setters/getters?)
+*
+*   + Need to preserve user prefs and able to reset to defaults
+*     (refactor config to monitor and cache states? Cookie parser?)
+*
+*   + Related to config, style/theme preference engine? Dynamic not preloaded?
+*
+*   + Add ability to set wallpapers (style/theme engine?)
+*
+*   + Add a comments interface/modal (with a spellchecker? Preview post?)
+*
+*   + Build source *into* the extension, packaged together
+*     (no source pulling from rawgit or local server. Just embedded into
+*     the extension chrome source). Auto-update capabilities?
+*
+*   + A place for Kanban tools? Not attached to the console toolbar?
 */
 
 define(
     [
         'config',
-        'main/util',
+        'main/components/util',
         'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',
         'main/components/http',
+        'main/components/configurator',
         'main/ui/gui',
         'test/main.test'
     ],
@@ -35,6 +48,7 @@ define(
         status,
         cache,
         http,
+        Configurator,
         GUI,
         tests
     ) {
@@ -109,7 +123,8 @@ define(
             events: events,
             http: http,
             util: util,
-            gui: gui
+            gui: gui,
+            configurator: new Configurator()
         };
 
         // wait for kbs loaded event

@@ -7,7 +7,7 @@
 /*global define: true */
 
 define(
-    ['config', 'main/util'],
+    ['config', 'main/components/util'],
     function (config, util) {
         'use strict';
         
