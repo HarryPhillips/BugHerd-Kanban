@@ -61,7 +61,7 @@ define(["config", "main/components/util"], function (config, util) {
     
     // reset config to state before manipulation
     Configurator.prototype.reset = function () {
-        config = this.previousState;
+        config.reset();
     };
     
     return Configurator;

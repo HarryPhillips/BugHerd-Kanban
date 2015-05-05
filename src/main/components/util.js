@@ -535,7 +535,7 @@ define(
 
         // create instance
         instance = new Util();
-        instance.log("+ instance.js loaded");
+        instance.log("+ util.js loaded");
 
         return instance;
     }
