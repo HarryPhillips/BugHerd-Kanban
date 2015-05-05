@@ -4,67 +4,163 @@
 *   @copy Copyright 2015 Harry Phillips
 */
 
-/*global define: true */
+/*global define: true, clone: true */
 
-define('config',{
-    appName: "kbs",
-    appFullname: "Kanban",
-    version: "1.2.2",
-    enabled: true,
-    mode: "dev",
-//    offline: true,
-    httpToken: "Fw43Iueh87aw7",
-//    theme: "black",
-//    test: true,
-    logs: {
-        enabled: true,
-        gui: true,
-        contexts: true,
-        contextFlag: "context:",
-        obj2buffer: false,
-        filter: false
-    },
-    gui: {
-        enabled: true,
-        autorefresh: true,
-        console: {
-            state: "kbs-close",
-            autoscroll: true,
-            icons: {
-                save: "file-text",
-                clear: "trash",
-                toggle: "terminal",
-                close: "times",
-                destroy: "unlink",
-                example: "plus-circle",
-                benchmark: "tachometer",
-                expand: "caret-square-o-right"
+define('config',[],function () {
+    
+    
+    // self references the instantiated config class
+    // pointer references the config object
+    var self, pointer;
+    
+    // config class
+    function Config(obj) {
+        // set reference to this instance
+        self = this;
+        
+        this.defaultObj = clone(obj);
+        this.defaultObj.reset = this.reset;
+        obj.reset = this.reset;
+        
+        this.obj = obj;
+        pointer = this.obj;
+    }
+    
+    // set config to default values
+    Config.prototype.reset = function () {
+        // iterate and check each property
+        var i;
+        for (i in self.obj) {
+            if (self.obj.hasOwnProperty(i)) {
+                // is a default prop?
+                if (!self.defaultObj[i]) {
+                    // this is a new prop - unset it
+                    delete self.obj[i];
+                }
+                
+                // set to default
+                self.obj[i] = self.defaultObj[i];
             }
         }
-    },
-    interactor: {
-        enabled: true
-    },
-    events: {
-        silent: false
-    },
-    cookies: {
-        enabled: true,
-        prefix: "__kbs_"
-    },
-    routes: {
-        console: {
-            save: "endpoint/SaveBuffer.php"
+    };
+    
+    // internal cloning function
+    function clone(obj) {
+        var copy,
+            attr,
+            len,
+            i;
+
+        // handle dates
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
         }
-    },
-    tooltips: {
-        save: "Save the output buffer to text file",
-        clear: "Clear all logs",
-        toggle: "GUI Console State",
-        close: "Close the console",
-        destroy: "Destroy this console instance",
-        benchmark: "Run the benchmark"
+
+        // handle arrays
+        if (obj instanceof Array) {
+            copy = [];
+            len = obj.length;
+            i = 0;
+
+            // recursive copy
+            for (i; i < len; i += 1) {
+                copy[i] = clone(obj[i]);
+            }
+
+            return copy;
+        }
+
+        // handle objects
+        if (obj instanceof Object) {
+            copy = {};
+
+            // recursive copy
+            for (attr in obj) {
+                if (obj.hasOwnProperty(attr)) {
+                    copy[attr] = clone(obj[attr]);
+                }
+            }
+
+            return copy;
+        }
+
+        // handle simple types
+        if (typeof obj === "string"
+                || typeof obj === "number"
+                || typeof obj === "boolean") {
+            copy = obj;
+            return copy;
+        }
     }
+    
+    // construct the config instance once only
+    pointer = pointer || new Config({
+        appName: "kbs",
+        appFullname: "Kanban",
+        version: "1.2.2",
+        enabled: true,
+        mode: "dev",
+//        offline: true,
+        httpToken: "Fw43Iueh87aw7",
+//        theme: "black",
+//        test: true,
+        logs: {
+            enabled: true,
+            gui: true,
+            contexts: true,
+            contextFlag: "context:",
+            obj2buffer: false,
+            filter: false
+        },
+        gui: {
+            enabled: true,
+            autorefresh: true,
+            console: {
+                state: "kbs-close",
+                autoscroll: true,
+                icons: {
+                    save: "file-text",
+                    clear: "trash",
+                    toggle: "terminal",
+                    close: "times",
+                    destroy: "unlink",
+                    example: "plus-circle",
+                    benchmark: "tachometer",
+                    settings: "cogs",
+                    expand: "caret-square-o-right"
+                }
+            }
+        },
+        interactor: {
+            enabled: true
+        },
+        events: {
+            silent: false
+        },
+        cookies: {
+            enabled: true,
+            prefix: "__kbs_"
+        },
+        routes: {
+            console: {
+                save: "endpoint/SaveBuffer.php"
+            }
+        },
+        tooltips: {
+            save: "Save the output buffer to text file",
+            clear: "Clear all logs",
+            toggle: "GUI Console State",
+            close: "Close the console",
+            destroy: "Destroy this console instance",
+            benchmark: "Run the benchmark",
+            settings: "Edit Kanban settings"
+        }
+    }).obj;
+    
+    // return the instance
+    return pointer;
 });
 
 /*
@@ -248,11 +344,11 @@ define('main/components/cache',['main/components/buffer'], function (Buffer) {
 /*global define: true */
 
 define(
-    'main/util',[
+    'main/components/util',[
         'config',
-        './components/events',
-        './components/status',
-        './components/cache'
+        'main/components/events',
+        'main/components/status',
+        'main/components/cache'
     ],
     function (config, events, status, cache) {
         
@@ -260,7 +356,7 @@ define(
         // util class
         function Util() {}
         
-        // set instance
+        // set instance for internal references
         var instance = new Util();
         
         // amend zeros to a number until a length is met
@@ -389,9 +485,52 @@ define(
             );
         };
         
+        // checks if input is a date object
+        Util.prototype.isDate = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return obj instanceof Date;
+        };
+        
         // checks if input is an array
         Util.prototype.isArray = function (obj) {
-            return obj instanceof Array || obj.constructor === "Array";
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return obj instanceof Array || obj.constructor.name === "Array";
+        };
+        
+        // checks if input is an object
+        Util.prototype.isObject = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return obj instanceof Object;
+        };
+        
+        // checks if input is a string
+        Util.prototype.isString = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return typeof obj === "string";
+        };
+        
+        // checks if input is a number
+        Util.prototype.isNumber = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return typeof obj === "number";
+        };
+        
+        // checks if input is a boolean (strictly of boolean type)
+        Util.prototype.isBoolean = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
+            return typeof obj === "boolean";
         };
 
         // returns true or the index
@@ -478,6 +617,66 @@ define(
             // swap values
             array[i] = array[j];
             array[j] = tmp;
+        };
+        
+        // clone an object of type Array, Object or Date
+        // will also copy simple types (string, boolean etc)
+        // WILL BREAK WITH CYCLIC OBJECT REFERENCES!
+        Util.prototype.clone = function (obj) {
+            var copy,
+                attr,
+                len,
+                i;
+            
+            // handle dates
+            if (instance.isDate(obj)) {
+                copy = new Date();
+                copy.setTime(obj.getTime());
+                return copy;
+            }
+            
+            // handle arrays
+            if (instance.isArray(obj)) {
+                copy = [];
+                len = obj.length;
+                i = 0;
+                
+                // recursive copy
+                for (i; i < len; i += 1) {
+                    copy[i] = instance.clone(obj[i]);
+                }
+                
+                return copy;
+            }
+            
+            // handle objects
+            if (instance.isObject(obj)) {
+                copy = {};
+                
+                // recursive copy
+                for (attr in obj) {
+                    if (obj.hasOwnProperty(attr)) {
+                        copy[attr] = instance.clone(obj[attr]);
+                    }
+                }
+                     
+                return copy;
+            }
+            
+            // handle simple types
+            if (instance.isString(obj)
+                    || instance.isNumber(obj)
+                    || instance.isBoolean(obj)) {
+                copy = obj;
+                return copy;
+            }
+            
+            // error if uncaught type
+            instance.log(
+                "error",
+                "Couldn't clone object of unsupported type: " +
+                    typeof obj
+            );
         };
 
         // log wrapper
@@ -691,7 +890,7 @@ define(
 
         // create instance
         instance = new Util();
-        instance.log("+ instance.js loaded");
+        instance.log("+ util.js loaded");
 
         return instance;
     }
@@ -706,7 +905,7 @@ define(
 /*global define: true */
 
 define(
-    'main/components/node',['config', 'main/util'],
+    'main/components/node',['config', 'main/components/util'],
     function (config, util) {
         
         
@@ -989,7 +1188,7 @@ define('main/components/counter',[],function () {
 define(
     'main/components/http',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/counter'
     ],
     function (config, util, Counter) {
@@ -1086,7 +1285,7 @@ define(
 define(
     'main/ui/modal',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/events',
         'main/components/http',
         'main/components/status',
@@ -1117,12 +1316,12 @@ define(
                 instance = null;
             }
             
-            if (!gui && !instance) {
+            if (!gui && !instance && params.init) {
                 throw new Error("Modal has no GUI instance!");
             }
             
             // set props
-            gui = gui || instance;
+            gui = gui || instance || null;
             this.type = type;
             this.node = new Node("div", "kbs-modal");
             this.node.hide();
@@ -1268,7 +1467,7 @@ define(
 define(
     'main/ui/interactor',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/events',
         'main/components/status',
         'main/components/node',
@@ -1743,6 +1942,100 @@ define(
 );
 /*
 *   @type javascript
+*   @name configurator.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define(
+    'main/components/configurator',[
+        "config",
+        "main/components/util",
+        "main/ui/modal"
+    ],
+    function (config, util, Modal) {
+        
+
+        var self;
+        
+        // configurator class
+        function Configurator() {
+            self = this;
+            
+            this.previousState = util.clone(config);
+            this.currentState = util.clone(config);
+            
+            // modal
+            this.modal = new Modal({
+                init: false,
+                title: "Settings",
+                message: "Kanban configurator..."
+            });
+        }
+        
+        // start the configurator
+        Configurator.prototype.start = function () {
+            // initialise the modal
+            self.modal.init();
+        };
+
+        // finds a config setting from a selector string e.g. "gui/console/state"
+        // will get config.gui.console.state
+        Configurator.prototype.get = function (selector) {
+            var i = 0,
+                segments = selector.split("/"),
+                value = config,
+                len = segments.length;
+
+            // iterate through segments
+            for (i; i < len; i += 1) {
+                // get segment value
+                value = value[segments[i]];
+            }
+
+            return value;
+        };
+
+        // set/create a config value
+        Configurator.prototype.set = function (selector, value) {
+            var segments = selector.split("/"),
+                len = segments.length,
+                got = config,
+                i = 0,
+                parent;
+
+            // if a simple selector
+            if (segments.length === 1) {
+                config[selector] = value;
+                return config[selector];
+            }
+
+            // more complex selector - let's get references
+            for (i; i < len; i += 1) {
+                // if second to last segment, set as parent ref
+                if (i === len - 2) {
+                    parent = got[segments[i]];
+                }
+                got = got[segments[i]];
+            }
+
+            // set value
+            parent[segments[len - 1]] = value;
+            return parent[segments[len - 1]];
+        };
+
+        // reset config to default state
+        Configurator.prototype.reset = function () {
+            config.reset();
+        };
+
+        return Configurator;
+    }
+);
+
+/*
+*   @type javascript
 *   @name router.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -1770,13 +2063,14 @@ define('main/components/router',['config'], function (config) {
 define(
     'main/ui/console',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/events',
         'main/components/http',
         'main/components/status',
         'main/components/router',
         'main/components/cache',
         'main/components/node',
+        'main/components/configurator',
         'main/ui/modal'
     ],
     function (
@@ -1788,12 +2082,14 @@ define(
         router,
         cache,
         Node,
+        Configurator,
         Modal
     ) {
         
             
         // instance pointers
-        var self, gui;
+        var self, gui,
+            configurator;
         
         // console constructor
         function Console(instance) {
@@ -2139,7 +2435,9 @@ define(
                 titlenode,
                 cons,
                 consout,
-                consicon;
+                consicon,
+                
+                cfgmodal;
 
             // console wrapper
             consclass = "kbs-cons-box " + config.gui.console.state;
@@ -2181,6 +2479,11 @@ define(
                         self.open();
                     }
                 };
+            
+            // configurator tool
+            configurator = new Configurator();
+            this.createTool("settings")
+                .element.onclick = configurator.start;
             
             // save tool - only on localhost base url's
             if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
@@ -2282,7 +2585,7 @@ define(
 define(
     'main/ui/gui',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/components/events',
         'main/components/counter',
         'main/components/node',
@@ -2332,7 +2635,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("kbs/gui/loaded");
+                    events.publish("gui/loaded");
                 }),
 
                 // create link elements
@@ -2366,18 +2669,13 @@ define(
 
             // events setup
             if (config.gui.enabled) {
-                // auto refresh
-                if (config.gui.autorefresh) {
-                    events.subscribe("gui/update", this.refresh);
-                }
-
                 // gui logging
                 if (config.logs.gui) {
                     events.subscribe("gui/log", this.console.write);
                 }
 
                 // gui load event listener
-                events.subscribe("kbs/gui/loaded", publish);
+                events.subscribe("gui/loaded", publish);
             }
 
             // props
@@ -2388,6 +2686,8 @@ define(
             mainlink.href = mainurl;
             themelink.href = themeurl;
             falink.href = faurl;
+            
+            themelink.id = "kbs-theme-link";
 
             // gui init log context
             util.log("context:gui/init", "info", "Initialising GUI...");
@@ -2405,7 +2705,9 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "+ theme.css loaded");
+                var themename = self.getThemeName();
+                
+                util.log("context:gui/init", "+ " + themename + " loaded");
                 loader.count += 1;
             };
 
@@ -2431,6 +2733,51 @@ define(
             }
             document.head.appendChild(mainlink);
             document.head.appendChild(themelink);
+        };
+            
+        // return current theme name or theme name from url
+        GUI.prototype.getThemeName = function (url) {
+            var themelink = document.getElementById("kbs-theme-link"),
+                name = url || themelink.href;
+            
+            name = name.replace(
+                window.KBS_BASE_URL +
+                    "css/",
+                ""
+            );
+            
+            name = name.replace(".css", "");
+            
+            return name;
+        };
+            
+        // return to configured theme
+        GUI.prototype.resetTheme = function () {
+            self.loadTheme(config.theme || "theme");
+        };
+            
+        // set theme
+        GUI.prototype.loadTheme = function (theme) {
+            var themelink = document.getElementById("kbs-theme-link"),
+                node = new Node(themelink);
+            
+            // remove .css if found
+            theme = theme.replace(".css", "");
+            
+            // set theme
+            node.attr(
+                "href",
+                window.KBS_BASE_URL +
+                    "css/" + theme + ".css"
+            );
+        };
+            
+        // remove current theme
+        GUI.prototype.unloadTheme = function () {
+            var themelink = document.getElementById("kbs-theme-link"),
+                node = new Node(themelink);
+            
+            node.attr("href", "");
         };
 
         // build gui node tree
@@ -2477,11 +2824,6 @@ define(
             };
         };
 
-        // refresh the gui and its child nodes
-        GUI.prototype.refresh = function () {
-            this.console.refresh();
-        };
-
 
         // add a child node to the gui
         GUI.prototype.addChild = function (node) {
@@ -2517,7 +2859,7 @@ define(
 define(
     'test/main.test',[
         'require',
-        'main/util'
+        'main/components/util'
     ],
     function (require, util) {
         
@@ -2529,7 +2871,7 @@ define(
         function TestController() {
             // modules
             this.modules = [
-                "util",
+                "components/util",
                 "components/events"
             ];
         }
@@ -2573,21 +2915,34 @@ define(
 /*
 *   TODO
 *   + On the fly user configuration tool
-      (maybe refactor config to use a class with setters/getters?)
-*   + Related to config, style/theme preference changes?
-*   + Add ability to set wallpapers
-*   + Add a comments interface/modal (with a spellchecker?)
+*     (maybe refactor config to use a class with setters/getters?)
+*
+*   + Need to preserve user prefs and able to reset to defaults
+*     (refactor config to monitor and cache states? Cookie parser?)
+*
+*   + Related to config, style/theme preference engine? Dynamic not preloaded?
+*
+*   + Add ability to set wallpapers (style/theme engine?)
+*
+*   + Add a comments interface/modal (with a spellchecker? Preview post?)
+*
+*   + Build source *into* the extension, packaged together
+*     (no source pulling from rawgit or local server. Just embedded into
+*     the extension chrome source). Auto-update capabilities?
+*
+*   + A place for Kanban tools? Not attached to the console toolbar?
 */
 
 define(
     'main/init',[
         'config',
-        'main/util',
+        'main/components/util',
         'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',
         'main/components/http',
+        'main/components/configurator',
         'main/ui/gui',
         'test/main.test'
     ],
@@ -2599,6 +2954,7 @@ define(
         status,
         cache,
         http,
+        Configurator,
         GUI,
         tests
     ) {
@@ -2673,7 +3029,8 @@ define(
             events: events,
             http: http,
             util: util,
-            gui: gui
+            gui: gui,
+            configurator: new Configurator()
         };
 
         // wait for kbs loaded event
