@@ -74,7 +74,7 @@ define(
                 "css/main.css",
 
                 themeurl = window.KBS_BASE_URL +
-                "css/" + (config.theme || "theme") + ".css",
+                "css/themes/" + (config.theme || "default") + ".css",
 
                 faurl = "//maxcdn.bootstrapcdn.com/font-awesome/" +
                 "4.3.0" +
@@ -133,13 +133,15 @@ define(
             themelink.onload = function () {
                 var themename = self.getThemeName();
                 
-                util.log("context:gui/init", "+ " + themename + " loaded");
+                util.log("context:gui/init", "+ theme '" + themename + "' loaded");
                 loader.count += 1;
             };
 
             themelink.onerror = function () {
                 loader.count += 1;
-                throw new Error("theme.css failed to load!");
+                util.log("error", "theme '" +
+                                self.getThemeName() +
+                                "' failed to load!");
             };
 
             // font-awesome css link events
@@ -168,7 +170,7 @@ define(
             
             name = name.replace(
                 window.KBS_BASE_URL +
-                    "css/",
+                    "css/themes/",
                 ""
             );
             
@@ -194,7 +196,7 @@ define(
             node.attr(
                 "href",
                 window.KBS_BASE_URL +
-                    "css/" + theme + ".css"
+                    "css/themes/" + theme + ".css"
             );
         };
             
