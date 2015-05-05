@@ -61,7 +61,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("kbs/gui/loaded");
+                    events.publish("gui/loaded");
                 }),
 
                 // create link elements
@@ -95,18 +95,13 @@ define(
 
             // events setup
             if (config.gui.enabled) {
-                // auto refresh
-                if (config.gui.autorefresh) {
-                    events.subscribe("gui/update", this.refresh);
-                }
-
                 // gui logging
                 if (config.logs.gui) {
                     events.subscribe("gui/log", this.console.write);
                 }
 
                 // gui load event listener
-                events.subscribe("kbs/gui/loaded", publish);
+                events.subscribe("gui/loaded", publish);
             }
 
             // props
@@ -117,6 +112,8 @@ define(
             mainlink.href = mainurl;
             themelink.href = themeurl;
             falink.href = faurl;
+            
+            themelink.id = "kbs-theme-link";
 
             // gui init log context
             util.log("context:gui/init", "info", "Initialising GUI...");
@@ -134,7 +131,9 @@ define(
 
             // theme css link events
             themelink.onload = function () {
-                util.log("context:gui/init", "+ theme.css loaded");
+                var themename = self.getThemeName();
+                
+                util.log("context:gui/init", "+ " + themename + " loaded");
                 loader.count += 1;
             };
 
@@ -160,6 +159,51 @@ define(
             }
             document.head.appendChild(mainlink);
             document.head.appendChild(themelink);
+        };
+            
+        // return current theme name or theme name from url
+        GUI.prototype.getThemeName = function (url) {
+            var themelink = document.getElementById("kbs-theme-link"),
+                name = url || themelink.href;
+            
+            name = name.replace(
+                window.KBS_BASE_URL +
+                    "css/",
+                ""
+            );
+            
+            name = name.replace(".css", "");
+            
+            return name;
+        };
+            
+        // return to configured theme
+        GUI.prototype.resetTheme = function () {
+            self.loadTheme(config.theme || "theme");
+        };
+            
+        // set theme
+        GUI.prototype.loadTheme = function (theme) {
+            var themelink = document.getElementById("kbs-theme-link"),
+                node = new Node(themelink);
+            
+            // remove .css if found
+            theme = theme.replace(".css", "");
+            
+            // set theme
+            node.attr(
+                "href",
+                window.KBS_BASE_URL +
+                    "css/" + theme + ".css"
+            );
+        };
+            
+        // remove current theme
+        GUI.prototype.unloadTheme = function () {
+            var themelink = document.getElementById("kbs-theme-link"),
+                node = new Node(themelink);
+            
+            node.attr("href", "");
         };
 
         // build gui node tree
@@ -204,11 +248,6 @@ define(
                     }
                 }
             };
-        };
-
-        // refresh the gui and its child nodes
-        GUI.prototype.refresh = function () {
-            this.console.refresh();
         };
 
 

@@ -150,31 +150,49 @@ define(
         
         // checks if input is a date object
         Util.prototype.isDate = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return obj instanceof Date;
         };
         
         // checks if input is an array
         Util.prototype.isArray = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return obj instanceof Array || obj.constructor.name === "Array";
         };
         
         // checks if input is an object
         Util.prototype.isObject = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return obj instanceof Object;
         };
         
         // checks if input is a string
         Util.prototype.isString = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return typeof obj === "string";
         };
         
         // checks if input is a number
         Util.prototype.isNumber = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return typeof obj === "number";
         };
         
         // checks if input is a boolean (strictly of boolean type)
         Util.prototype.isBoolean = function (obj) {
+            if (typeof obj === "undefined") {
+                return false;
+            }
             return typeof obj === "boolean";
         };
 

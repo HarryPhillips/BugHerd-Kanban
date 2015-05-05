@@ -40,12 +40,12 @@ define(
                 instance = null;
             }
             
-            if (!gui && !instance) {
+            if (!gui && !instance && params.init) {
                 throw new Error("Modal has no GUI instance!");
             }
             
             // set props
-            gui = gui || instance;
+            gui = gui || instance || null;
             this.type = type;
             this.node = new Node("div", "kbs-modal");
             this.node.hide();

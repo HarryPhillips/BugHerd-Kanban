@@ -7,85 +7,42 @@
 /*global define: true, clone: true */
 
 define(function () {
-    "use strict";
+    'use strict';
     
-    var instance;
+    // self references the instantiated config class
+    // pointer references the config object
+    var self, pointer;
     
     // config class
     function Config(obj) {
-        this.defaults = clone(obj);
-        this.state = obj;
-        this.state.reset = this.reset;
+        // set reference to this instance
+        self = this;
+        
+        this.defaultObj = clone(obj);
+        this.defaultObj.reset = this.reset;
+        obj.reset = this.reset;
+        
+        this.obj = obj;
+        pointer = this.obj;
     }
     
-    // reset to initial/default state
+    // set config to default values
     Config.prototype.reset = function () {
-        this.state = clone(this.defaults);
-        this.state.reset = this.reset;
-    };
-    
-    // construct a single config instance
-    // with these default values
-    instance = new Config({
-        appName: "kbs",
-        appFullname: "Kanban",
-        version: "1.2.2",
-        enabled: true,
-        mode: "dev",
-//            offline: true,
-        httpToken: "Fw43Iueh87aw7",
-//            theme: "black",
-//            test: true,
-        logs: {
-            enabled: true,
-            gui: true,
-            contexts: true,
-            contextFlag: "context:",
-            obj2buffer: false,
-            filter: false
-        },
-        gui: {
-            enabled: true,
-            autorefresh: true,
-            console: {
-                state: "kbs-close",
-                autoscroll: true,
-                icons: {
-                    save: "file-text",
-                    clear: "trash",
-                    toggle: "terminal",
-                    close: "times",
-                    destroy: "unlink",
-                    example: "plus-circle",
-                    benchmark: "tachometer",
-                    expand: "caret-square-o-right"
+        // iterate and check each property
+        var i;
+        for (i in self.obj) {
+            if (self.obj.hasOwnProperty(i)) {
+                // is a default prop?
+                if (!self.defaultObj[i]) {
+                    // this is a new prop - unset it
+                    delete self.obj[i];
                 }
+                
+                // set to default
+                self.obj[i] = self.defaultObj[i];
             }
-        },
-        interactor: {
-            enabled: true
-        },
-        events: {
-            silent: false
-        },
-        cookies: {
-            enabled: true,
-            prefix: "__kbs_"
-        },
-        routes: {
-            console: {
-                save: "endpoint/SaveBuffer.php"
-            }
-        },
-        tooltips: {
-            save: "Save the output buffer to text file",
-            clear: "Clear all logs",
-            toggle: "GUI Console State",
-            close: "Close the console",
-            destroy: "Destroy this console instance",
-            benchmark: "Run the benchmark"
         }
-    });
+    };
     
     // internal cloning function
     function clone(obj) {
@@ -93,7 +50,7 @@ define(function () {
             attr,
             len,
             i;
-            
+
         // handle dates
         if (obj instanceof Date) {
             copy = new Date();
@@ -138,5 +95,70 @@ define(function () {
         }
     }
     
-    return instance.state;
+    // construct the config instance once only
+    pointer = pointer || new Config({
+        appName: "kbs",
+        appFullname: "Kanban",
+        version: "1.2.2",
+        enabled: true,
+        mode: "dev",
+//        offline: true,
+        httpToken: "Fw43Iueh87aw7",
+//        theme: "black",
+//        test: true,
+        logs: {
+            enabled: true,
+            gui: true,
+            contexts: true,
+            contextFlag: "context:",
+            obj2buffer: false,
+            filter: false
+        },
+        gui: {
+            enabled: true,
+            autorefresh: true,
+            console: {
+                state: "kbs-close",
+                autoscroll: true,
+                icons: {
+                    save: "file-text",
+                    clear: "trash",
+                    toggle: "terminal",
+                    close: "times",
+                    destroy: "unlink",
+                    example: "plus-circle",
+                    benchmark: "tachometer",
+                    settings: "cogs",
+                    expand: "caret-square-o-right"
+                }
+            }
+        },
+        interactor: {
+            enabled: true
+        },
+        events: {
+            silent: false
+        },
+        cookies: {
+            enabled: true,
+            prefix: "__kbs_"
+        },
+        routes: {
+            console: {
+                save: "endpoint/SaveBuffer.php"
+            }
+        },
+        tooltips: {
+            save: "Save the output buffer to text file",
+            clear: "Clear all logs",
+            toggle: "GUI Console State",
+            close: "Close the console",
+            destroy: "Destroy this console instance",
+            benchmark: "Run the benchmark",
+            settings: "Edit Kanban settings"
+        }
+    }).obj;
+    
+    // return the instance
+    return pointer;
 });

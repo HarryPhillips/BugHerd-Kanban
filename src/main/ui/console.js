@@ -16,6 +16,7 @@ define(
         'main/components/router',
         'main/components/cache',
         'main/components/node',
+        'main/components/configurator',
         'main/ui/modal'
     ],
     function (
@@ -27,12 +28,14 @@ define(
         router,
         cache,
         Node,
+        Configurator,
         Modal
     ) {
         'use strict';
             
         // instance pointers
-        var self, gui;
+        var self, gui,
+            configurator;
         
         // console constructor
         function Console(instance) {
@@ -378,7 +381,9 @@ define(
                 titlenode,
                 cons,
                 consout,
-                consicon;
+                consicon,
+                
+                cfgmodal;
 
             // console wrapper
             consclass = "kbs-cons-box " + config.gui.console.state;
@@ -420,6 +425,11 @@ define(
                         self.open();
                     }
                 };
+            
+            // configurator tool
+            configurator = new Configurator();
+            this.createTool("settings")
+                .element.onclick = configurator.start;
             
             // save tool - only on localhost base url's
             if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
