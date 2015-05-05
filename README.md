@@ -28,9 +28,7 @@ updates automatically and all you need to do is install Kanban.xpi to Firefox. N
 Head over to releases to download the latest version of the extension. Or download the source and install kanban.xpi found under the dist/ directory.
 
 ### Notice:
-Kanban will automatically access the source code via this url:
-
-https://rawgit.com/HarryPhillips/Kanban/master/
+Kanban will automatically access the source code via https://rawgit.com
 
 You will have to go into Firefox Add-ons Manager and change the Base Url preference
 for Kanban if you wish to use your own hosted source.
