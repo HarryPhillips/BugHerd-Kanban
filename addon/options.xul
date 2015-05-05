@@ -7,10 +7,10 @@
         type="string"
         pref="extensions.kanban.baseUrl"
         title="Base Url"
-        desc="Enter the path to your local Kanban repository if you wish to use local files instead of the raw GitHub files. Leave empty if you wish to use the raw files. Please include the trailing slash, example: 'http://localhost/code/myKanbanRepo/'" />
+        desc="The location which Kanban's source will be loaded from." />
     <setting
         type="bool"
         pref="extensions.kanban.useDist"
         title="Use Distribution?"
-        desc="Enabling this will tell Kanban to use the distribution source, use for quicker loading times but do not enable if you are debugging / developing"/>
+        desc="Use compiled source for faster load times. Makes debugging hell."/>
 </vbox>
