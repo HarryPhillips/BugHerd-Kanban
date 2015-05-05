@@ -8,9 +8,6 @@
 
 /*
 *   TODO
-*   + On the fly user configuration tool
-*     (maybe refactor config to use a class with setters/getters?)
-*
 *   + Need to preserve user prefs and able to reset to defaults
 *     (refactor config to monitor and cache states? Cookie parser?)
 *
@@ -26,7 +23,7 @@
 *
 *   + A place for Kanban tools? Not attached to the console toolbar?
 *
-*   + Point addon base url to prodution cdn using source tag e.g
+*   + Point base url to prodution cdn using source tag e.g
 *     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.2.2/
 */
 
