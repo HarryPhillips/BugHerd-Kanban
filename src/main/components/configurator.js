@@ -21,9 +21,6 @@ define(
         function Configurator() {
             self = this;
             
-            this.previousState = util.clone(config);
-            this.currentState = util.clone(config);
-            
             // modal
             this.modal = new Modal({
                 init: false,
