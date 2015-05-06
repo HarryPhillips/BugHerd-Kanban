@@ -371,7 +371,7 @@ define(
             taskExpander.createChild("a")
                 .text("Search Task")
                 .on("click", function (event) {
-                    taskSearch = new Modal("input", {
+                    taskSearch = new Modal("searchTask", {
                         init: true,
                         title: "Find a task",
                         message: "Enter the ID of the task you want to find:",
