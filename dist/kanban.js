@@ -99,7 +99,7 @@ define('config',[],function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.2.2",
+        version: "1.3.0-pre",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -483,6 +483,13 @@ define(
                             obj.nodeType === 1 &&
                             typeof obj.nodeName === "string"
             );
+        };
+        
+        // parse a html string into DOM element
+        Util.prototype.parseHTML = function (html) {
+            var element = document.createElement("div");
+            element.innerHTML = html;
+            return element;
         };
         
         // checks if input is a date object
@@ -887,7 +894,7 @@ define(
         Util.prototype.log.clearContext = function (context) {
             events.publish("gui/contexts/clear", context);
         };
-
+        
         // create instance
         instance = new Util();
         instance.log("+ util.js loaded");
@@ -1110,12 +1117,14 @@ define(
         // set attribute to node
         Node.prototype.attr = function (name, value) {
             this.element.setAttribute(name, value);
+            return this;
         };
         
         // write or return node text
         Node.prototype.text = function (text) {
             if (typeof text === "undefined") {
-                return this.element.textContent;
+                return this.element.textContent
+                    || this.element.value;
             }
             
             text = document.createTextNode(text);
@@ -1276,91 +1285,122 @@ define(
 );
 /*
 *   @type javascript
+*   @name viewloader.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('main/ui/viewloader',['require'],function (require) {
+    
+    
+    // view loader class
+    function ViewLoader() {}
+    
+    // load and return a view
+    ViewLoader.prototype.load = function (view, callback) {
+        require(["main/views/" + view], function (mod) {
+            callback(mod);
+        });
+    };
+    
+    return ViewLoader;
+});
+/*
+*   @type javascript
 *   @name modal.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
 /*global define: true */
 
+/*
+*   TODO
+*   + Handle element events
+*/
+
 define(
     'main/ui/modal',[
         'config',
         'main/components/util',
         'main/components/events',
-        'main/components/http',
         'main/components/status',
-        'main/components/node'
+        'main/components/http',
+        'main/components/node',
+        'main/ui/viewloader'
     ],
-    function (config, util, events, Http, status, Node) {
+    function (
+        config,
+        util,
+        events,
+        status,
+        Http,
+        Node,
+        ViewLoader
+    ) {
         
-
-        // instance references
-        var gui;
         
-        function Modal(type, instance, params) {
-            // set pointer
-            var self = this;
+        // shared vars between instances
+        var gui,
+            self,
+            vloader = new ViewLoader(),
+            activeModals = [];
+        
+        // modal class
+        function Modal(view, params) {
+            self = this;
             
-            // check if a type has been passed
-            if (typeof type !== "string") {
-                // adjust arguments
-                params = instance;
-                instance = type;
-                type = null;
+            // if already instantiated return
+            if (util.contains(activeModals, view)) {
+                return;
             }
             
-            // check if gui instance has been passed
-            if (instance.constructor.name !== "GUI") {
-                // adjust arguments
-                params = instance;
-                instance = null;
-            }
+            // add to the active modals array
+            activeModals.push(view);
             
-            if (!gui && !instance && params.init) {
-                throw new Error("Modal has no GUI instance!");
-            }
+            // store props
+            this.viewName = view;
+            this.params = params;
             
-            // set props
-            gui = gui || instance || null;
-            this.type = type;
-            this.node = new Node("div", "kbs-modal");
+            // create and hide node
+            this.node = new Node("div", "kbs-modal kbs-" + view);
             this.node.hide();
             
-            if (type) {
-                this.node.addClass("kbs-" + type);
-            }
+            // view element
+            this.view = null;
             
-            this.onConfirm = params.confirm || function () {};
-            this.onCancel = params.cancel || function () {};
-            this.onProceed = function () {};
+            // set modal event handlers
+            this.applyHandlers(params);
             
-            // wrap the on proceed event to pass args
-            if (params.proceed) {
-                this.onProceed = function (args) {
-                    params.proceed(args);
-                };
-            }
-            
-            // text content
-            this.title = params.title;
-            this.message = params.message;
-            
-            // input
-            this.inputType = params.input || "text";
-            
-            // initialise
-            if (params.init) {
-                this.init();
-            }
+            // load view and initialise
+            this.load((params.init) ? this.init : function () {});
         }
         
-        // init and open modal
+        // load modal view
+        Modal.prototype.load = function (onload) {
+            self = this;
+            
+            var view;
+            
+            // load view from modals dir
+            vloader.load(
+                "modals/" + this.viewName,
+                function (mod) {
+                    view = mod.createView(self);
+                    
+                    self.view = view;
+                    self.title = view.title;
+                    
+                    onload();
+                }
+            );
+        };
+        
+        // init modal with content
         Modal.prototype.init = function () {
             // declarations
             var
-                self = this,
-            
-                modal = this.node,
+                modal = self.node,
             
                 title =
                 modal.createChild("h2", "kbs-modal-title"),
@@ -1368,59 +1408,58 @@ define(
                 close =
                 modal.createChild("i", "fa fa-times kbs-modal-close"),
                 
-                message =
-                modal.createChild("p", "kbs-modal-msg"),
-                
-                input,
-                confirm,
-                cancel,
-                proceed;
+                content =
+                modal.createChild("p", "kbs-modal-content");
             
-            title.element.textContent = this.title;
-            message.element.textContent = this.message;
+            // set title
+            title.text(self.title);
             
-            close.element.onclick = function () {
-                self.destroy();
-            };
+            // close handler
+            close.on("click", self.destroy);
             
-            // add confirm/cancel buttons for prompt modals
-            if (this.type === "prompt") {
-                // confirm
-                confirm = modal.createChild("span", "kbs-confirm");
-                confirm.text("confirm");
-                confirm.element.onclick = this.onConfirm;
-                
-                // cancel
-                cancel = modal.createChild("span", "kbs-cancel");
-                cancel.text("cancel");
-                cancel.element.onclick = this.onCancel;
-            }
+            // append content from view
+            content.addChild(self.view);
             
-            // add user input for input modals
-            if (this.type === "input") {
-                // input field
-                input = this.node.createChild("input", "kbs-input-field");
-                input.element.type = this.inputType;
-                
-                // continue button
-                proceed = modal.createChild("div", "kbs-continue");
-                proceed.text("Go");
-                proceed.element.onclick = function () {
-                    self.onProceed(input.element.value);
-                };
-                
-            }
-            
-            // add our node to gui
+            // add modal to gui
             gui.addChild(modal);
             
-            // focus on input
-            if (this.type === "input") {
-                input.focus();
+            // open
+            self.open();
+        };
+            
+        // apply custom modal event handlers
+        Modal.prototype.applyHandlers = function (params) {
+            self = this;
+            
+            var err = function (event) {
+                // warning
+                util.log(
+                    "warn",
+                    "Modal '" +
+                        self.viewName +
+                        "' event '" +
+                        event +
+                        "' ran but didn't have a handler!"
+                );
+                
+                // destroy modal
+                self.destroy();
             }
             
-            // open the modal
-            this.open();
+            // confirmation
+            this.onConfirm = params.confirm || function () {
+                err("confirm");
+            };
+            
+            // cancellation
+            this.onCancel = params.cancel || function () {
+                err("cancel");
+            };
+            
+            // continuation
+            this.onProceed = params.proceed || function () {
+                err("proceed");
+            };
         };
         
         // reveal modal and overlay
@@ -1431,21 +1470,25 @@ define(
             
             status.modal = true;
             gui.tree.main.overlay.fadeIn();
-            this.node.fadeIn();
+            self.node.fadeIn();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
             status.modal = false;
             gui.tree.main.overlay.hide();
-            this.node.hide();
+            self.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
             status.modal = false;
             gui.tree.main.overlay.hide();
-            this.node.destroy();
+            self.node.destroy();
+            activeModals.splice(
+                activeModals.indexOf(self.viewName),
+                1
+            );
         };
         
         // set gui instance
@@ -1829,12 +1872,8 @@ define(
             taskExpander.createChild("a")
                 .text("Search Task")
                 .on("click", function (event) {
-                    taskSearch = new Modal("input", {
+                    taskSearch = new Modal("searchTask", {
                         init: true,
-                        title: "Find a task",
-                        message: "Enter the ID of the task you want to find:",
-                        input: "number",
-                        continueText: "Go",
                         proceed: function (localId) {
                             if (!localId) {
                                 // return if no id passed
@@ -1963,18 +2002,20 @@ define(
         function Configurator() {
             self = this;
             
+            this.modal = null;
+            
             // modal
-            this.modal = new Modal({
-                init: false,
+            this.modalProps = {
+                init: true,
                 title: "Settings",
                 message: "Kanban configurator..."
-            });
+            };
         }
         
         // start the configurator
         Configurator.prototype.start = function () {
             // initialise the modal
-            self.modal.init();
+            self.modal = new Modal("userConfig", self.modalProps);
         };
 
         // finds a config setting from a selector string e.g. "gui/console/state"
@@ -2391,10 +2432,8 @@ define(
                 modalMsg = "Confirm destruction of the GUI Console? " +
                 "(irreversible until refresh).",
                 
-                modal = new Modal("prompt", gui, {
+                modal = new Modal("destructConsole", {
                     init: true,
-                    title: modalTitle,
-                    message: modalMsg,
                     confirm: function () {
                         var parent = self.wrapper.parent(),
                             child = self.wrapper.element;
@@ -2913,9 +2952,6 @@ define(
 
 /*
 *   TODO
-*   + On the fly user configuration tool
-*     (maybe refactor config to use a class with setters/getters?)
-*
 *   + Need to preserve user prefs and able to reset to defaults
 *     (refactor config to monitor and cache states? Cookie parser?)
 *
@@ -2925,11 +2961,12 @@ define(
 *
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + Build source *into* the extension, packaged together
-*     (no source pulling from rawgit or local server. Just embedded into
-*     the extension chrome source). Auto-update capabilities?
-*
 *   + A place for Kanban tools? Not attached to the console toolbar?
+*
+*   + Point base url to prodution cdn using source tag e.g
+*     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.3.0/
+*
+*   + Easier way to create complex elements like modals? View components?
 */
 
 define(
