@@ -373,10 +373,6 @@ define(
                 .on("click", function (event) {
                     taskSearch = new Modal("searchTask", {
                         init: true,
-                        title: "Find a task",
-                        message: "Enter the ID of the task you want to find:",
-                        input: "number",
-                        continueText: "Go",
                         proceed: function (localId) {
                             if (!localId) {
                                 // return if no id passed

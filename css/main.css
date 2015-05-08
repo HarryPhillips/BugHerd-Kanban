@@ -105,11 +105,19 @@
     margin-right: -100px;
 }
 
+.kbs-destructConsole .kbs-modal-content {
+    text-align: center;
+}
+
 .kbs-modal.kbs-searchTask {
     width: 400px; height: 200px;
     margin-top: -80px;
     margin-left: -200px;
     margin-right: -100px;
+}
+
+.kbs-searchTask .kbs-modal-content {
+    text-align: center;
 }
 
 .kbs-modal.kbs-searchTask .kbs-modal-content {
@@ -123,7 +131,7 @@
 .kbs-confirm,
 .kbs-cancel {
     width: 100px; height: 30px;
-    margin: 0 2px;
+    margin: 0 4px;
     border: solid transparent 0px;
     padding: 5px 15px;
     text-align: center;
@@ -336,6 +344,10 @@
     -moz-transform: rotate(90deg);
     -o-transform: rotate(90deg);
     transform: rotate(90deg);
+}
+
+.kbs-clearfix {
+    clear: both;
 }
 
 /* kbs bugherd classes

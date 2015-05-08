@@ -16,15 +16,20 @@ define(
         'config',
         'main/components/util',
         'main/components/events',
-        'main/components/http',
         'main/components/status',
+        'main/components/http',
         'main/components/node',
         'main/ui/viewloader'
     ],
-    function (config, util,
-               events, Http,
-               status, Node,
-               ViewLoader) {
+    function (
+        config,
+        util,
+        events,
+        status,
+        Http,
+        Node,
+        ViewLoader
+    ) {
         'use strict';
         
         // shared vars between instances
@@ -42,6 +47,7 @@ define(
                 return;
             }
             
+            // add to the active modals array
             activeModals.push(view);
             
             // store props
@@ -55,6 +61,9 @@ define(
             // view element
             this.view = null;
             
+            // set modal event handlers
+            this.applyHandlers(params);
+            
             // load view and initialise
             this.load((params.init) ? this.init : function () {});
         }
@@ -63,13 +72,17 @@ define(
         Modal.prototype.load = function (onload) {
             self = this;
             
+            var view;
+            
             // load view from modals dir
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
-                    // parse view into content
-                    self.view = util.parseHTML(mod.view);
-                    self.title = mod.title;
+                    view = mod.createView(self);
+                    
+                    self.view = view;
+                    self.title = view.title;
+                    
                     onload();
                 }
             );
@@ -104,6 +117,41 @@ define(
             
             // open
             self.open();
+        };
+            
+        // apply custom modal event handlers
+        Modal.prototype.applyHandlers = function (params) {
+            self = this;
+            
+            var err = function (event) {
+                // warning
+                util.log(
+                    "warn",
+                    "Modal '" +
+                        self.viewName +
+                        "' event '" +
+                        event +
+                        "' ran but didn't have a handler!"
+                );
+                
+                // destroy modal
+                self.destroy();
+            }
+            
+            // confirmation
+            this.onConfirm = params.confirm || function () {
+                err("confirm");
+            };
+            
+            // cancellation
+            this.onCancel = params.cancel || function () {
+                err("cancel");
+            };
+            
+            // continuation
+            this.onProceed = params.proceed || function () {
+                err("proceed");
+            };
         };
         
         // reveal modal and overlay
@@ -143,133 +191,3 @@ define(
         return Modal;
     }
 );
-
-/**
-*   LEGACY
-*
-define(
-    [
-        'config',
-        'main/components/util',
-        'main/components/events',
-        'main/components/http',
-        'main/components/status',
-        'main/components/node',
-        'main/ui/viewloader'
-    ],
-    function (
-        config,
-        util,
-        events,
-        Http,
-        status,
-        Node,
-        ViewLoader
-    ) {
-        'use strict';
-
-        // instance references
-        var gui,
-            vloader = new ViewLoader();
-        
-        function Modal(view, instance, params) {
-            // set pointer
-            var self = this;
-            
-            if (view) {
-                this.node.addClass("kbs-" + view);
-            }
-            
-            this.onConfirm = params.confirm || function () {};
-            this.onCancel = params.cancel || function () {};
-            this.onProceed = function () {};
-            
-            // wrap the on proceed event to pass args
-            if (params.proceed) {
-                this.onProceed = function (args) {
-                    params.proceed(args);
-                };
-            }
-            
-            // text content
-            this.title = params.title;
-            this.message = params.message;
-            
-            // input
-            this.inputType = params.input || "text";
-            
-            // initialise
-            if (params.init) {
-                this.init();
-            }
-        }
-        
-        // init and open modal
-        Modal.prototype.init = function () {
-            // declarations
-            var
-                self = this,
-            
-                modal = this.node,
-            
-                title =
-                modal.createChild("h2", "kbs-modal-title"),
-                
-                close =
-                modal.createChild("i", "fa fa-times kbs-modal-close"),
-                
-                content =
-                modal.createChild("p", "kbs-modal-content"),
-                
-                input,
-                confirm,
-                cancel,
-                proceed;
-            
-            title.element.textContent = this.title;
-            content.addChild(this.view);
-            
-            close.element.onclick = function () {
-                self.destroy();
-            };
-            
-            // add confirm/cancel buttons for prompt modals
-            if (this.view === "prompt") {
-                // confirm
-                confirm = modal.createChild("span", "kbs-confirm");
-                confirm.text("confirm");
-                confirm.element.onclick = this.onConfirm;
-                
-                // cancel
-                cancel = modal.createChild("span", "kbs-cancel");
-                cancel.text("cancel");
-                cancel.element.onclick = this.onCancel;
-            }
-            
-            // add user input for input modals
-            if (this.view === "input") {
-                // input field
-                input = this.node.createChild("input", "kbs-input-field");
-                input.element.type = this.inputType;
-                
-                // continue button
-                proceed = modal.createChild("div", "kbs-continue");
-                proceed.text("Go");
-                proceed.element.onclick = function () {
-                    self.onProceed(input.element.value);
-                };
-            }
-            
-            // add our node to gui
-            gui.addChild(modal);
-            
-            // focus on input
-            if (this.view === "input") {
-                input.focus();
-            }
-            
-            // open the modal
-            this.open();
-        };
-    }
-);*/

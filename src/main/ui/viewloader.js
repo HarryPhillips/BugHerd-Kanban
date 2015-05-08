@@ -14,7 +14,7 @@ define(function (require) {
     
     // load and return a view
     ViewLoader.prototype.load = function (view, callback) {
-        var mod = require(["main/views/" + view], function (mod) {
+        require(["main/views/" + view], function (mod) {
             callback(mod);
         });
     };

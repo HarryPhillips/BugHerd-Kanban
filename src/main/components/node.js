@@ -212,12 +212,14 @@ define(
         // set attribute to node
         Node.prototype.attr = function (name, value) {
             this.element.setAttribute(name, value);
+            return this;
         };
         
         // write or return node text
         Node.prototype.text = function (text) {
             if (typeof text === "undefined") {
-                return this.element.textContent;
+                return this.element.textContent
+                    || this.element.value;
             }
             
             text = document.createTextNode(text);
