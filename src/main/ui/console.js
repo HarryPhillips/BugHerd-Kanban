@@ -427,7 +427,7 @@ define(
             // configurator tool
             configurator = new Configurator();
             this.createTool("settings")
-                .element.onclick = configurator.start;
+                .element.onclick = configurator.launchModal;
             
             // save tool - only on localhost base url's
             if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {

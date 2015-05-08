@@ -20,19 +20,24 @@ define(
         // configurator class
         function Configurator() {
             self = this;
-            
             this.modal = null;
-            
-            // modal
-            this.modalProps = {
-                init: true
-            };
         }
         
-        // start the configurator
-        Configurator.prototype.start = function () {
+        // check for and load existing user config data
+        Configurator.prototype.loadExisting = function () {
+            if (util.cookie.exists("settings")) {
+                // TODO
+                return;
+            } else {
+                // TODO
+                return;
+            }
+        };
+        
+        // launch the configurator ui
+        Configurator.prototype.launchModal = function () {
             // initialise the modal
-            self.modal = new Modal("userConfig", self.modalProps);
+            self.modal = new Modal("userConfig", {init: true});
         };
 
         // finds a config setting from a selector string e.g. "gui/console/state"

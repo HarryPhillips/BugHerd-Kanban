@@ -355,11 +355,13 @@ define(
             
             // parse object
             if (instance.isObject(object)) {
+                // TODO
                 result = "object";
             }
             
             // parse array
             if (instance.isArray(object)) {
+                // TODO
                 result = "array";
             }
             

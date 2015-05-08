@@ -198,6 +198,12 @@
     transition: width 0.3s 0.3s, height 0.3s, border 0.3s;
 }
 
+.kbs-cons-box.kbs-disabled {
+    height: auto;
+    border-bottom: solid tranpsarent 0px !important;
+    border-radius: 0px;
+}
+
 /* console toolbar 
 ------------------------------------------------------------------------------*/
 .kbs-cons-toolbar {

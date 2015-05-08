@@ -53,8 +53,14 @@ define(
         'use strict';
 
         // components
-        var kanban, end, gui, interactor;
+        var kanban, end, gui, interactor, settings;
 
+        // get a new configurator
+        settings = new Configurator();
+            
+        // check and load existing user config data
+        settings.loadExisting();
+            
         // check if disabled
         if (!config.enabled) {
             return;
@@ -122,7 +128,7 @@ define(
             http: http,
             util: util,
             gui: gui,
-            configurator: new Configurator()
+            configurator: settings
         };
 
         // wait for kbs loaded event
