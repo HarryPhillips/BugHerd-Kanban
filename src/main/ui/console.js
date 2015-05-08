@@ -340,10 +340,8 @@ define(
                 modalMsg = "Confirm destruction of the GUI Console? " +
                 "(irreversible until refresh).",
                 
-                modal = new Modal("prompt", gui, {
+                modal = new Modal("destructConsole", {
                     init: true,
-                    title: modalTitle,
-                    message: modalMsg,
                     confirm: function () {
                         var parent = self.wrapper.parent(),
                             child = self.wrapper.element;

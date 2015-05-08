@@ -148,6 +148,13 @@ define(
             );
         };
         
+        // parse a html string into DOM element
+        Util.prototype.parseHTML = function (html) {
+            var element = document.createElement("div");
+            element.innerHTML = html;
+            return element;
+        };
+        
         // checks if input is a date object
         Util.prototype.isDate = function (obj) {
             if (typeof obj === "undefined") {
@@ -550,7 +557,7 @@ define(
         Util.prototype.log.clearContext = function (context) {
             events.publish("gui/contexts/clear", context);
         };
-
+        
         // create instance
         instance = new Util();
         instance.log("+ util.js loaded");

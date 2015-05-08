@@ -21,18 +21,20 @@ define(
         function Configurator() {
             self = this;
             
+            this.modal = null;
+            
             // modal
-            this.modal = new Modal({
-                init: false,
+            this.modalProps = {
+                init: true,
                 title: "Settings",
                 message: "Kanban configurator..."
-            });
+            };
         }
         
         // start the configurator
         Configurator.prototype.start = function () {
             // initialise the modal
-            self.modal.init();
+            self.modal = new Modal("userConfig", self.modalProps);
         };
 
         // finds a config setting from a selector string e.g. "gui/console/state"

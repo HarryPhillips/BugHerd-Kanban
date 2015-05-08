@@ -6,85 +6,93 @@
 
 /*global define: true */
 
+/*
+*   TODO
+*   + Handle element events
+*/
+
 define(
     [
         'config',
         'main/components/util',
         'main/components/events',
-        'main/components/http',
         'main/components/status',
-        'main/components/node'
+        'main/components/http',
+        'main/components/node',
+        'main/ui/viewloader'
     ],
-    function (config, util, events, Http, status, Node) {
+    function (
+        config,
+        util,
+        events,
+        status,
+        Http,
+        Node,
+        ViewLoader
+    ) {
         'use strict';
-
-        // instance references
-        var gui;
         
-        function Modal(type, instance, params) {
-            // set pointer
-            var self = this;
+        // shared vars between instances
+        var gui,
+            self,
+            vloader = new ViewLoader(),
+            activeModals = [];
+        
+        // modal class
+        function Modal(view, params) {
+            self = this;
             
-            // check if a type has been passed
-            if (typeof type !== "string") {
-                // adjust arguments
-                params = instance;
-                instance = type;
-                type = null;
+            // if already instantiated return
+            if (util.contains(activeModals, view)) {
+                return;
             }
             
-            // check if gui instance has been passed
-            if (instance.constructor.name !== "GUI") {
-                // adjust arguments
-                params = instance;
-                instance = null;
-            }
+            // add to the active modals array
+            activeModals.push(view);
             
-            if (!gui && !instance && params.init) {
-                throw new Error("Modal has no GUI instance!");
-            }
+            // store props
+            this.viewName = view;
+            this.params = params;
             
-            // set props
-            gui = gui || instance || null;
-            this.type = type;
-            this.node = new Node("div", "kbs-modal");
+            // create and hide node
+            this.node = new Node("div", "kbs-modal kbs-" + view);
             this.node.hide();
             
-            if (type) {
-                this.node.addClass("kbs-" + type);
-            }
+            // view element
+            this.view = null;
             
-            this.onConfirm = params.confirm || function () {};
-            this.onCancel = params.cancel || function () {};
-            this.onProceed = function () {};
+            // set modal event handlers
+            this.applyHandlers(params);
             
-            // wrap the on proceed event to pass args
-            if (params.proceed) {
-                this.onProceed = function (args) {
-                    params.proceed(args);
-                };
-            }
-            
-            // text content
-            this.title = params.title;
-            this.message = params.message;
-            
-            // input
-            this.inputType = params.input || "text";
-            
-            // initialise
-            if (params.init) {
-                this.init();
-            }
+            // load view and initialise
+            this.load((params.init) ? this.init : function () {});
         }
         
-        // init and open modal
+        // load modal view
+        Modal.prototype.load = function (onload) {
+            self = this;
+            
+            var view;
+            
+            // load view from modals dir
+            vloader.load(
+                "modals/" + this.viewName,
+                function (mod) {
+                    view = mod.createView(self);
+                    
+                    self.view = view;
+                    self.title = view.title;
+                    
+                    onload();
+                }
+            );
+        };
+        
+        // init modal with content
         Modal.prototype.init = function () {
             // declarations
             var
-                self = this,
-            
-                modal = this.node,
+                modal = self.node,
             
                 title =
                 modal.createChild("h2", "kbs-modal-title"),
@@ -92,59 +100,58 @@ define(
                 close =
                 modal.createChild("i", "fa fa-times kbs-modal-close"),
                 
-                message =
-                modal.createChild("p", "kbs-modal-msg"),
-                
-                input,
-                confirm,
-                cancel,
-                proceed;
+                content =
+                modal.createChild("p", "kbs-modal-content");
             
-            title.element.textContent = this.title;
-            message.element.textContent = this.message;
+            // set title
+            title.text(self.title);
             
-            close.element.onclick = function () {
-                self.destroy();
-            };
+            // close handler
+            close.on("click", self.destroy);
             
-            // add confirm/cancel buttons for prompt modals
-            if (this.type === "prompt") {
-                // confirm
-                confirm = modal.createChild("span", "kbs-confirm");
-                confirm.text("confirm");
-                confirm.element.onclick = this.onConfirm;
-                
-                // cancel
-                cancel = modal.createChild("span", "kbs-cancel");
-                cancel.text("cancel");
-                cancel.element.onclick = this.onCancel;
-            }
+            // append content from view
+            content.addChild(self.view);
             
-            // add user input for input modals
-            if (this.type === "input") {
-                // input field
-                input = this.node.createChild("input", "kbs-input-field");
-                input.element.type = this.inputType;
-                
-                // continue button
-                proceed = modal.createChild("div", "kbs-continue");
-                proceed.text("Go");
-                proceed.element.onclick = function () {
-                    self.onProceed(input.element.value);
-                };
-                
-            }
-            
-            // add our node to gui
+            // add modal to gui
             gui.addChild(modal);
             
-            // focus on input
-            if (this.type === "input") {
-                input.focus();
+            // open
+            self.open();
+        };
+            
+        // apply custom modal event handlers
+        Modal.prototype.applyHandlers = function (params) {
+            self = this;
+            
+            var err = function (event) {
+                // warning
+                util.log(
+                    "warn",
+                    "Modal '" +
+                        self.viewName +
+                        "' event '" +
+                        event +
+                        "' ran but didn't have a handler!"
+                );
+                
+                // destroy modal
+                self.destroy();
             }
             
-            // open the modal
-            this.open();
+            // confirmation
+            this.onConfirm = params.confirm || function () {
+                err("confirm");
+            };
+            
+            // cancellation
+            this.onCancel = params.cancel || function () {
+                err("cancel");
+            };
+            
+            // continuation
+            this.onProceed = params.proceed || function () {
+                err("proceed");
+            };
         };
         
         // reveal modal and overlay
@@ -155,21 +162,25 @@ define(
             
             status.modal = true;
             gui.tree.main.overlay.fadeIn();
-            this.node.fadeIn();
+            self.node.fadeIn();
         };
         
         // close modal and overlay
         Modal.prototype.close = function () {
             status.modal = false;
             gui.tree.main.overlay.hide();
-            this.node.hide();
+            self.node.hide();
         };
         
         // destroy the modal
         Modal.prototype.destroy = function () {
             status.modal = false;
             gui.tree.main.overlay.hide();
-            this.node.destroy();
+            self.node.destroy();
+            activeModals.splice(
+                activeModals.indexOf(self.viewName),
+                1
+            );
         };
         
         // set gui instance

@@ -17,14 +17,12 @@
 *
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + Build source *into* the extension, packaged together
-*     (no source pulling from rawgit or local server. Just embedded into
-*     the extension chrome source). Auto-update capabilities?
-*
 *   + A place for Kanban tools? Not attached to the console toolbar?
 *
 *   + Point base url to prodution cdn using source tag e.g
-*     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.2.2/
+*     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.3.0/
+*
+*   + Easier way to create complex elements like modals? View components?
 */
 
 define(
