@@ -15,9 +15,9 @@ define(function (util) {
     }
 
     // create view
-    View.prototype.createView = function (param) {
+    View.prototype.createView = function (params) {
         if (typeof this.createFn === "function") {
-            return this.createFn(param);
+            return this.createFn(params);
         }
     };
 

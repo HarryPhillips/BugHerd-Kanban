@@ -337,6 +337,28 @@
     cursor: default;
 }
 
+/* field classes
+------------------------------------------------------------------------------*/
+.kbs-field * {
+    max-height: 30px;
+    float: left;
+}
+
+/* label */
+.kbs-field .kbs-label {
+    padding: 5px 8px;
+}
+
+/* input */
+.kbs-field .kbs-input-field {}
+
+/* submit/confirm */
+.kbs-field .kbs-confirm {
+    width: auto;
+    margin: 0;
+    padding: 5px 15px;
+}
+
 /* misc classes
 ------------------------------------------------------------------------------*/
 .kbs-rotate {

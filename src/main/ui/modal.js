@@ -78,7 +78,7 @@ define(
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
-                    view = mod.createView(self);
+                    view = mod.createView([gui, self]);
                     
                     self.view = view;
                     self.title = view.title;

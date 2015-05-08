@@ -25,9 +25,7 @@ define(
             
             // modal
             this.modalProps = {
-                init: true,
-                title: "Settings",
-                message: "Kanban configurator..."
+                init: true
             };
         }
         

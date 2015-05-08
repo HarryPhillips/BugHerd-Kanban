@@ -349,6 +349,23 @@ define(
             );
         };
 
+        // stringify a value, polymorphic
+        Util.prototype.stringify = function (object) {
+            var result;
+            
+            // parse object
+            if (instance.isObject(object)) {
+                result = "object";
+            }
+            
+            // parse array
+            if (instance.isArray(object)) {
+                result = "array";
+            }
+            
+            return result;
+        };
+        
         // log wrapper
         Util.prototype.log = function (context, type, msg, opt) {
             // check if logs are enabled

@@ -16,8 +16,10 @@ define(
         'use strict';
 
         // create a new view
-        var view = new View(function (modal) {
+        var view = new View(function (args) {
             var node = new Node("div", "kbs-view"),
+                gui = args[0],
+                modal = args[1],
                 input,
                 go;
             
