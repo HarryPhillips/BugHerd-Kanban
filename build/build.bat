@@ -13,7 +13,7 @@ echo Compilation complete.
 echo.
 
 echo Building Firefox Addon archive...
-START /WAIT "BUILDING ARCHIVE" 7z.exe a -tzip ../dist/kanban-1.3.0.xpi ../addon/* 
+START /WAIT "BUILDING ARCHIVE" 7z.exe a -tzip ../dist/kanban.xpi ../addon/* 
 echo Compilation complete.
 
 echo.

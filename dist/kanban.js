@@ -686,6 +686,23 @@ define(
             );
         };
 
+        // stringify a value, polymorphic
+        Util.prototype.stringify = function (object) {
+            var result;
+            
+            // parse object
+            if (instance.isObject(object)) {
+                result = "object";
+            }
+            
+            // parse array
+            if (instance.isArray(object)) {
+                result = "array";
+            }
+            
+            return result;
+        };
+        
         // log wrapper
         Util.prototype.log = function (context, type, msg, opt) {
             // check if logs are enabled
@@ -1386,7 +1403,7 @@ define(
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
-                    view = mod.createView(self);
+                    view = mod.createView([gui, self]);
                     
                     self.view = view;
                     self.title = view.title;
@@ -2006,9 +2023,7 @@ define(
             
             // modal
             this.modalProps = {
-                init: true,
-                title: "Settings",
-                message: "Kanban configurator..."
+                init: true
             };
         }
         
