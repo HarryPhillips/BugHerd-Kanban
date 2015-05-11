@@ -136,7 +136,7 @@ define(
                 
                 // destroy modal
                 self.destroy();
-            }
+            };
             
             // confirmation
             this.onConfirm = params.confirm || function () {

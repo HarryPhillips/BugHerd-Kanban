@@ -376,7 +376,7 @@ define(
                 for (index in object) {
                     if (object.hasOwnProperty(index)) {
                         // add object value?
-                        result += index + ": " +
+                        result += index + ":" +
                             util.serialise(object[index]);
                         
                         // if is last element
@@ -415,6 +415,74 @@ define(
                 }
                      
                 result += "]";
+            }
+            
+            // wrap string with '
+            if (util.isString(object)) {
+                return "'" + result + "'";
+            }
+            
+            return result;
+        };
+        
+        // unserialise a string an object in object form
+        Util.prototype.unserialise = function (string) {
+            var result,
+                parts,
+                index,
+                length,
+                props;
+            
+            // parse an array from string
+            function parseArray(str) {
+                var original = str,
+                    result = [];
+                
+                // get array values
+                parts = string.replace(/(\[)|(\])|(\')/g, "");
+                parts = parts.split(", ");
+                length = parts.length;
+
+                // do recursive unserialisation into result
+                for (index = 0; index < length; index += 1) {
+                    result.push(util.unserialise(parts[index]));
+                }
+                
+                return result;
+            }
+            
+            // parse an object from string
+            function parseObject(str) {
+                var original = str,
+                    result = {},
+                    index = 0,
+                    wrkstr,
+                    ch;
+                
+                // remove spaces from string
+                str = str.replace(/(:\s)/g, ":");
+                str = str.replace(/(\s\{)/g, "{");
+                str = str.replace(/(\{\s)/g, "{");
+                str = str.replace(/(\s\})/g, "}");
+                str = str.replace(/(\}\s)/g, "}");
+                
+                // begin reading string
+                
+                return result;
+            }
+            
+            // this should capture simple types
+            // e.g. strings and numbers
+            result = string;
+            
+            // serialised array
+            if (string.charAt(0) === "[") {
+                return parseArray(string);
+            }
+            
+            // serialised object
+            if (string.charAt(0) === "{") {
+                return parseObject(string);
             }
             
             return result;
