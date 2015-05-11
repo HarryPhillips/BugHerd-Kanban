@@ -173,9 +173,13 @@ define(
         
         // checks if input is an object
         Util.prototype.isObject = function (obj) {
-            if (typeof obj === "undefined") {
+            if (
+                typeof obj === "undefined" ||
+                    instance.isArray(obj)
+            ) {
                 return false;
             }
+            
             return obj instanceof Object;
         };
         
@@ -349,23 +353,88 @@ define(
             );
         };
 
-        // stringify a value, polymorphic
-        Util.prototype.stringify = function (object) {
-            var result;
+        // serialise a data structure
+        Util.prototype.serialise = function (object) {
+            var index,
+                result,
+                length,
+                props,
+                separate = false;
             
-            // parse object
+            // this should capture simple types
+            // e.g. strings and numbers
+            result = object;
+            
+            // serialise object
             if (instance.isObject(object)) {
-                // TODO
-                result = "object";
+                result = "{";
+                props = instance.listProperties(object);
+                separate = true;
+                
+                // add each element to result string
+                for (index in object) {
+                    if (object.hasOwnProperty(index)) {
+                        // add object value?
+                        result += index + ": " +
+                            instance.serialise(object[index]);
+                        
+                        // if is last element
+                        if (props.indexOf(index) === props.length - 1) {
+                            separate = false;
+                        }
+                        
+                        // separate?
+                        if (separate) {
+                            result += ", ";
+                        }
+                    }
+                }
+                
+                result += "}";
             }
             
-            // parse array
+            // serialise array
             if (instance.isArray(object)) {
-                // TODO
-                result = "array";
+                index = 0;
+                length = object.length;
+                result = "[";
+                
+                // add each element to result string
+                for (index; index < length; index += 1) {
+                    separate = index > 0 && index !== length;
+                    
+                    // need to separate?
+                    if (separate) {
+                        result += ", ";
+                    }
+                    
+                    result += "'";
+                    result += instance.serialise(object[index]);
+                    result += "'";
+                }
+                     
+                result += "]";
             }
             
             return result;
+        };
+        
+        // return an array of properties on an object
+        Util.prototype.listProperties = function (obj) {
+            var list = [],
+                index;
+            
+            if (!instance.isObject(obj)) {
+                return;
+            }
+            
+            for (index in obj) {
+                if (obj.hasOwnProperty(index)) {
+                    list.push(index);
+                }
+            }
+            
+            return list;
         };
         
         // log wrapper
@@ -549,7 +618,7 @@ define(
             }
         };
         
-        // current logging context - defaults to false boolean
+        // current logging context
         Util.prototype.log.currentContext = instance.log.currentContext || false;
         
         // begin a continuous logging context
@@ -564,6 +633,7 @@ define(
                                "when using beginContext()");
                 return;
             }
+            
             instance.log.currentContext = context;
         };
         
