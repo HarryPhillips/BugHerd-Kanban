@@ -20,7 +20,8 @@ define(
         function Util() {}
         
         // set instance for internal references
-        var instance = new Util();
+        var util = new Util(),
+            instance;
         
         // amend zeros to a number until a length is met
         Util.prototype.zerofy = function (num, len) {
@@ -48,10 +49,10 @@ define(
         Util.prototype.ftime = function () {
             var time = new Date(),
 
-                hours = instance.zerofy(time.getHours()),
-                minutes = instance.zerofy(time.getMinutes()),
-                seconds = instance.zerofy(time.getSeconds()),
-                millis = instance.zerofy(time.getMilliseconds(), 3);
+                hours = util.zerofy(time.getHours()),
+                minutes = util.zerofy(time.getMinutes()),
+                seconds = util.zerofy(time.getSeconds()),
+                millis = util.zerofy(time.getMilliseconds(), 3);
 
             return hours + ":" + minutes + ":" + seconds + "." + millis;
         };
@@ -60,9 +61,9 @@ define(
         Util.prototype.fdate = function () {
             var time = new Date(),
 
-                year = instance.zerofy(time.getFullYear(), 4),
-                month = instance.zerofy(time.getMonth(), 2),
-                date = instance.zerofy(time.getDate(), 2);
+                year = util.zerofy(time.getFullYear(), 4),
+                month = util.zerofy(time.getMonth(), 2),
+                date = util.zerofy(time.getDate(), 2);
 
             return year + "-" + month + "-" + date;
         };
@@ -121,11 +122,11 @@ define(
             },
             // deletes a cookie by name
             del: function (name) {
-                instance.cookie.set(name, "", -1);
+                util.cookie.set(name, "", -1);
             },
             // returns true if cookie exists
             exists: function (name) {
-                var cookie = instance.cookie.get(name);
+                var cookie = util.cookie.get(name);
                 return cookie !== "" && cookie !== null && cookie !== undefined;
             }
         };
@@ -175,7 +176,7 @@ define(
         Util.prototype.isObject = function (obj) {
             if (
                 typeof obj === "undefined" ||
-                    instance.isArray(obj)
+                    util.isArray(obj)
             ) {
                 return false;
             }
@@ -235,13 +236,13 @@ define(
 
                 // escape regex meta chars from target
                 // before generating a new RegEx
-                target = instance.escapeRegEx(target);
+                target = util.escapeRegEx(target);
 
                 // regex will match whole word of target only
                 regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
 
                 // is host an array?
-                if (instance.isArray(host)) {
+                if (util.isArray(host)) {
                    // add to occurences array
                     while (i < host.length) {
                         if (regex.test(host[i])) {
@@ -268,7 +269,7 @@ define(
             strict = strict || false;
 
             // is target an array of targets?
-            if (instance.isArray(target)) {
+            if (util.isArray(target)) {
                 for (i = 0; i < target.length; i += 1) {
                     temp = chk(host, target[i]);
                     if (temp !== false) {
@@ -303,34 +304,34 @@ define(
                 i;
             
             // handle dates
-            if (instance.isDate(obj)) {
+            if (util.isDate(obj)) {
                 copy = new Date();
                 copy.setTime(obj.getTime());
                 return copy;
             }
             
             // handle arrays
-            if (instance.isArray(obj)) {
+            if (util.isArray(obj)) {
                 copy = [];
                 len = obj.length;
                 i = 0;
                 
                 // recursive copy
                 for (i; i < len; i += 1) {
-                    copy[i] = instance.clone(obj[i]);
+                    copy[i] = util.clone(obj[i]);
                 }
                 
                 return copy;
             }
             
             // handle objects
-            if (instance.isObject(obj)) {
+            if (util.isObject(obj)) {
                 copy = {};
                 
                 // recursive copy
                 for (attr in obj) {
                     if (obj.hasOwnProperty(attr)) {
-                        copy[attr] = instance.clone(obj[attr]);
+                        copy[attr] = util.clone(obj[attr]);
                     }
                 }
                      
@@ -338,15 +339,15 @@ define(
             }
             
             // handle simple types
-            if (instance.isString(obj)
-                    || instance.isNumber(obj)
-                    || instance.isBoolean(obj)) {
+            if (util.isString(obj)
+                    || util.isNumber(obj)
+                    || util.isBoolean(obj)) {
                 copy = obj;
                 return copy;
             }
             
             // error if uncaught type
-            instance.log(
+            util.log(
                 "error",
                 "Couldn't clone object of unsupported type: " +
                     typeof obj
@@ -366,9 +367,9 @@ define(
             result = object;
             
             // serialise object
-            if (instance.isObject(object)) {
+            if (util.isObject(object)) {
                 result = "{";
-                props = instance.listProperties(object);
+                props = util.listProperties(object);
                 separate = true;
                 
                 // add each element to result string
@@ -376,7 +377,7 @@ define(
                     if (object.hasOwnProperty(index)) {
                         // add object value?
                         result += index + ": " +
-                            instance.serialise(object[index]);
+                            util.serialise(object[index]);
                         
                         // if is last element
                         if (props.indexOf(index) === props.length - 1) {
@@ -394,7 +395,7 @@ define(
             }
             
             // serialise array
-            if (instance.isArray(object)) {
+            if (util.isArray(object)) {
                 index = 0;
                 length = object.length;
                 result = "[";
@@ -409,7 +410,7 @@ define(
                     }
                     
                     result += "'";
-                    result += instance.serialise(object[index]);
+                    result += util.serialise(object[index]);
                     result += "'";
                 }
                      
@@ -424,7 +425,7 @@ define(
             var list = [],
                 index;
             
-            if (!instance.isObject(obj)) {
+            if (!util.isObject(obj)) {
                 return;
             }
             
@@ -478,11 +479,11 @@ define(
                 if (typeof context === "string") {
                     if (context.indexOf(ctxFlag) !== -1) {
                         // we have a valid context param
-                        if (instance.log.currentContext !== false) {
+                        if (util.log.currentContext !== false) {
                             // we have an active context
                             // create a subcontext
                             subcontext = context.replace(ctxFlag, "");
-                            context = instance.log.currentContext;
+                            context = util.log.currentContext;
                             args.shift();
                         } else {
                             // set new context
@@ -495,11 +496,11 @@ define(
                         args.shift();
                     } else {
                         ctxArgsAdjust();
-                        context = instance.log.currentContext;
+                        context = util.log.currentContext;
                     }
                 } else {
                     ctxArgsAdjust();
-                    context = instance.log.currentContext;
+                    context = util.log.currentContext;
                 }
             } else {
                 // check if we were passed a context
@@ -554,13 +555,13 @@ define(
             // check if we need to filter the type
             if (filter) {
                 // apply filter
-                if (instance.contains(filter, type, true) !== false) {
+                if (util.contains(filter, type, true) !== false) {
                     return;
                 }
             }
 
             // format and push output
-            str += instance.ftime();
+            str += util.ftime();
             str += " [" + (subcontext || context || config.appName) + "]";
             str += " [" + type + "]" + ":> ";
             str += msg;
@@ -619,7 +620,7 @@ define(
         };
         
         // current logging context
-        Util.prototype.log.currentContext = instance.log.currentContext || false;
+        Util.prototype.log.currentContext = util.log.currentContext || false;
         
         // begin a continuous logging context
         Util.prototype.log.beginContext = function (context) {
@@ -629,17 +630,17 @@ define(
             }
             
             if (context.indexOf(config.logs.contextFlag) !== -1) {
-                instance.log("error", "You shouldn't pass the context flag " +
+                util.log("error", "You shouldn't pass the context flag " +
                                "when using beginContext()");
                 return;
             }
             
-            instance.log.currentContext = context;
+            util.log.currentContext = context;
         };
         
         // end a continuous logging context
         Util.prototype.log.endContext = function () {
-            instance.log.currentContext = false;
+            util.log.currentContext = false;
         };
         
         // clear/remove a logging context
@@ -649,7 +650,7 @@ define(
         
         // create instance
         instance = new Util();
-        instance.log("+ util.js loaded");
+        util.log("+ util.js loaded");
 
         return instance;
     }

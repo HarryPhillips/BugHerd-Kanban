@@ -15,7 +15,7 @@ define(
     function (config, util, Modal) {
         "use strict";
 
-        var self;
+        var self, modded = {};
         
         // configurator class
         function Configurator() {
@@ -32,6 +32,21 @@ define(
                 // TODO
                 return;
             }
+        };
+        
+        // return list of modified properties
+        Configurator.prototype.modifiedProperties = function () {
+            var list = [],
+                prop;
+            
+            // form an array of prop names
+            for (prop in modded) {
+                if (modded.hasOwnProperty(prop)) {
+                    list.push(prop);
+                }
+            }
+            
+            return list;
         };
         
         // launch the configurator ui
@@ -63,11 +78,23 @@ define(
                 len = segments.length,
                 got = config,
                 i = 0,
-                parent;
+                parent,
+                parentName;
 
             // if a simple selector
             if (segments.length === 1) {
+                // update config
                 config[selector] = value;
+                
+                // update mofified prop list
+                modded[selector] = value;
+                
+                // update user prefs cookie
+                util.cookie.set(
+                    "settings",
+                    util.serialise(modded)
+                );
+                
                 return config[selector];
             }
 
@@ -76,12 +103,26 @@ define(
                 // if second to last segment, set as parent ref
                 if (i === len - 2) {
                     parent = got[segments[i]];
+                    parentName = segments[i];
                 }
                 got = got[segments[i]];
             }
 
-            // set value
+            // set values in config, modified
+            // prop list and user cookie
+            
+            // set value to config config
             parent[segments[len - 1]] = value;
+            
+            // update modified prop list
+            modded[parentName] = value;
+            
+            // update user prefs cookie
+            util.cookie.set(
+                "settings",
+                util.serialise(modded)
+            );
+            
             return parent[segments[len - 1]];
         };
 

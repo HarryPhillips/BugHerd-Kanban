@@ -104,7 +104,7 @@ define(function () {
         mode: "dev",
 //        offline: true,
         httpToken: "Fw43Iueh87aw7",
-//        theme: "black",
+        theme: "default",
 //        test: true,
         logs: {
             enabled: true,

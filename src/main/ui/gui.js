@@ -14,6 +14,7 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/counter',
+        'main/components/configurator',
         'main/components/node',
         'main/ui/console',
         'main/ui/modal'
@@ -23,6 +24,7 @@ define(
         util,
         events,
         Counter,
+        Configurator,
         Node,
         Console,
         Modal
@@ -30,7 +32,8 @@ define(
         'use strict';
 
         // instance pointer
-        var self;
+        var self,
+            configurator = new Configurator();
 
         util.log("+ gui.js loaded");
 
@@ -198,6 +201,9 @@ define(
                 window.KBS_BASE_URL +
                     "css/themes/" + theme + ".css"
             );
+            
+            // update config
+            configurator.set("theme", theme);
         };
             
         // remove current theme
