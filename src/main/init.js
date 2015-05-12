@@ -8,9 +8,6 @@
 
 /*
 *   TODO
-*   + Need to preserve user prefs and able to reset to defaults
-*     (refactor config to monitor and cache states? Cookie parser?)
-*
 *   + Related to config, style/theme preference engine? Dynamic not preloaded?
 *
 *   + Add ability to set wallpapers (style/theme engine?)
@@ -21,8 +18,6 @@
 *
 *   + Point base url to prodution cdn using source tag e.g
 *     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.3.0/
-*
-*   + Easier way to create complex elements like modals? View components?
 */
 
 define(
@@ -55,10 +50,8 @@ define(
         // components
         var kanban, end, gui, interactor, settings;
 
-        // get a new configurator
+        // get a new configurator and load data
         settings = new Configurator();
-            
-        // check and load existing user config data
         settings.loadExisting();
             
         // check if disabled

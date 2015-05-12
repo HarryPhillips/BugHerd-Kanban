@@ -11,9 +11,18 @@ define(
         'config',
         'main/components/events',
         'main/components/status',
-        'main/components/cache'
+        'main/components/cache',
+        'main/components/cookies',
+        'main/components/buffer'
     ],
-    function (config, events, status, cache) {
+    function (
+        config,
+        events,
+        status,
+        cache,
+        Cookies,
+        Buffer
+    ) {
         'use strict';
 
         // util class
@@ -81,55 +90,7 @@ define(
         };
         
         // cookie lib
-        Util.prototype.cookie = {
-            // gets a cookie with name
-            get: function (name) {
-                var cname = config.cookies.prefix + name + "=",
-                    ca = document.cookie.split(';'),
-                    i,
-                    c;
-
-                for (i = 0; i < ca.length; i += 1) {
-                    c = ca[i];
-
-                    while (c.charAt(0) === ' ') {
-                        c = c.substring(1);
-                    }
-
-                    if (c.indexOf(cname) === 0) {
-                        return c.substring(cname.length, c.length);
-                    }
-                }
-            
-                return "";
-            },
-            // sets a cookie with name, value and options expiry days
-            set: function (name, value, days) {
-                var expires, date;
-            
-                if (days) {
-                    date = new Date();
-                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                    expires = "; expires=" + date.toGMTString();
-                } else {
-                    expires = "";
-                }
-
-                // write cookie
-                document.cookie =
-                    config.cookies.prefix + name +
-                    "=" + value + expires + "; path=/";
-            },
-            // deletes a cookie by name
-            del: function (name) {
-                util.cookie.set(name, "", -1);
-            },
-            // returns true if cookie exists
-            exists: function (name) {
-                var cookie = util.cookie.get(name);
-                return cookie !== "" && cookie !== null && cookie !== undefined;
-            }
-        };
+        Util.prototype.cookie = new Cookies();
         
         // checks if obj is a Node
         Util.prototype.isNode = function (obj) {
@@ -353,14 +314,38 @@ define(
                     typeof obj
             );
         };
+        
+        // merge two objects
+        Util.prototype.merge = function (one, two, overwrite) {
+            var i,
+                exists;
+            
+            // loop through all two's props
+            // and push into one
+            for (i in two) {
+                if (two.hasOwnProperty(i)) {
+                    exists = typeof one[i] !== "undefined";
+                    
+                    if (!exists || (exists && overwrite)) {
+                        one[i] = two[i];
+                    }
+                }
+            }
+            
+            return one;
+        };
 
         // serialise a data structure
-        Util.prototype.serialise = function (object) {
+        Util.prototype.serialise = function (object, json) {
             var index,
                 result,
                 length,
                 props,
+                value,
                 separate = false;
+            
+            // default to json usage
+            json = json || true;
             
             // this should capture simple types
             // e.g. strings and numbers
@@ -368,30 +353,34 @@ define(
             
             // serialise object
             if (util.isObject(object)) {
-                result = "{";
-                props = util.listProperties(object);
-                separate = true;
-                
-                // add each element to result string
-                for (index in object) {
-                    if (object.hasOwnProperty(index)) {
-                        // add object value?
-                        result += index + ":" +
-                            util.serialise(object[index]);
-                        
-                        // if is last element
-                        if (props.indexOf(index) === props.length - 1) {
-                            separate = false;
-                        }
-                        
-                        // separate?
-                        if (separate) {
-                            result += ", ";
+                if (json) {
+                    result = JSON.stringify(object);
+                } else {
+                    result = "{";
+                    props = util.listProperties(object);
+                    separate = true;
+
+                    // add each element to result string
+                    for (index in object) {
+                        if (object.hasOwnProperty(index)) {
+                            // add object value?
+                            result += index + ":" +
+                                util.serialise(object[index], json);
+
+                            // if is last element
+                            if (props.indexOf(index) === props.length - 1) {
+                                separate = false;
+                            }
+
+                            // separate?
+                            if (separate) {
+                                result += ", ";
+                            }
                         }
                     }
+
+                    result += "}";
                 }
-                
-                result += "}";
             }
             
             // serialise array
@@ -409,9 +398,16 @@ define(
                         result += ", ";
                     }
                     
-                    result += "'";
-                    result += util.serialise(object[index]);
-                    result += "'";
+                    value = object[index];
+                    
+                    // push to result
+                    if (util.isString(value)) {
+                        result += "'" + value + "'";
+                    } else if (util.isNumber(value)) {
+                        result += value;
+                    } else {
+                        result += util.serialise(value, json);
+                    }
                 }
                      
                 result += "]";
@@ -425,33 +421,69 @@ define(
             return result;
         };
         
-        // unserialise a string an object in object form
-        Util.prototype.unserialise = function (string) {
+        // unserialise a data structure
+        Util.prototype.unserialise = function (string, json) {
             var result,
                 parts,
                 index,
                 length,
                 props;
             
+            // default to json usage
+            json = json || true;
+            
             // parse an array from string
             function parseArray(str) {
-                var original = str,
-                    result = [];
+                var result = [],
+                    nstruct = new RegExp(/(\[)|(\{)/g),
+                    estruct = new RegExp(/(\])|(\})/g),
+                    value = "",
+                    eov,
+                    len,
+                    ch,
+                    depth = 0,
+                    i = 0;
                 
-                // get array values
-                parts = string.replace(/(\[)|(\])|(\')/g, "");
-                parts = parts.split(", ");
-                length = parts.length;
-
-                // do recursive unserialisation into result
-                for (index = 0; index < length; index += 1) {
-                    result.push(util.unserialise(parts[index]));
-                }
+                // clean up the string
+                str = str.replace(/\s,*/g, "");
+                str = str.replace(/,\s*/g, ",");
+                str = str.substring(1, str.length - 1);
+                
+                len = str.length;
+                
+                // walk through string and pick up values
+                do {
+                    // get char
+                    ch = str.charAt(i);
+                  
+                    // new structure - increase depth
+                    if (nstruct.test(ch)) {
+                        depth += 1;
+                    }
+                    
+                    // end of structure - decrease depth
+                    if (estruct.test(ch)) {
+                        depth -= 1;
+                    }
+                    
+                    // reached end of value
+                    eov = ((ch === "," || estruct.test(ch)) && !depth);
+                    if (eov || i === len) {
+                        result.push(util.unserialise(value, json));
+                        value = "";
+                    } else {
+                        // add char to current value
+                        value += ch;
+                    }
+                    
+                    // next char
+                    i += 1;
+                } while (i <= len);
                 
                 return result;
             }
             
-            // parse an object from string
+            // parse an object from string (not json)
             function parseObject(str) {
                 var original = str,
                     result = {},
@@ -459,21 +491,41 @@ define(
                     wrkstr,
                     ch;
                 
-                // remove spaces from string
+                // clean the string
                 str = str.replace(/(:\s)/g, ":");
                 str = str.replace(/(\s\{)/g, "{");
                 str = str.replace(/(\{\s)/g, "{");
                 str = str.replace(/(\s\})/g, "}");
                 str = str.replace(/(\}\s)/g, "}");
                 
-                // begin reading string
+                // TODO(harry): write an object parser...
                 
                 return result;
             }
             
+            // parse a string
+            function parseString(str) {
+                var quote = /(')|(")/g;
+                
+                // get value between quotes
+                if (str.charAt(0).match(quote) &&
+                        str.charAt(str.length - 1).match(quote)) {
+                    str = str.substring(1, str.length - 1);
+                } else {
+                    // assume number if no quotes
+                    str = Number(str);
+                }
+                
+                return str;
+            }
+            
             // this should capture simple types
-            // e.g. strings and numbers
             result = string;
+            
+            // catch numbers
+            if (util.isNumber(string)) {
+                return string;
+            }
             
             // serialised array
             if (string.charAt(0) === "[") {
@@ -482,7 +534,16 @@ define(
             
             // serialised object
             if (string.charAt(0) === "{") {
-                return parseObject(string);
+                if (json) {
+                    return JSON.parse(string);
+                } else {
+                    return parseObject(string);
+                }
+            }
+            
+            // catch uncaught strings
+            if (util.isString(string)) {
+                return parseString(string);
             }
             
             return result;

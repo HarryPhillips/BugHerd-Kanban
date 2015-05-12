@@ -6,6 +6,12 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Find out why settings disabling logs via the configurator
+*     breaks the GUI console...
+*/
+
 define(
     [
         "config",
@@ -25,11 +31,13 @@ define(
         
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
-            if (util.cookie.exists("settings")) {
-                // TODO
-                return;
-            } else {
-                // TODO
+            var settings = util.cookie.get("settings"),
+                parsed;
+            
+            if (settings) {
+                util.log("loading existing user config");
+                parsed = util.unserialise(settings, true);
+                util.merge(config, parsed, true);
                 return;
             }
         };
@@ -128,7 +136,14 @@ define(
 
         // reset config to default state
         Configurator.prototype.reset = function () {
+            // reset config object
             config.reset();
+            
+            // delete user settings cookie
+            util.cookie.del("settings");
+            
+            // refresh page
+            location.reload();
         };
 
         return Configurator;
