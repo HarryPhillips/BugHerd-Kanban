@@ -21,27 +21,43 @@ define(
                 label,
                 input,
                 submit,
-                verify;
+                verify,
+                showVerify = function () {
+                    verify.fadeIn("fast");
+                    setTimeout(function () {
+                        verify.fadeOut("slow");
+                    }, 1200);
+                };
 
             // label
             label = field.createChild("span", "kbs-label")
                 .text(text);
 
             // input
-            input = field.createChild("input", "kbs-input-field")
+            input = field.createChild("input",
+                    "kbs-input-field kbs-input-" + type)
                 .attr("type", type)
                 .val(placeholder || "");
+            
+            // check or uncheck checkbox input
+            if (type === "checkbox") {
+                input.on("change", function (event) {
+                    handler(event.target.checked);
+                    showVerify();
+                });
+                
+                input.element.checked = placeholder;
+            }
 
             // submit
-            submit = field.createChild("span", "kbs-confirm")
-                .text("set")
-                .on("click", function () {
-                    handler(input.val());
-                    verify.fadeIn("fast");
-                    setTimeout(function () {
-                        verify.fadeOut("slow");
-                    }, 1200);
-                });
+            if (type !== "checkbox") {
+                submit = field.createChild("span", "kbs-confirm")
+                    .text("set")
+                    .on("click", function () {
+                        handler(input.val());
+                        showVerify();
+                    });
+            }
 
             // verify submission icon
             verify = field.createChild(

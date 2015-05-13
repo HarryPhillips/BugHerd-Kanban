@@ -135,8 +135,6 @@ define(
                 } else {
                     tree[segments[i]] = value;
                 }
-                
-                util.log(tree);
             }
 
             // set values in config, modified
