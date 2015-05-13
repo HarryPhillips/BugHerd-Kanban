@@ -22,12 +22,12 @@ define(
                 modal = args[1];
             
             // modal text
-            node.title = "Destruct GUI Console";
+            node.title = "Destruct GUI Console/Toolbar";
             
             // message
             node
                 .createChild("p")
-                .text("Confirm destruction of GUI console?");
+                .text("Confirm destruction of GUI console and toolbar?");
             
             // confirm
             node

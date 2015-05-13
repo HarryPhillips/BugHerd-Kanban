@@ -386,6 +386,10 @@ define(
             // console wrapper
             consclass = "kbs-cons-box " + config.gui.console.state;
             this.wrapper = wrapper = gui.createChild("div", consclass);
+            
+            if (!config.logs.enabled) {
+                wrapper.addClass("kbs-disabled");
+            }
 
             // console toolbar
             constools = wrapper.constools =
@@ -454,6 +458,12 @@ define(
             // console
             wrapper.cons = cons =
                 wrapper.createChild("div", "kbs-cons");
+            
+            // check if logs are disabled
+            if (!config.logs.enabled) {
+                // disable console
+                cons.hide();
+            }
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");

@@ -68,13 +68,13 @@ define(
                 
                 // console logs
                 node.addChild(new Field(
-                    "Enable Logs",
+                    "Enable Logs:",
                     "checkbox",
                     function (value) {
                         // enable/disable logging
-                        alert(value);
                         config.set("logs/enabled", value);
-                    }
+                    },
+                    config.get("logs/enabled")
                 ));
                 
                 // reset config button

@@ -200,7 +200,7 @@
 
 .kbs-cons-box.kbs-disabled {
     height: auto;
-    border-bottom: solid tranpsarent 0px !important;
+    border-bottom: solid transparent 0px !important;
     border-radius: 0px;
 }
 
@@ -345,6 +345,10 @@
 
 /* field classes
 ------------------------------------------------------------------------------*/
+.kbs-field {
+    min-height: 45px;
+}
+
 .kbs-field * {
     max-height: 30px;
     float: left;
@@ -366,6 +370,10 @@
 /* input */
 .kbs-field .kbs-input-field {}
 
+.kbs-field .kbs-input-checkbox {
+    margin: 7px 5px 15px 5px !important;
+}
+
 /* submit/confirm */
 .kbs-field .kbs-confirm {
     width: auto;
@@ -375,6 +383,7 @@
 
 /* submission verification icon */
 .kbs-field-verified {
+    color: #94e263;
     display: none;
     padding: 8px;
 }

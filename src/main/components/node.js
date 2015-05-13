@@ -211,6 +211,10 @@ define(
         
         // set attribute to node
         Node.prototype.attr = function (name, value) {
+            if (typeof value === "undefined") {
+                return this.element.getAttribute(name);
+            }
+            
             this.element.setAttribute(name, value);
             return this;
         };
