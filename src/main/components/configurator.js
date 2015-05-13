@@ -6,6 +6,12 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Find out why settings disabling logs via the configurator
+*     breaks the GUI console...
+*/
+
 define(
     [
         "config",
@@ -15,7 +21,7 @@ define(
     function (config, util, Modal) {
         "use strict";
 
-        var self;
+        var self, modded = {};
         
         // configurator class
         function Configurator() {
@@ -23,15 +29,40 @@ define(
             this.modal = null;
         }
         
+        // get user config object from cookie
+        Configurator.prototype.getUserData = function () {
+            var cookie = util.cookie.get("settings"),
+                data = util.unserialise(cookie);
+            
+            return data || {};
+        };
+        
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
-            if (util.cookie.exists("settings")) {
-                // TODO
-                return;
-            } else {
-                // TODO
+            var data = this.getUserData(),
+                parsed;
+            
+            if (data) {
+                util.log("loading existing user config");
+                modded = data;
+                util.merge(config, data, true);
                 return;
             }
+        };
+        
+        // return list of modified properties
+        Configurator.prototype.modifiedProperties = function () {
+            var list = [],
+                prop;
+            
+            // form an array of prop names
+            for (prop in modded) {
+                if (modded.hasOwnProperty(prop)) {
+                    list.push(prop);
+                }
+            }
+            
+            return list;
         };
         
         // launch the configurator ui
@@ -63,31 +94,76 @@ define(
                 len = segments.length,
                 got = config,
                 i = 0,
-                parent;
+                tree = modded,
+                parent,
+                parentName;
 
             // if a simple selector
-            if (segments.length === 1) {
+            if (len === 1) {
+                // update config
                 config[selector] = value;
+                
+                // update mofified prop list
+                modded[selector] = value;
+                
+                // update user prefs cookie
+                util.cookie.set(
+                    "settings",
+                    util.serialise(modded)
+                );
+                
                 return config[selector];
             }
 
-            // more complex selector - let's get references
+            // more complex selector build tree to
+            // target value and get reference to parent
+            // config object
             for (i; i < len; i += 1) {
                 // if second to last segment, set as parent ref
                 if (i === len - 2) {
                     parent = got[segments[i]];
+                    parentName = segments[i];
                 }
+                
+                // set ref for next loop
                 got = got[segments[i]];
+                
+                // build tree for merging with config
+                if (i !== len - 1) {
+                    tree[segments[i]] = {};
+                    tree = tree[segments[i]];
+                } else {
+                    tree[segments[i]] = value;
+                }
+                
+                util.log(tree);
             }
 
-            // set value
+            // set values in config, modified
+            // prop list and user cookie
+            
+            // set value to config config
             parent[segments[len - 1]] = value;
+            
+            // update user prefs cookie
+            util.cookie.set(
+                "settings",
+                util.serialise(modded)
+            );
+            
             return parent[segments[len - 1]];
         };
 
         // reset config to default state
         Configurator.prototype.reset = function () {
+            // reset config object
             config.reset();
+            
+            // delete user settings cookie
+            util.cookie.del("settings");
+            
+            // refresh page
+            location.reload();
         };
 
         return Configurator;

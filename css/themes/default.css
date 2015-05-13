@@ -26,12 +26,12 @@ body {
     color: #fff;
 }
 
-.kbs-modal-close {
+.kbs-modal-closed {
     background-color: #7e1a1a;
     color: #fff;
 }
 
-.kbs-modal-close:hover {
+.kbs-modal-closed:hover {
     background-color: #7e1a1a;
     color: #fff;
 }
@@ -74,7 +74,7 @@ body {
     border: solid #405662 0px;
 }
 
-.kbs-cons-box.kbs-close {
+.kbs-cons-box.kbs-closed {
     border: solid #405662 0px;
 }
 
@@ -99,7 +99,7 @@ body {
 .kbs-tool:hover {
     background-color: #1a1a1a;
     color: #fff;
-    border-bottom: solid #000 30px;
+    border-bottom: solid #fff 30px;
 }
 
 .kbs-save {
@@ -108,7 +108,7 @@ body {
 }
 
 .kbs-save:hover {
-    background-color: #fff;
+    background-color: #000;
     color: #429e7e;
 }
 
@@ -118,8 +118,18 @@ body {
 }
 
 .kbs-toggle:hover {
-    background-color: #fff;
+    background-color: #000;
     color: #91d467;
+}
+
+.kbs-settings {
+    background-color: #5177a8;
+    color: #fff;
+}
+
+.kbs-settings:hover {
+    background-color: #000;
+    color: #5177a8;
 }
 
 .kbs-clear {
@@ -128,7 +138,7 @@ body {
 }
 
 .kbs-clear:hover {
-    background-color: #fff;
+    background-color: #000;
     color: #9049ce;
 }
 
@@ -138,8 +148,18 @@ body {
 }
 
 .kbs-close:hover {
-    background-color: #fff;
+    background-color: #000;
     color: #cc4141;
+}
+
+.kbs-benchmark {
+    background-color: #fed852;
+    color: #fff;
+}
+
+.kbs-benchmark:hover {
+    background-color: #000;
+    color: #fed852;
 }
 
 .kbs-destroy {
@@ -148,12 +168,8 @@ body {
 }
 
 .kbs-destroy:hover {
-    background-color: #fff;
+    background-color: #000;
     color: #b82c2c;
-}
-
-.kbs-benchmark {
-    background-color: ;
 }
 
 .kbs-example {

@@ -11,9 +11,16 @@ define(
         'main/components/util',
         'main/components/node',
         'main/components/view',
+        'main/components/field',
         'main/components/configurator'
     ],
-    function (util, Node, View, Configurator) {
+    function (
+        util,
+        Node,
+        View,
+        Field,
+        Configurator
+    ) {
         'use strict';
         
         var
@@ -26,35 +33,10 @@ define(
                     gui = args[0],
                     modal = args[1];
 
-                // field class
-                function Field(text, type, handler) {
-                    var field = new Node("div", "kbs-field"),
-                        label,
-                        input,
-                        submit;
-
-                    // label
-                    label = field.createChild("span", "kbs-label")
-                        .text(text);
-
-                    // input
-                    input = field.createChild("input", "kbs-input-field")
-                        .attr("type", type);
-
-                    // submit
-                    submit = field.createChild("span", "kbs-confirm")
-                        .text("set")
-                        .on("click", function () {
-                            handler(input.text());
-                        });
-
-                    return field;
-                }
-
                 // modal text
                 node.title = "Kanban Settings";
 
-                // theme config
+                // theme
                 node.addChild(new Field(
                     "Theme:",
                     "text",
@@ -64,8 +46,43 @@ define(
                         
                         // set new theme to gui
                         gui.loadTheme(value);
+                    },
+                    config.get("theme")
+                ));
+                
+                // console state
+                node.addChild(new Field(
+                    "Console State on Load:",
+                    "text",
+                    function (value) {
+                        // make sure is a valid state class
+                        if (value.indexOf("kbs-") === -1) {
+                            value = "kbs-" + value;
+                        }
+                        
+                        // set console state
+                        config.set("gui/console/state", value);
+                    },
+                    config.get("gui/console/state")
+                ));
+                
+                // console logs
+                node.addChild(new Field(
+                    "Enable Logs",
+                    "checkbox",
+                    function (value) {
+                        // enable/disable logging
+                        alert(value);
+                        config.set("logs/enabled", value);
                     }
                 ));
+                
+                // reset config button
+                node.createChild("span", "kbs-confirm")
+                    .text("Reset Settings")
+                    .on("click", function () {
+                        config.reset();
+                    });
 
                 return node;
             });

@@ -33,12 +33,12 @@ body {
     color: #000;
 }
 
-.kbs-modal-close {
+.kbs-modal-closed {
     background-color: #7e1a1a;
     color: #fff;
 }
 
-.kbs-modal-close:hover {
+.kbs-modal-closed:hover {
     background-color: #7e1a1a;
     color: #fff;
 }
@@ -75,7 +75,7 @@ body {
     border-left: solid #000 3px;
 }
 
-.kbs-cons-box.kbs-close {
+.kbs-cons-box.kbs-closed {
     border: solid #405662 0px;
 }
 
@@ -102,7 +102,7 @@ body {
     border-bottom: solid #fff 30px;
 }
 
-.kbs-tool.kbs-close:hover {
+.kbs-tool.kbs-closed:hover {
     color: #fff;
     border-bottom: solid #d52424 30px;
 }

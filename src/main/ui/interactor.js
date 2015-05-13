@@ -137,7 +137,7 @@ define(
             
             // show elements
             setTimeout(function () {
-                $(".taskDetails, .kbs-details-close").fadeIn();
+                $(".taskDetails, .kbs-details-closed").fadeIn();
             
                 // trigger a resize event
                 // so BugHerd can set the content height
@@ -152,7 +152,7 @@ define(
         Interactor.prototype.shrinkTaskDetails = function () {
             var task = $(".taskDetails"),
                 overlay = $(".kbs-overlay"),
-                btn = $(".kbs-details-close");
+                btn = $(".kbs-details-closed");
             
             if (!status.interactor.taskDetailsExpanded) {
                 return;
@@ -386,7 +386,7 @@ define(
                 });
             
             // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-close");
+            taskContractor = new Node("div", "kbs-details-closed");
             taskContractor.createChild("i", "fa fa-times");
             taskContractor.on("click", function (event) {
                 self.closeTask();
