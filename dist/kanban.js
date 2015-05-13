@@ -99,7 +99,7 @@ define('config',[],function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0-pre",
+        version: "1.3.0",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -118,7 +118,7 @@ define('config',[],function () {
             enabled: true,
             autorefresh: true,
             console: {
-                state: "kbs-close",
+                state: "kbs-closed",
                 autoscroll: true,
                 icons: {
                     save: "file-text",
@@ -1429,6 +1429,10 @@ define(
         
         // set attribute to node
         Node.prototype.attr = function (name, value) {
+            if (typeof value === "undefined") {
+                return this.element.getAttribute(name);
+            }
+            
             this.element.setAttribute(name, value);
             return this;
         };
@@ -1729,7 +1733,7 @@ define(
                 modal.createChild("h2", "kbs-modal-title"),
                 
                 close =
-                modal.createChild("i", "fa fa-times kbs-modal-close"),
+                modal.createChild("i", "fa fa-times kbs-modal-closed"),
                 
                 content =
                 modal.createChild("p", "kbs-modal-content");
@@ -1961,7 +1965,7 @@ define(
             
             // show elements
             setTimeout(function () {
-                $(".taskDetails, .kbs-details-close").fadeIn();
+                $(".taskDetails, .kbs-details-closed").fadeIn();
             
                 // trigger a resize event
                 // so BugHerd can set the content height
@@ -1976,7 +1980,7 @@ define(
         Interactor.prototype.shrinkTaskDetails = function () {
             var task = $(".taskDetails"),
                 overlay = $(".kbs-overlay"),
-                btn = $(".kbs-details-close");
+                btn = $(".kbs-details-closed");
             
             if (!status.interactor.taskDetailsExpanded) {
                 return;
@@ -2210,7 +2214,7 @@ define(
                 });
             
             // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-close");
+            taskContractor = new Node("div", "kbs-details-closed");
             taskContractor.createChild("i", "fa fa-times");
             taskContractor.on("click", function (event) {
                 self.closeTask();
@@ -2419,7 +2423,9 @@ define(
                 return config[selector];
             }
 
-            // more complex selector - let's get references
+            // more complex selector build tree to
+            // target value and get reference to parent
+            // config object
             for (i; i < len; i += 1) {
                 // if second to last segment, set as parent ref
                 if (i === len - 2) {
@@ -2430,12 +2436,12 @@ define(
                 // set ref for next loop
                 got = got[segments[i]];
                 
-                // build tree
+                // build tree for merging with config
                 if (i !== len - 1) {
                     tree[segments[i]] = {};
                     tree = tree[segments[i]];
                 } else {
-                    tree[segments[i]] = got;
+                    tree[segments[i]] = value;
                 }
             }
 
@@ -2705,7 +2711,7 @@ define(
                 contextParent = context.parentNode.className;
                 if ((args.type.match(/(test)|(buffer)/)) &&
                         util.contains(contextParent, "kbs-exec")) {
-                    log.addClass("kbs-log-close");
+                    log.addClass("kbs-log-closed");
                 }
             }
                 
@@ -2748,14 +2754,14 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            self.wrapper.removeClass("kbs-close");
+            self.wrapper.removeClass("kbs-closed");
             self.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
             self.wrapper.removeClass("kbs-open");
-            self.wrapper.addClass("kbs-close");
+            self.wrapper.addClass("kbs-closed");
         };
         
         // refresh console
@@ -2876,6 +2882,10 @@ define(
             // console wrapper
             consclass = "kbs-cons-box " + config.gui.console.state;
             this.wrapper = wrapper = gui.createChild("div", consclass);
+            
+            if (!config.logs.enabled) {
+                wrapper.addClass("kbs-disabled");
+            }
 
             // console toolbar
             constools = wrapper.constools =
@@ -2892,7 +2902,7 @@ define(
             // toggle tool
             this.createTool("toggle")
                 .element.onclick = function () {
-                    var closed = wrapper.hasClass("kbs-close"),
+                    var closed = wrapper.hasClass("kbs-closed"),
                         full = wrapper.hasClass("kbs-full");
 
                     // if not closed and not full screen
@@ -2944,6 +2954,12 @@ define(
             // console
             wrapper.cons = cons =
                 wrapper.createChild("div", "kbs-cons");
+            
+            // check if logs are disabled
+            if (!config.logs.enabled) {
+                // disable console
+                cons.hide();
+            }
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
@@ -3255,12 +3271,12 @@ define(
             out.onclick = function (event) {
                 current = new Node(event.target);
                 if (current.hasClass(togglables)) {
-                    if (!current.hasClass("kbs-log-close")) {
+                    if (!current.hasClass("kbs-log-closed")) {
                         // we need to close the block
-                        current.addClass("kbs-log-close");
+                        current.addClass("kbs-log-closed");
                     } else {
                         // we need to open the block
-                        current.removeClass("kbs-log-close");
+                        current.removeClass("kbs-log-closed");
                     }
                 }
             };

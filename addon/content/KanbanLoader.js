@@ -146,7 +146,7 @@ var KanbanLoader = {
                 getBranch("extensions.kanban.");
 
         // get url pref or default
-        baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl") : "https://rawgit.com/HarryPhillips/Kanban/master/";
+        baseUrl = (pref.getCharPref("baseUrl").length > 1) ? pref.getCharPref("baseUrl") : "https://rawgit.com/HarryPhillips/Kanban/v1.3.0/";
 
         try {
             useDist = pref.getBoolPref("useDist", false);
