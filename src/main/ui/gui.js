@@ -247,12 +247,12 @@ define(
             out.onclick = function (event) {
                 current = new Node(event.target);
                 if (current.hasClass(togglables)) {
-                    if (!current.hasClass("kbs-log-close")) {
+                    if (!current.hasClass("kbs-log-closed")) {
                         // we need to close the block
-                        current.addClass("kbs-log-close");
+                        current.addClass("kbs-log-closed");
                     } else {
                         // we need to open the block
-                        current.removeClass("kbs-log-close");
+                        current.removeClass("kbs-log-closed");
                     }
                 }
             };
