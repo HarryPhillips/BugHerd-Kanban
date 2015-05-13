@@ -45,24 +45,24 @@ define(
         };
         
         // fade in node
-        Node.prototype.fadeIn = function () {
+        Node.prototype.fadeIn = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.show();
             }
             
             // jquery fade in
-            window.jQuery(this.element).fadeIn();
+            window.jQuery(this.element).fadeIn(args);
         };
         
         // fade out node
-        Node.prototype.fadeOut = function () {
+        Node.prototype.fadeOut = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.hide();
                 return;
             }
             
             // jquery fade out
-            window.jQuery(this.element).fadeOut();
+            window.jQuery(this.element).fadeOut(args);
         };
         
         // return current element id
@@ -224,6 +224,16 @@ define(
             
             text = document.createTextNode(text);
             this.addChild(text);
+            return this;
+        };
+        
+        // set value of a node
+        Node.prototype.val = function (value) {
+            if (typeof value === "undefined") {
+                return this.element.value;
+            }
+            
+            this.element.value = value;
             return this;
         };
         

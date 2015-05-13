@@ -19,7 +19,7 @@ define(
         'main/components/status',
         'main/components/http',
         'main/components/node',
-        'main/ui/viewloader'
+        'main/components/viewloader'
     ],
     function (
         config,
@@ -98,7 +98,7 @@ define(
                 modal.createChild("h2", "kbs-modal-title"),
                 
                 close =
-                modal.createChild("i", "fa fa-times kbs-modal-close"),
+                modal.createChild("i", "fa fa-times kbs-modal-closed"),
                 
                 content =
                 modal.createChild("p", "kbs-modal-content");

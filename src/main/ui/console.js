@@ -215,7 +215,7 @@ define(
                 contextParent = context.parentNode.className;
                 if ((args.type.match(/(test)|(buffer)/)) &&
                         util.contains(contextParent, "kbs-exec")) {
-                    log.addClass("kbs-log-close");
+                    log.addClass("kbs-log-closed");
                 }
             }
                 
@@ -258,14 +258,14 @@ define(
         
         // open console
         Console.prototype.open = function () {
-            self.wrapper.removeClass("kbs-close");
+            self.wrapper.removeClass("kbs-closed");
             self.wrapper.addClass("kbs-open");
         };
         
         // close console
         Console.prototype.close = function () {
             self.wrapper.removeClass("kbs-open");
-            self.wrapper.addClass("kbs-close");
+            self.wrapper.addClass("kbs-closed");
         };
         
         // refresh console
@@ -402,7 +402,7 @@ define(
             // toggle tool
             this.createTool("toggle")
                 .element.onclick = function () {
-                    var closed = wrapper.hasClass("kbs-close"),
+                    var closed = wrapper.hasClass("kbs-closed"),
                         full = wrapper.hasClass("kbs-full");
 
                     // if not closed and not full screen

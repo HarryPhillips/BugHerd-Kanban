@@ -327,7 +327,11 @@ define(
                     exists = typeof one[i] !== "undefined";
                     
                     if (!exists || (exists && overwrite)) {
-                        one[i] = two[i];
+                        if (util.isObject(two[i])) {
+                            util.merge(one[i], two[i], overwrite);
+                        } else {
+                            one[i] = two[i];
+                        }
                     }
                 }
             }
@@ -437,10 +441,13 @@ define(
                 var result = [],
                     nstruct = new RegExp(/(\[)|(\{)/g),
                     estruct = new RegExp(/(\])|(\})/g),
+                    instr = false,
+                    strch,
                     value = "",
                     eov,
                     len,
                     ch,
+                    pch,
                     depth = 0,
                     i = 0;
                 
@@ -453,21 +460,38 @@ define(
                 
                 // walk through string and pick up values
                 do {
-                    // get char
+                    // get chars
+                    pch = str.charAt(i - 1);
                     ch = str.charAt(i);
+                    
+                    // check if string
+                    if (ch === "'" || ch === '"') {
+                        if (pch !== "\\" && ch === strch) {
+                            if (instr && ch === strch) {
+                                instr = false;
+                                strch = "";
+                            } else if (!instr) {
+                                instr = true;
+                                strch = ch;
+                            }
+                        }
+                    }
                   
                     // new structure - increase depth
-                    if (nstruct.test(ch)) {
+                    if (nstruct.test(ch) && !instr) {
                         depth += 1;
                     }
                     
                     // end of structure - decrease depth
-                    if (estruct.test(ch)) {
+                    if (estruct.test(ch) && !instr) {
                         depth -= 1;
                     }
                     
-                    // reached end of value
-                    eov = ((ch === "," || estruct.test(ch)) && !depth);
+                    // end of value flag
+                    eov = ((ch === "," || estruct.test(ch))
+                           && !depth
+                           && !instr);
+                    
                     if (eov || i === len) {
                         result.push(util.unserialise(value, json));
                         value = "";
@@ -522,8 +546,10 @@ define(
             // this should capture simple types
             result = string;
             
-            // catch numbers
-            if (util.isNumber(string)) {
+            // catch numbers and already parsed values
+            if (util.isNumber(string) ||
+                    util.isObject(string) ||
+                    util.isArray(string)) {
                 return string;
             }
             

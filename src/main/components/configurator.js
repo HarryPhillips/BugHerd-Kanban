@@ -29,15 +29,23 @@ define(
             this.modal = null;
         }
         
+        // get user config object from cookie
+        Configurator.prototype.getUserData = function () {
+            var cookie = util.cookie.get("settings"),
+                data = util.unserialise(cookie);
+            
+            return data || {};
+        };
+        
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
-            var settings = util.cookie.get("settings"),
+            var data = this.getUserData(),
                 parsed;
             
-            if (settings) {
+            if (data) {
                 util.log("loading existing user config");
-                parsed = util.unserialise(settings, true);
-                util.merge(config, parsed, true);
+                modded = data;
+                util.merge(config, data, true);
                 return;
             }
         };
@@ -86,11 +94,12 @@ define(
                 len = segments.length,
                 got = config,
                 i = 0,
+                tree = modded,
                 parent,
                 parentName;
 
             // if a simple selector
-            if (segments.length === 1) {
+            if (len === 1) {
                 // update config
                 config[selector] = value;
                 
@@ -106,14 +115,28 @@ define(
                 return config[selector];
             }
 
-            // more complex selector - let's get references
+            // more complex selector build tree to
+            // target value and get reference to parent
+            // config object
             for (i; i < len; i += 1) {
                 // if second to last segment, set as parent ref
                 if (i === len - 2) {
                     parent = got[segments[i]];
                     parentName = segments[i];
                 }
+                
+                // set ref for next loop
                 got = got[segments[i]];
+                
+                // build tree for merging with config
+                if (i !== len - 1) {
+                    tree[segments[i]] = {};
+                    tree = tree[segments[i]];
+                } else {
+                    tree[segments[i]] = value;
+                }
+                
+                util.log(tree);
             }
 
             // set values in config, modified
@@ -121,9 +144,6 @@ define(
             
             // set value to config config
             parent[segments[len - 1]] = value;
-            
-            // update modified prop list
-            modded[parentName] = value;
             
             // update user prefs cookie
             util.cookie.set(

@@ -99,7 +99,7 @@ define(function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0-pre",
+        version: "1.3.0",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -118,7 +118,7 @@ define(function () {
             enabled: true,
             autorefresh: true,
             console: {
-                state: "kbs-close",
+                state: "kbs-closed",
                 autoscroll: true,
                 icons: {
                     save: "file-text",

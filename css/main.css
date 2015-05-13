@@ -63,7 +63,7 @@
     text-align: left;
 }
 
-.kbs-modal-close {
+.kbs-modal-closed {
     float: left;
     width: 10%; height: 40px;
     margin: 0; padding: 0;
@@ -80,7 +80,7 @@
     transition: background-color 0.3s, color 0.3s, border 0.3s;
 }
 
-.kbs-modal-close:hover {
+.kbs-modal-closed:hover {
     border-bottom: solid #ff0000 40px;
 }
 
@@ -188,7 +188,7 @@
     border-radius: 0px;
 }
 
-.kbs-cons-box.kbs-close {
+.kbs-cons-box.kbs-closed {
     width: 30px; height: 30px;
     min-width: 30px; min-height: 30px;
     border-radius: 0px;
@@ -220,7 +220,7 @@
     float: left;
 }
 
-.kbs-cons-box.kbs-close .kbs-cons-title {
+.kbs-cons-box.kbs-closed .kbs-cons-title {
     display: none;
 }
 
@@ -234,10 +234,10 @@
     text-align: center;
     cursor: pointer;
     
-    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    transition: background-color 0.3s, color 0.3s, border 0.3s;
+    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
+    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
+    -o-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
+    transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
 }
 
 /* console output wrapper
@@ -289,7 +289,7 @@
     border: solid #000 1px;
 }
 
-.kbs-log-close {
+.kbs-log-closed {
     height: 25px;
 }
 
@@ -350,8 +350,16 @@
     float: left;
 }
 
+.kbs-field:after {
+    content: "";
+    clear: both;
+    display: block;
+    visibility: hidden;
+}
+
 /* label */
 .kbs-field .kbs-label {
+    width: 200px;
     padding: 5px 8px;
 }
 
@@ -363,6 +371,12 @@
     width: auto;
     margin: 0;
     padding: 5px 15px;
+}
+
+/* submission verification icon */
+.kbs-field-verified {
+    display: none;
+    padding: 8px;
 }
 
 /* misc classes
@@ -395,7 +409,7 @@
 }
 
 /* task details close btn */
-.kbs-details-close {
+.kbs-details-closed {
     background-color: #e82626;
     color: #fff;
     position: fixed;
@@ -418,7 +432,7 @@
     transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
 }
 
-.kbs-details-close:hover {
+.kbs-details-closed:hover {
     background-color: #972a2a;
     color: #fff;
     border-radius: 0%;
@@ -490,7 +504,7 @@
     }
     
     /* position close btn */
-    .kbs-details-close {
+    .kbs-details-closed {
         left: 50%;
         
         /* (kbs-detail:width / 2) - (btn:width / 2) */
