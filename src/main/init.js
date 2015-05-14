@@ -17,6 +17,8 @@
 *   + Add a repository component for storing instances of Kanban objects,
 *     making them globally accessible within Kanban. Should remove the
 *     need to pass instances between function calls.
+*
+*   + Add a modal to view screenshots instead of opening in a new tab
 */
 
 define(
