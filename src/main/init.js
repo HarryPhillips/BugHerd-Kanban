@@ -19,6 +19,10 @@
 *     need to pass instances between function calls.
 *
 *   + Add a modal to view screenshots instead of opening in a new tab
+*
+*   + Monitor status of all components and defer kbs/loaded event until
+*     all components have finished initialising, more reliable than hard coding
+*     the event firing
 */
 
 define(
