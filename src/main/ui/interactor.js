@@ -28,18 +28,20 @@ define(
         // declarations
         var $,
             self,
-            inited = false;
+            inited = false,
+            gui;
 
         // interactor constructor
-        function Interactor() {
+        function Interactor(instance) {
             util.log(
                 "context:inter/init",
                 "info",
                 "Initialising Interactor..."
             );
             
-            // set pointer
+            // set references
             self = this;
+            gui = instance;
             
             // initialise
             this.init();
@@ -424,6 +426,17 @@ define(
 
             // add a margin to user nav to accompany console controls
             $(".nav.user-menu").css("margin-right", "10px");
+            
+            // overhaul theme specifics
+            if (gui.getThemeName() === "overhaul") {
+                // change VS search icon to use fa
+                $(".VS-icon-search").append("<i class=\"fa fa-search\"></i>");
+                $(".VS-icon-search").css("top", "8px");
+
+                // change VS cancel icon to use fa
+                $(".VS-icon-cancel").append("<i class=\"fa fa-times\"></i>");
+                $(".VS-icon-cancel").css("top", "8px");
+            }
         };
             
         // apply interactor logging context / output

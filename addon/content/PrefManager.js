@@ -1,8 +1,3 @@
-/*
-*   TODO:
-*   + Fix this god awful code quality...
-*/
-
 /*jslint sloppy: true, regexp: true */
 
 /*global

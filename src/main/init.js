@@ -8,16 +8,15 @@
 
 /*
 *   TODO
-*   + Related to config, style/theme preference engine? Dynamic not preloaded?
-*
 *   + Add ability to set wallpapers (style/theme engine?)
 *
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
 *   + A place for Kanban tools? Not attached to the console toolbar?
 *
-*   + Point base url to prodution cdn using source tag e.g
-*     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.3.0/
+*   + Add a repository component for storing instances of Kanban objects,
+*     making them globally accessible within Kanban. Should remove the
+*     need to pass instances between function calls.
 */
 
 define(
@@ -71,7 +70,7 @@ define(
 
         // initialise interactor
         if (config.interactor.enabled) {
-            interactor = new Interactor();
+            interactor = new Interactor(gui);
         }
             
         // execute kanban

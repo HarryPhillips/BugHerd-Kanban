@@ -6,12 +6,6 @@
 
 /*global define: true */
 
-/*
-*   TODO:
-*   + Find out why settings disabling logs via the configurator
-*     breaks the GUI console...
-*/
-
 define(
     [
         "config",
