@@ -439,6 +439,21 @@ body {
     border-bottom: 0 !important;
 }
 
+.attachBlock .attachList li {
+    background-color: transparent !important;
+}
+
+.detailBlock .detailText,
+.detailBlock .detailText ul.token-input-list-bh {
+    background-color: transparent !important;
+    border-color: #18cd48 !important;
+}
+
+.token-input-token-bh {
+    background-color: #353535 !important;
+    border-color: transparent !important;
+}
+
 #kanbanBoard li.taskItem.active {
     border-color: #18cd48 !important;
     outline: solid #18cd48 10px !important;
