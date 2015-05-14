@@ -292,6 +292,10 @@ body {
 
 /* bugherd style overrides
 --------------------------------------------------------------------*/
+.kbs-details-expand {
+    border: solid #18cd48 5px;
+}
+
 /* main head nav bar */
 .app-head {
     background-color: #000000;
@@ -449,6 +453,7 @@ body {
 }
 
 .taskDetailContent td,
-.taskDetailContent th {
+.taskDetailContent th,
+.taskDetailContent .detailBlock {
     border-bottom: solid #18cd48 1px !important;
 }
