@@ -16,46 +16,62 @@ body {
 
 /* modals
 --------------------------------------------------------------------*/
+.kbs-modal * {
+    box-shadow: 0 0 transparent;
+}
+
 .kbs-modal {
-    background-color: #fff;
-    color: #1a1a1a;
+    background-color: #000;
+    color: #37a9f7;
 }
 
 .kbs-modal-title {
-    background-color: #363D47;
-    color: #fff;
+    background-color: #222;
+    color: #37a9f7;
 }
 
 .kbs-modal-closed {
-    background-color: #7e1a1a;
-    color: #fff;
+    background-color: #37a9f7;
+    color: #1a1a1a;
 }
 
 .kbs-modal-closed:hover {
-    background-color: #7e1a1a;
-    color: #fff;
+    background-color: #37a9f7;
+    color: #37a9f7;
+    border-bottom-color: #1a1a1a;
 }
 
 .kbs-confirm,
 .kbs-cancel,
 .kbs-continue {
-    background-color: #ddd;
-    color: #000;
+    background-color: transparent;
+    color: #37a9f7;
+    border: solid #37a9f7 1px;
 }
 
 .kbs-confirm:hover {
-    background-color: #6a8e29;
-    color: #fff;
+    background-color: #37a9f7;
+    color: #1a1a1a;
 }
 
 .kbs-cancel:hover {
-    background-color: #8e2929;
-    color: #fff;
+    background-color: transparent;
+    border-color: #f40a0a;
+    color: #f40a0a;
 }
 
 .kbs-continue:hover {
-    background-color: #6a8e29;
-    color: #fff;
+    background-color: #37a9f7;
+    color: #1a1a1a;
+}
+
+/* fields
+--------------------------------------------------------------------*/
+
+.kbs-input-field {
+    background-color: transparent !important;
+    border-color: #37a9f7 !important;
+    color: #37a9f7 !important;
 }
 
 /* console box
@@ -293,17 +309,17 @@ body {
 /* bugherd style overrides
 --------------------------------------------------------------------*/
 .kbs-details-expand {
-    border: solid #18cd48 5px;
+    border: solid #37a9f7 2px;
 }
 
 /* main head nav bar */
 .app-head {
     background-color: #000000;
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .main-nav li a {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .main-nav a:hover {
@@ -311,7 +327,7 @@ body {
 }
 
 .user-menu span {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .user-menu span:hover {
@@ -326,12 +342,12 @@ body {
 
 .pane-head .pane-left .project-name {
     background-color: transparent;
-    color: #18cd48;
-    border: solid #18cd48 1px;
+    color: #37a9f7;
+    border: solid #37a9f7 1px;
 }
 
 #project-settings .dropdown-toggle {
-    background-color: #18cd48;
+    background-color: #37a9f7;
     cursor: pointer;
 }
 
@@ -340,59 +356,59 @@ body {
 }
 
 .dropdown-menu * {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .dropdown-menu .divider {
     background-color: transparent;
-    border-color: #18cd48;
+    border-color: #37a9f7;
 }
 
 .project-settings ul.project-dropdown li:hover {
-    background-color: #18cd48 !important;
+    background-color: #37a9f7 !important;
     color: #fff !important;
 }
 
 .VS-search-box-wrapper {
     background-color: transparent !important;
-    border: solid #18cd48 1px !important;
+    border: solid #37a9f7 1px !important;
     box-shadow: 0 0 !important;
 }
 
 .VS-search-box-wrapper .category {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .VS-search-box-wrapper input {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .VS-icon-search,
 .VS-icon-cancel {
     background-image: none !important;
-    color: #18cd48;
+    color: #37a9f7;
 }
 
 .project-nav li {
     background-color: transparent;
-    border: solid #18cd48 1px;
+    border: solid #37a9f7 1px;
 }
 
 .project-nav li a {
-    color: #18cd48;
+    color: #37a9f7;
 }
 
 .project-nav li span.task-count {
     background-color: transparent;
-    color: #18cd48;
-    border-color: #18cd48;
+    color: #37a9f7;
+    border-color: #37a9f7;
 }
 
 .button-newIssue {
     background-image: none;
     background-color: transparent;
-    color: #18cd48;
-    border: solid #18cd48 1px;
+    color: #37a9f7;
+    border: solid #37a9f7 1px;
     box-shadow: 0 0;
 }
 
@@ -406,13 +422,34 @@ body {
     background-image: none !important;
 }
 
+.button-viewOptions {
+    background-image: none;
+    background-color: #333;
+}
+
+.button-viewOptions span {
+    background-color: rgb(74,74,74);
+}
+
+.button-viewOptions ul {
+    background-color: #555;
+}
+
+.button-viewOptions small b:hover {
+    background-color: transparent !important;
+}
+
 /* center content */
 .pane {
     background-color: #000 !important;
 }
 
+#triage, #kanbanBoard, #archive {
+    overflow-x: hidden !important;
+}
+
 .pane * {
-    color: #18cd48 !important;
+    color: #37a9f7 !important;
 }
 
 .content-head {
@@ -431,7 +468,7 @@ body {
 }
 
 .group-head h3 {
-    border-color: #18cd48;
+    border-color: #37a9f7;
 }
 
 .cta-tag {
@@ -440,13 +477,17 @@ body {
 }
 
 .attachBlock .attachList li {
-    background-color: transparent !important;
+    background-color: #37a9f7 !important;
+}
+
+.attachBlock .attachList .attachLink {
+    color: #000 !important;
 }
 
 .detailBlock .detailText,
 .detailBlock .detailText ul.token-input-list-bh {
     background-color: transparent !important;
-    border-color: #18cd48 !important;
+    border-color: #37a9f7 !important;
 }
 
 .token-input-token-bh {
@@ -454,21 +495,110 @@ body {
     border-color: transparent !important;
 }
 
+#kanbanBoard li.task:hover {
+    box-shadow: 0 1px 6px rgba(24, 205, 72, 0.85);
+}
+
 #kanbanBoard li.taskItem.active {
-    border-color: #18cd48 !important;
-    outline: solid #18cd48 10px !important;
+    background-color: #37a9f7 !important;
+    border-color: #37a9f7 !important;
+}
+
+#kanbanBoard li.taskItem.active .task-description {
+    color: #000 !important;
+}
+
+.taskDescriptionHolder,
+.taskDescription,
+.taskDescription:focus {
+    background-color: #000;
+    border: solid #37a9f7 1px;
+    padding: 10px;
+}
+
+.taskDescriptionHolder:hover {
+    background-color: #000;
+}
+
+#kanbanBoard li.taskItem {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#kanbanBoard li.taskItem .task-info {
+    background-color: #2a2a2a;
+}
+
+#archive .taskList .listHeading {
+    background-color: #37a9f7 !important;
+    border-color: #333 !important;
+}
+
+#archive .taskList .listHeading span {
+    background-color: #555 !important;
+    border-color: #555 !important;
+}
+
+#archive .taskList li.taskItem .taskContent {
+    background-color: #4a4a4a !important;
+    border: solid transparent 0px !important;
+}
+
+#archive .taskList li.taskItem .taskID {
+    background-color: #2a2a2a !important;
+    border: solid transparent 0px !important;
+}
+
+.button-archiveDecline {
+    background-image: none !important;
+    background-color: #1a1a1a !important;
+}
+
+span.assignee-avatar {
+    border: solid #37a9f7 2px !important;
 }
 
 .taskDetails .taskDetailMain {
-    background-color: #656565;
+    background-color: #2a2a2a;
 }
 
-.taskDetails, .taskDetailContent {
+.taskDetails .taskDetailMain .count {
+    background-color: #000;
+    border-left: solid #37a9f7 1px;
+    border-bottom: solid #37a9f7 1px;
+}
+
+.taskDetails,
+.taskDetailContent,
+.panelWrap.panelDetail {
     background-color: #000;
 }
 
 .taskDetailContent td,
 .taskDetailContent th,
 .taskDetailContent .detailBlock {
-    border-bottom: solid #18cd48 1px !important;
+    border-bottom: solid #37a9f7 1px !important;
+}
+
+/* task detail inputs */
+.chzn-container-single .chzn-single {
+    background-image: none;
+    background-color: transparent;
+    border: solid #37a9f7 1px;
+}
+
+/* task comment input */
+.taskComment,
+.taskComment textarea {
+    background-color: #333;
+}
+
+.taskComment .btn {
+    background-image: none !important;
+    background-color: #000 !important;
+    margin-left: 2px;
+}
+
+.itemComment .itemContent {
+    background-color: #000;
+    margin: 5px;
 }

@@ -134,7 +134,8 @@ define(function () {
             }
         },
         interactor: {
-            enabled: true
+            enabled: true,
+            observe: false
         },
         events: {
             silent: false

@@ -480,6 +480,10 @@
     min-width: initial;
 }
 
+#kanbanBoard li.taskItem.active {
+    outline: solid transparent 0px;
+}
+
 /* make task id more prominent */
 .taskDetailId {
     background-color: #000;
@@ -492,6 +496,10 @@
 /* fix tag dropdown on popup */
 .token-input-dropdown-bh {
     z-index: 2147483647 !important;
+}
+
+.taskComment {
+    padding: 5px;
 }
 
 /* responsive media queries

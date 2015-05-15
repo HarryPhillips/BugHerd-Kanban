@@ -1,0 +1,604 @@
+/*
+*   @type css
+*   @name theme.css
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+body {
+    background-color: #000;
+}
+
+/* overlay
+--------------------------------------------------------------------*/
+.kbs-overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* modals
+--------------------------------------------------------------------*/
+.kbs-modal * {
+    box-shadow: 0 0 transparent;
+}
+
+.kbs-modal {
+    background-color: #000;
+    color: #fd2e2e;
+}
+
+.kbs-modal-title {
+    background-color: #222;
+    color: #fd2e2e;
+}
+
+.kbs-modal-closed {
+    background-color: #fd2e2e;
+    color: #1a1a1a;
+}
+
+.kbs-modal-closed:hover {
+    background-color: #fd2e2e;
+    color: #fd2e2e;
+    border-bottom-color: #1a1a1a;
+}
+
+.kbs-confirm,
+.kbs-cancel,
+.kbs-continue {
+    background-color: transparent;
+    color: #fd2e2e;
+    border: solid #fd2e2e 1px;
+}
+
+.kbs-confirm:hover {
+    background-color: #fd2e2e;
+    color: #1a1a1a;
+}
+
+.kbs-cancel:hover {
+    background-color: transparent;
+    border-color: #f40a0a;
+    color: #f40a0a;
+}
+
+.kbs-continue:hover {
+    background-color: #fd2e2e;
+    color: #1a1a1a;
+}
+
+/* fields
+--------------------------------------------------------------------*/
+
+.kbs-input-field {
+    background-color: transparent !important;
+    border-color: #fd2e2e !important;
+    color: #fd2e2e !important;
+}
+
+/* console box
+--------------------------------------------------------------------*/
+.kbs-cons-box {
+    background: #1b1b1b;
+    color: #fff;
+}
+
+.kbs-cons-box.kbs-open {
+    border-left: solid #405662 3px;
+    border-bottom: solid #405662 3px;
+}
+
+.kbs-cons-box.kbs-full {
+    border: solid #405662 0px;
+}
+
+.kbs-cons-box.kbs-closed {
+    border: solid #405662 0px;
+}
+
+/* console toolbar
+--------------------------------------------------------------------*/
+.kbs-cons-toolbar {
+    background-color: #405662;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.kbs-cons-title {
+    color: #fff;
+}
+
+/* tools
+--------------------------------------------------------------------*/
+.kbs-tool {
+    background-color: #fff;
+    color: #1a1a1a;
+}
+
+.kbs-tool:hover {
+    background-color: #1a1a1a;
+    color: #fff;
+    border-bottom: solid #fff 30px;
+}
+
+.kbs-save {
+    background-color: #429e7e;
+    color: #fff;
+}
+
+.kbs-save:hover {
+    background-color: #000;
+    color: #429e7e;
+}
+
+.kbs-toggle {
+    background-color: #91d467;
+    color: #fff;
+}
+
+.kbs-toggle:hover {
+    background-color: #000;
+    color: #91d467;
+}
+
+.kbs-settings {
+    background-color: #5177a8;
+    color: #fff;
+}
+
+.kbs-settings:hover {
+    background-color: #000;
+    color: #5177a8;
+}
+
+.kbs-clear {
+    background-color: #9049ce;
+    color: #fff;
+}
+
+.kbs-clear:hover {
+    background-color: #000;
+    color: #9049ce;
+}
+
+.kbs-close {
+    background-color: #cc4141;
+    color: #fff;
+}
+
+.kbs-close:hover {
+    background-color: #000;
+    color: #cc4141;
+}
+
+.kbs-benchmark {
+    background-color: #fed852;
+    color: #fff;
+}
+
+.kbs-benchmark:hover {
+    background-color: #000;
+    color: #fed852;
+}
+
+.kbs-destroy {
+    background-color: #b82c2c;
+    color: #fff;
+}
+
+.kbs-destroy:hover {
+    background-color: #000;
+    color: #b82c2c;
+}
+
+.kbs-example {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.kbs-example:hover {
+    background-color: #fff;
+    color: #1a1a1a;
+}
+
+/* console and output
+--------------------------------------------------------------------*/
+.kbs-cons {
+    background: #1a1a1a;
+}
+
+.kbs-object {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.kbs-object-expand:hover {
+    color: #96e64b;
+}
+
+.kbs-object-expand.kbs-rotate {
+    color: #dd2b2b;
+}
+
+.kbs-object-expand.kbs-rotate:hover {
+    color: #ab1b1b;
+}
+
+/* console log types
+--------------------------------------------------------------------*/
+/* type: 'log' */
+.kbs-log {
+    background-color: #000;
+    color: #fff;
+}
+
+/* type: 'info' */
+.kbs-info {
+    background-color: #eee;
+    color: #1a1a1a;
+}
+
+/* type: 'debug' */
+.kbs-debug {
+    background-color: #1b5773;
+    color: #fff;
+}
+
+/* type: 'okay' */
+.kbs-okay {
+    background-color: #2d8444;
+    color: #fff;
+}
+
+/* type: 'warn' */
+.kbs-warn {
+    background-color: #d97330;
+    color: #fff;
+}
+
+/* type: 'error' */
+.kbs-error {
+    background-color: #af3535;
+    color: #fff;
+}
+
+/* type: 'test' */
+.kbs-test {
+    background-color: #e8df68;
+    color: #1a1a1a;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+
+.kbs-test:hover {
+    background-color: #1a1a1a;
+    color: #e8df68;
+}
+
+/* type: 'exec' */
+.kbs-exec {
+    background-color: #8610c6;
+    color: #fff;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+
+.kbs-exec:hover {
+    background-color: #580b84;
+}
+
+/* type: 'buffer' */
+.kbs-buffer {
+    background-color: #e8df68;
+    color: #1a1a1a;
+    
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+}
+
+.kbs-buffer:hover {
+    background-color: #1a1a1a;
+    color: #e8df68 !important;
+}
+
+/* bugherd style overrides
+--------------------------------------------------------------------*/
+.kbs-details-expand {
+    border: solid #fd2e2e 2px;
+}
+
+/* main head nav bar */
+.app-head {
+    background-color: #000000;
+    color: #fd2e2e !important;
+}
+
+.main-nav li a {
+    color: #fd2e2e !important;
+}
+
+.main-nav a:hover {
+    color: #bfdec3 !important;
+}
+
+.user-menu span {
+    color: #fd2e2e !important;
+}
+
+.user-menu span:hover {
+    color: #bfdec3 !important;
+}
+
+/* secondary head nav bar */
+#header.pane-head {
+    background-image: none;
+    background-color: #353535;
+}
+
+.pane-head .pane-left .project-name {
+    background-color: transparent;
+    color: #fd2e2e;
+    border: solid #fd2e2e 1px;
+}
+
+#project-settings .dropdown-toggle {
+    background-color: #fd2e2e;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    background-color: #555;
+}
+
+.dropdown-menu * {
+    color: #fd2e2e !important;
+}
+
+.dropdown-menu .divider {
+    background-color: transparent;
+    border-color: #fd2e2e;
+}
+
+.project-settings ul.project-dropdown li:hover {
+    background-color: #fd2e2e !important;
+    color: #fff !important;
+}
+
+.VS-search-box-wrapper {
+    background-color: transparent !important;
+    border: solid #fd2e2e 1px !important;
+    box-shadow: 0 0 !important;
+}
+
+.VS-search-box-wrapper .category {
+    color: #fd2e2e !important;
+}
+
+.VS-search-box-wrapper input {
+    color: #fd2e2e !important;
+}
+
+.VS-icon-search,
+.VS-icon-cancel {
+    background-image: none !important;
+    color: #fd2e2e;
+}
+
+.project-nav li {
+    background-color: transparent;
+    border: solid #fd2e2e 1px;
+}
+
+.project-nav li a {
+    color: #fd2e2e;
+}
+
+.project-nav li span.task-count {
+    background-color: transparent;
+    color: #fd2e2e;
+    border-color: #fd2e2e;
+}
+
+.button-newIssue {
+    background-image: none;
+    background-color: transparent;
+    color: #fd2e2e;
+    border: solid #fd2e2e 1px;
+    box-shadow: 0 0;
+}
+
+.button-newIssue:hover {
+    background-color: transparent;
+    color: #bfdec3;
+    border-color: #bfdec3;
+}
+
+.button-newIssue span {
+    background-image: none !important;
+}
+
+.button-viewOptions {
+    background-image: none;
+    background-color: #333;
+}
+
+.button-viewOptions span {
+    background-color: rgb(74,74,74);
+}
+
+.button-viewOptions ul {
+    background-color: #555;
+}
+
+.button-viewOptions small b:hover {
+    background-color: transparent !important;
+}
+
+/* center content */
+.pane {
+    background-color: #000 !important;
+}
+
+#triage, #kanbanBoard, #archive {
+    overflow-x: hidden !important;
+}
+
+.pane * {
+    color: #fd2e2e !important;
+}
+
+.content-head {
+    background-color: #000;
+}
+
+.pane-center .pane-content {
+    background-image: none;
+    background-color: #353535;
+    border-left: 0;
+    border-right: 0;
+}
+
+.issue-count {
+    background-color: #353535;
+}
+
+.group-head h3 {
+    border-color: #fd2e2e;
+}
+
+.cta-tag {
+    background-color: #353535 !important;
+    border-bottom: 0 !important;
+}
+
+.attachBlock .attachList li {
+    background-color: #fd2e2e !important;
+}
+
+.attachBlock .attachList .attachLink {
+    color: #000 !important;
+}
+
+.detailBlock .detailText,
+.detailBlock .detailText ul.token-input-list-bh {
+    background-color: transparent !important;
+    border-color: #fd2e2e !important;
+}
+
+.token-input-token-bh {
+    background-color: #353535 !important;
+    border-color: transparent !important;
+}
+
+#kanbanBoard li.task:hover {
+    box-shadow: 0 1px 6px rgba(24, 205, 72, 0.85);
+}
+
+#kanbanBoard li.taskItem.active {
+    background-color: #fd2e2e !important;
+    border-color: #fd2e2e !important;
+}
+
+#kanbanBoard li.taskItem.active .task-description {
+    color: #000 !important;
+}
+
+.taskDescriptionHolder,
+.taskDescription,
+.taskDescription:focus {
+    background-color: #000;
+    border: solid #fd2e2e 1px;
+    padding: 10px;
+}
+
+.taskDescriptionHolder:hover {
+    background-color: #000;
+}
+
+#kanbanBoard li.taskItem {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#kanbanBoard li.taskItem .task-info {
+    background-color: #2a2a2a;
+}
+
+#archive .taskList .listHeading {
+    background-color: #fd2e2e !important;
+    border-color: #333 !important;
+}
+
+#archive .taskList .listHeading span {
+    background-color: #555 !important;
+    border-color: #555 !important;
+}
+
+#archive .taskList li.taskItem .taskContent {
+    background-color: #4a4a4a !important;
+    border: solid transparent 0px !important;
+}
+
+#archive .taskList li.taskItem .taskID {
+    background-color: #2a2a2a !important;
+    border: solid transparent 0px !important;
+}
+
+.button-archiveDecline {
+    background-image: none !important;
+    background-color: #1a1a1a !important;
+}
+
+span.assignee-avatar {
+    border: solid #fd2e2e 2px !important;
+}
+
+.taskDetails .taskDetailMain {
+    background-color: #2a2a2a;
+}
+
+.taskDetails .taskDetailMain .count {
+    background-color: #000;
+    border-left: solid #fd2e2e 1px;
+    border-bottom: solid #fd2e2e 1px;
+}
+
+.taskDetails,
+.taskDetailContent,
+.panelWrap.panelDetail {
+    background-color: #000;
+}
+
+.taskDetailContent td,
+.taskDetailContent th,
+.taskDetailContent .detailBlock {
+    border-bottom: solid #fd2e2e 1px !important;
+}
+
+/* task detail inputs */
+.chzn-container-single .chzn-single {
+    background-image: none;
+    background-color: transparent;
+    border: solid #fd2e2e 1px;
+}
+
+/* task comment input */
+.taskComment,
+.taskComment textarea {
+    background-color: #333;
+}
+
+.taskComment .btn {
+    background-image: none !important;
+    background-color: #000 !important;
+    margin-left: 2px;
+}
+
+.itemComment .itemContent {
+    background-color: #000;
+    margin: 5px;
+}

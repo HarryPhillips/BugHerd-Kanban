@@ -23,6 +23,9 @@
 *   + Monitor status of all components and defer kbs/loaded event until
 *     all components have finished initialising, more reliable than hard coding
 *     the event firing
+*
+*   + Allow searching of tasks by meta data such as references, browser and
+*     version etc.
 */
 
 define(
