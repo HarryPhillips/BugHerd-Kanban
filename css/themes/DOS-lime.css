@@ -23,6 +23,7 @@ body {
 .kbs-modal {
     background-color: #000;
     color: #18cd48;
+    border: solid #18cd48 1px;
 }
 
 .kbs-modal-title {
@@ -186,6 +187,17 @@ body {
 .kbs-destroy:hover {
     background-color: #000;
     color: #b82c2c;
+}
+
+.kbs-settings {
+    background-color: #18cd48;
+    color: #000;
+}
+
+.kbs-settings:hover {
+    background-color: #18cd48;
+    color: #000;
+    border-color: lime;
 }
 
 .kbs-example {

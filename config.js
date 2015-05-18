@@ -129,7 +129,8 @@ define(function () {
                     example: "plus-circle",
                     benchmark: "tachometer",
                     settings: "cogs",
-                    expand: "caret-square-o-right"
+                    expand: "caret-square-o-right",
+                    toolbarToggle: "ellipsis-h"
                 }
             }
         },
@@ -156,7 +157,8 @@ define(function () {
             close: "Close the console",
             destroy: "Destroy this console instance",
             benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings"
+            settings: "Edit Kanban settings",
+            toolbarToggle: "Toggle the toolbar position"
         }
     }).obj;
     

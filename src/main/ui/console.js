@@ -403,58 +403,76 @@ define(
                     " v" + config.version + " - " + connection);
             constitle.addChild(titlenode);
             
-            // toggle tool
-            this.createTool("toggle")
-                .element.onclick = function () {
-                    var closed = wrapper.hasClass("kbs-closed"),
-                        full = wrapper.hasClass("kbs-full");
+            // tools for console
+            if (config.logs.enabled) {
+                // console toggle state tool
+                this.createTool("toggle")
+                    .element.onclick = function () {
+                        var closed = wrapper.hasClass("kbs-closed"),
+                            full = wrapper.hasClass("kbs-full");
 
-                    // if not closed and not full screen
-                    if (!closed && !full) {
-                        // make full screen
-                        wrapper.addClass("kbs-full");
-                    }
+                        // if not closed and not full screen
+                        if (!closed && !full) {
+                            // make full screen
+                            wrapper.addClass("kbs-full");
+                        }
 
-                    // if in full screen
-                    if (full) {
-                        // shrink
-                        wrapper.removeClass("kbs-full");
-                    }
+                        // if in full screen
+                        if (full) {
+                            // shrink
+                            wrapper.removeClass("kbs-full");
+                        }
 
-                    // if closed
-                    if (closed) {
-                        // open
-                        self.open();
-                    }
-                };
+                        // if closed
+                        if (closed) {
+                            // open
+                            self.open();
+                        }
+                    };
+                
+                // save tool - only on localhost base url's
+                if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
+                    this.createTool("save").on(
+                        "click",
+                        self.save
+                    );
+                }
+                
+                // benchmark tool
+                this.createTool("benchmark").on(
+                    "click",
+                    self.benchmark
+                );
+                
+                // console destructor tool
+                this.createTool("destroy").on(
+                    "click",
+                    self.destroy
+                );
+                
+                // clear tool
+                this.createTool("clear").on(
+                    "click",
+                    self.clear
+                );
+            }
             
             // configurator tool
             configurator = new Configurator();
-            this.createTool("settings")
-                .element.onclick = configurator.launchModal;
+            this.createTool("settings").on(
+                "click",
+                configurator.launchModal
+            );
             
-            // save tool - only on localhost base url's
-            if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
-                this.createTool("save")
-                    .element.onclick = self.save;
+            // if logs enabled, add a close tool
+            if (config.logs.enabled) {
+                // close tool
+                this.createTool("close").on(
+                    "click",
+                    self.close
+                );
             }
-            
-            // benchmark tool
-            this.createTool("benchmark")
-                .element.onclick = self.benchmark;
-            
-            // destroy tool
-            this.createTool("destroy")
-                .element.onclick = self.destroy;
-
-            // clear tool
-            this.createTool("clear")
-                .element.onclick = self.clear;
-
-            // close tool
-            this.createTool("close")
-                .element.onclick = self.close;
-
+                
             // console
             wrapper.cons = cons =
                 wrapper.createChild("div", "kbs-cons");

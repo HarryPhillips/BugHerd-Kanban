@@ -45,6 +45,9 @@ define(
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
             
+            // modals api
+            this.setModalApi();
+            
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
@@ -256,6 +259,11 @@ define(
                     }
                 }
             };
+        };
+            
+        // modal api / dynamic properties
+        GUI.prototype.setModalApi = function () {
+            this.modals = Modal.prototype.getController();
         };
 
 

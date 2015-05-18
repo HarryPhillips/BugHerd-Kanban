@@ -23,6 +23,7 @@ body {
 .kbs-modal {
     background-color: #000;
     color: #fd2e2e;
+    border: solid #fd2e2e 1px;
 }
 
 .kbs-modal-title {

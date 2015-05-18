@@ -144,6 +144,11 @@ define(
             
             return obj instanceof Object;
         };
+            
+        // check if input is a function
+        Util.prototype.isFunction = function (obj) {
+            return typeof obj === "function";
+        };
         
         // checks if input is a string
         Util.prototype.isString = function (obj) {

@@ -62,7 +62,11 @@ define(
         // launch the configurator ui
         Configurator.prototype.launchModal = function () {
             // initialise the modal
-            self.modal = new Modal("userConfig", {init: true});
+            if (self.modal) {
+                self.modal.init();
+            } else {
+                self.modal = new Modal("userConfig", {init: true});
+            }
         };
 
         // finds a config setting from a selector string e.g. "gui/console/state"
