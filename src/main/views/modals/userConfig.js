@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name settings.js
+*   @name userConfig.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

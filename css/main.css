@@ -128,6 +128,17 @@
     -moz-appearance: textfield;
 }
 
+.kbs-modal.kbs-taskNotFound {
+    width: 350px;
+    height: 175px;
+    margin-top: -68px;
+    margin-left: -175px;
+}
+
+.kbs-modal.kbs-taskNotFound .kbs-modal-content {
+    text-align: center;
+}
+
 .kbs-confirm,
 .kbs-cancel {
     width: 100px; height: 30px;

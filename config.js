@@ -129,8 +129,13 @@ define(function () {
                     example: "plus-circle",
                     benchmark: "tachometer",
                     settings: "cogs",
-                    expand: "caret-square-o-right",
-                    toolbarToggle: "ellipsis-h"
+                    expand: "caret-square-o-right"
+                }
+            },
+            modals: {
+                behaviour: {
+                    closeOnOpenOfOther: true,
+                    reopenOnCloseOfOther: true
                 }
             }
         },
@@ -157,8 +162,7 @@ define(function () {
             close: "Close the console",
             destroy: "Destroy this console instance",
             benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings",
-            toolbarToggle: "Toggle the toolbar position"
+            settings: "Edit Kanban settings"
         }
     }).obj;
     

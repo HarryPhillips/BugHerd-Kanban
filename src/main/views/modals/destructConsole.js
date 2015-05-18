@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name prompt.js
+*   @name destructConsole.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

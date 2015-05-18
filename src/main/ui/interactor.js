@@ -275,10 +275,22 @@ define(
                             errMsg
                         );
                         
-                        errModal = new Modal("small", {
+                        errModal = new Modal("taskNotFound", {
                             init: true,
-                            title: "Task search failed!",
-                            message: errMsg
+                            id: localId,
+                            confirm: function () {
+                                // close the err modal
+                                errModal.close();
+                                
+                                // re-open search task
+                                errModal
+                                    .getController()
+                                    .getModalByName("searchTask")
+                                    .open();
+                            },
+                            cancel: function () {
+                                errModal.close();
+                            }
                         });
                     }
                 });
@@ -319,7 +331,37 @@ define(
             
             return localId;
         };
-
+            
+        // find/filter tasks by meta data
+        Interactor.prototype.findTaskFromMetadata = function (title, content) {
+            
+        };
+            
+        // return all tasks for the current project in all boards
+        Interactor.prototype.getAllTasks = function () {
+            var tasks = [];
+            
+            // navigate to the triage
+            
+            return tasks;
+        };
+            
+        // navigate the ui to a specified task board
+        Interactor.prototype.navigateTo = function (board) {
+            var nav = $("#nav-" + board.toLowerCase());
+            
+            // make sure is valid view
+            if (nav.length) {
+                nav.trigger("click");
+            } else {
+                util.log(
+                    "context:interactor",
+                    "error",
+                    "Failed to navigate to: '" + board + "'"
+                );
+            }
+        };
+            
         // return current hash
         Interactor.prototype.getHash = function () {
             return window.location.hash;
@@ -415,7 +457,7 @@ define(
                                 return;
                             }
                             
-                            taskSearch.destroy();
+                            taskSearch.close();
                             self.openTask(localId);
                         }
                     });

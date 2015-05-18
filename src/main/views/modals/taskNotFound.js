@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name searchTask.js
+*   @name taskNotFound.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -20,21 +20,30 @@ define(
             var node = new Node("div", "kbs-view"),
                 gui = args[0],
                 modal = args[1],
-                input,
-                go;
+                id = modal.params.id || "null";
             
             // modal text
-            node.title = "Search for a task";
-            node.text("Enter a task id to search for:");
+            node.title = "Task Not Found";
             
-            // components
-            input = node.createChild("input", "kbs-input-field")
-                .attr("type", "number");
+            // message
+            node
+                .createChild("p")
+                .text("Couldn't find task #" + id + "!");
             
-            go = node.createChild("div", "kbs-continue")
-                .text("Go")
+            // confirm
+            node
+                .createChild("span", "kbs-confirm")
+                .text("search again")
                 .on("click", function () {
-                    modal.onProceed(input.text());
+                    modal.onConfirm();
+                });
+            
+            // cancel
+            node
+                .createChild("span", "kbs-cancel")
+                .text("close")
+                .on("click", function () {
+                    modal.onCancel();
                 });
             
             return node;

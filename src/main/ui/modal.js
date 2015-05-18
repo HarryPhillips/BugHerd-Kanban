@@ -8,8 +8,11 @@
 
 /*
 *   TODO
-*   + Rewrite to incorporate a ModalController similar to how
-*     XipePanels was written.
+*   + Incorporate a config object to modify how modals react to
+*     multiple modals at once.
+*     (e.g. Auto-closing a modal on opening
+*     of another, moving modals around the screen to show more than
+*     one at a time perhaps?)
 */
 
 define(
@@ -173,7 +176,9 @@ define(
             // view element
             this.view = null;
             
-            // setup externally exposed methods
+            // this should fix the 'this' refs
+            // for when our methods are called
+            // by external modules
             this.init = this.rInit.bind(this);
             this.open = this.rOpen.bind(this);
             this.close = this.rClose.bind(this);
@@ -252,12 +257,15 @@ define(
         // handler/listener application for modal
         Modal.prototype.applyHandlers = function () {
             var
+                // instance ref
+                self = this,
+            
                 // error handler
                 err = function (event) {
                     // warning
                     util.log(
                         "warn",
-                        "Modal '" + this.viewName + "' " +
+                        "Modal '" + self.viewName + "' " +
                             "event '" + event + "' " +
                             "ran but didn't have a handler!"
                     );
@@ -331,7 +339,7 @@ define(
             ctrl.removeModal(this);
             
             // publish destroy event
-            events.publish("gui/modal/destroy");
+            events.publish("gui/modal/destruct");
         };
         
         // set gui instance
