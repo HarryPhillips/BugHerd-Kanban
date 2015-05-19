@@ -342,8 +342,6 @@ define(
         Interactor.prototype.getAllTasks = function () {
             var tasks = [];
             
-            // navigate to the triage
-            
             return tasks;
         };
             

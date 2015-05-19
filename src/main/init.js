@@ -27,6 +27,9 @@
 *   + Allow searching of tasks by meta data such as references, browser and
 *     version etc. Maybe allowing pulling into a local file?? Would require
 *     local sourcing... possibly.
+*
+*   + Just discovered a very in-depth and exposed API under window.bugherd
+*     this opens up a LOT of possibilities...
 */
 
 define(
@@ -39,6 +42,7 @@ define(
         'main/components/cache',
         'main/components/http',
         'main/components/configurator',
+        'main/components/bugherd',
         'main/ui/gui',
         'test/main.test'
     ],
@@ -51,13 +55,14 @@ define(
         cache,
         http,
         Configurator,
+        BugHerd,
         GUI,
         tests
     ) {
         'use strict';
 
         // components
-        var kanban, end, gui, interactor, settings;
+        var kanban, end, gui, interactor, settings, bugherd;
 
         // get a new configurator and load data
         settings = new Configurator();
@@ -82,6 +87,10 @@ define(
         if (config.interactor.enabled) {
             interactor = new Interactor(gui);
         }
+            
+        // initialise the bugherd api wrapper
+        bugherd = new BugHerd();
+        bugherd.init();
             
         // execute kanban
         end = function () {
