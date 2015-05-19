@@ -30,6 +30,9 @@
 *
 *   + Just discovered a very in-depth and exposed API under window.bugherd
 *     this opens up a LOT of possibilities...
+*
+*   + Possibly add more info about the task to expanded details? Such as
+*     the last updated at and update by etc?
 */
 
 define(
