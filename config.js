@@ -133,6 +133,9 @@ define(function () {
                     settings: "cogs",
                     expand: "caret-square-o-right",
                     toggleObjs: "list-alt"
+                },
+                benchmark: {
+                    amount: 10000
                 }
             },
             modals: {
