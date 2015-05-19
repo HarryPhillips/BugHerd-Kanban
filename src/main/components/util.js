@@ -31,6 +31,17 @@ define(
         // set instance for internal references
         var util = new Util(),
             instance;
+            
+        // refresh/reload the page
+        Util.prototype.refresh = function (delay) {
+            if (typeof delay !== "undefined") {
+                setTimeout(function () {
+                    location.reload();
+                }, delay);
+            } else {
+                location.reload();
+            }
+        };
         
         // amend zeros to a number until a length is met
         Util.prototype.zerofy = function (num, len) {
@@ -172,6 +183,24 @@ define(
                 return false;
             }
             return typeof obj === "boolean";
+        };
+            
+        // capitilise the first letter of every word in string
+        // doesn't support multiple whitespaces currently
+        Util.prototype.capitilise = function (string) {
+            var words = string.split(" "),
+                len = words.length,
+                i = 0,
+                ch;
+            
+            // make every word capitilised
+            for (i; i < len; i += 1) {
+                ch = words[i].charAt(0).toUpperCase();
+                words[i] = ch + words[i].slice(1);
+            }
+            
+            // return words separated by one space
+            return words.join(" ");
         };
 
         // returns true or the index
@@ -807,6 +836,11 @@ define(
         Util.prototype.log.clearContext = function (context) {
             events.publish("gui/contexts/clear", context);
         };
+            
+        // logging aliases
+        Util.prototype.debug = function () {};
+        Util.prototype.warn = function () {};
+        Util.prototype.error = function () {};
         
         // create instance
         instance = new Util();

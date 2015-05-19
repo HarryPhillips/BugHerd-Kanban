@@ -31,6 +31,11 @@ define(
             return data || {};
         };
         
+        // get user config object string
+        Configurator.prototype.getUserCookie = function () {
+            return util.cookie.get("settings");
+        };
+        
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
             var data = this.getUserData(),
@@ -128,7 +133,7 @@ define(
                 
                 // build tree for merging with config
                 if (i !== len - 1) {
-                    tree[segments[i]] = {};
+                    tree[segments[i]] = tree[segments[i]] || {};
                     tree = tree[segments[i]];
                 } else {
                     tree[segments[i]] = value;

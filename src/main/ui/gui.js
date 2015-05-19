@@ -94,6 +94,9 @@ define(
 
                     // run event listeners
                     self.runEventListeners();
+                    
+                    // attach wallpaper
+                    self.loadWallpaper();
 
                     // publish the loaded event
                     events.publish("kbs/loaded");
@@ -215,6 +218,16 @@ define(
                 node = new Node(themelink);
             
             node.attr("href", "");
+        };
+            
+        // load wallpaper
+        GUI.prototype.loadWallpaper = function (url) {
+            var el = new Node(document.getElementById("kanbanBoard"));
+            
+            url = url || config.gui.wallpaper;
+            url = "url('" + url + "')";
+            
+            el.css("background-image", url);
         };
 
         // build gui node tree

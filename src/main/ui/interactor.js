@@ -221,6 +221,7 @@ define(
                     setTimeout(function () {
                         // clear search field
                         $("div.VS-icon:nth-child(4)").trigger("click");
+                        document.activeElement.blur();
                     }, 1000);
                 }, 500);
             });
@@ -491,6 +492,27 @@ define(
                     self.expandTaskDetails();
                 }
             });
+            
+            // on document mouse move - apply parallax to wallpaper
+            // if there is one
+            if (config.gui.wallpaper && config.gui.parallax) {
+                var move = false,
+                    frame = setInterval(function () {
+                        move = (move) ? false : true;
+                    }, 32);
+                
+                $("body").on("mousemove", function (event) {
+                    if (move) {
+                        var deltaX = -(event.pageX / 10),
+                            deltaY = -(event.pageY / 10);
+
+                        $("#kanbanBoard").css(
+                            "background-position",
+                            deltaX + "px " + deltaY + "px"
+                        );
+                    }
+                });
+            }
         };
 
         // apply new styling to bugherd ui
@@ -499,12 +521,15 @@ define(
                 "context:inter/init",
                 "+ applying styles to bugherd"
             );
+            
+            // apply wallpaper
+            $(".pane-center .pane-content").css("background-image", config.gui.wallpaper);
 
             // add a margin to user nav to accompany console controls
             $(".nav.user-menu").css("margin-right", "10px");
             
             // overhaul theme specifics
-            if (gui.getThemeName() === "overhaul") {
+            if (gui.getThemeName().indexOf("DOS") !== -1) {
                 // change VS search icon to use fa
                 $(".VS-icon-search").append("<i class=\"fa fa-search\"></i>");
                 $(".VS-icon-search").css("top", "8px");

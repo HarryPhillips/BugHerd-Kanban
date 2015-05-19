@@ -8,9 +8,11 @@
 
 define(
     [
+        'main/components/util',
         'main/components/node'
     ],
     function (
+        util,
         Node
     ) {
         'use strict';

@@ -117,6 +117,8 @@ define(function () {
         gui: {
             enabled: true,
             autorefresh: true,
+            wallpaper: "",
+            parallax: false,
             console: {
                 state: "kbs-closed",
                 autoscroll: true,

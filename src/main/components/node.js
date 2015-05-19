@@ -148,6 +148,26 @@ define(
             this.element.className = classes;
         };
         
+        // css rule changes
+        Node.prototype.css = function (rule, property) {
+            var rules = rule.split("-"),
+                i;
+            
+            // if more than one piece to rule name
+            if (rules.length > 1) {
+                // capitilise names after first name
+                for (i = 1; i < rules.length; i += 1) {
+                    rules[i] = util.capitilise(rules[i]);
+                }
+            }
+            
+            // join to form new rule
+            rule = rules.join("");
+            
+            // set 
+            this.element.style[rule] = property;
+        };
+        
         // get parent node
         Node.prototype.parent = function () {
             return this.element.parentNode;

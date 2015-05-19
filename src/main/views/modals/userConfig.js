@@ -50,6 +50,31 @@ define(
                     config.get("theme")
                 ));
                 
+                // wallpaper
+                node.addChild(new Field(
+                    "Wallpaper:",
+                    "text",
+                    function (url) {
+                        // set wallpaper config
+                        config.set("gui/wallpaper", url);
+                        
+                        // load the new wallpaper
+                        gui.loadWallpaper(url);
+                    },
+                    config.get("gui/wallpaper")
+                ));
+                
+                // enable/disable parallax
+                node.addChild(new Field(
+                    "Enable Parallax:",
+                    "checkbox",
+                    function (value, refresh) {
+                        config.set("gui/parallax", value);
+                        util.refresh(200);
+                    },
+                    config.get("gui/parallax")
+                ));
+                
                 // console state
                 node.addChild(new Field(
                     "Console State on Load:",
@@ -73,6 +98,7 @@ define(
                     function (value) {
                         // enable/disable logging
                         config.set("logs/enabled", value);
+                        util.refresh(200);
                     },
                     config.get("logs/enabled")
                 ));
@@ -82,6 +108,13 @@ define(
                     .text("Reset Settings")
                     .on("click", function () {
                         config.reset();
+                    });
+                
+                // show data button
+                node.createChild("span", "kbs-confirm")
+                    .text("Show Data")
+                    .on("click", function () {
+                        window.alert(config.getUserCookie());
                     });
 
                 return node;
