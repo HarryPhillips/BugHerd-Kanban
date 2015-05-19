@@ -274,6 +274,20 @@ define(
             var cons = self.wrapper.cons.element;
             cons.scrollTop = cons.scrollHeight;
         };
+            
+        // toggle object logs
+        Console.prototype.toggleObjectLogs = function () {
+            var objs = document.querySelectorAll(".kbs-object"),
+                displayed,
+                len = objs.length,
+                i = 0;
+
+            // hide the nodes
+            for (i; i < len; i += 1) {
+                displayed = objs[i].style.display !== "none";
+                objs[i].style.display = (displayed) ? "none" : "block";
+            }
+        };
          
         // clear output
         Console.prototype.clear = function () {
@@ -444,6 +458,12 @@ define(
                     self.benchmark
                 );
                 
+                // toggle object log tool
+                this.createTool("toggleObjs").on(
+                    "click",
+                    self.toggleObjectLogs
+                );
+                
                 // console destructor tool
                 this.createTool("destroy").on(
                     "click",
@@ -494,7 +514,7 @@ define(
         Console.prototype.benchmark = function () {
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
-                amount = 10000,
+                amount = config.gui.console.benchmark.amount,
                 start = new Date().getTime(),
                 deltaTime,
                 deltaSpeed,
