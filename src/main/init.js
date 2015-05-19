@@ -8,13 +8,11 @@
 
 /*
 *   TODO
-*   + Add ability to set wallpapers (style/theme engine?)
-*
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
 *   + A place for Kanban tools? Not attached to the console toolbar?
 *
-*   + Add a repository component for storing instances of Kanban objects,
+*   + Add a repository/deposit component for storing instances of Kanban objects,
 *     making them globally accessible within Kanban. Should remove the
 *     need to pass instances between function calls.
 *
@@ -22,7 +20,7 @@
 *
 *   + Monitor status of all components and defer kbs/loaded event until
 *     all components have finished initialising, more reliable than hard coding
-*     the event fire
+*     the event fire (maybe combine with the repository/deposit component?)
 *
 *   + Allow searching of tasks by meta data such as references, browser and
 *     version etc. Maybe allowing pulling into a local file?? Would require
