@@ -35,7 +35,7 @@ define(
                 .createChild("span", "kbs-confirm")
                 .text("search again")
                 .on("click", function () {
-                    modal.onConfirm();
+                    modal.trigger("confirm");
                 });
             
             // cancel
@@ -43,7 +43,7 @@ define(
                 .createChild("span", "kbs-cancel")
                 .text("close")
                 .on("click", function () {
-                    modal.onCancel();
+                    modal.trigger("cancel");
                 });
             
             return node;

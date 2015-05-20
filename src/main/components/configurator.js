@@ -36,6 +36,11 @@ define(
             return util.cookie.get("settings");
         };
         
+        // get formatted user config object string
+        Configurator.prototype.getFormattedUserCookie = function () {
+            return JSON.stringify(modded, null, 4);
+        };
+        
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
             var data = this.getUserData(),

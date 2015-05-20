@@ -43,6 +43,7 @@ define(
         'main/components/cache',
         'main/components/http',
         'main/components/configurator',
+        'main/components/repository',
         'main/components/bugherd',
         'main/ui/gui',
         'test/main.test'
@@ -55,6 +56,7 @@ define(
         status,
         cache,
         http,
+        repo,
         Configurator,
         BugHerd,
         GUI,
@@ -90,7 +92,7 @@ define(
         }
             
         // initialise the bugherd api wrapper
-        bugherd = new BugHerd();
+        bugherd = new BugHerd(interactor, gui);
         bugherd.init();
             
         // execute kanban
@@ -140,7 +142,8 @@ define(
             http: http,
             util: util,
             gui: gui,
-            configurator: settings
+            configurator: settings,
+            repo: repo
         };
 
         // wait for kbs loaded event

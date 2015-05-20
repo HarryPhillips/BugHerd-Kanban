@@ -118,7 +118,10 @@ define(function () {
             enabled: true,
             autorefresh: true,
             wallpaper: "",
-            parallax: false,
+            parallax: {
+                enabled: false,
+                factor: 100
+            },
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
@@ -140,8 +143,7 @@ define(function () {
             },
             modals: {
                 behaviour: {
-                    closeOnOpenOfOther: true,
-                    reopenOnCloseOfOther: true
+                    modalHopping: true
                 }
             }
         },

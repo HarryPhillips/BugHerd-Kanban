@@ -99,6 +99,19 @@ define(
 
             return result;
         };
+            
+        // run a series/array of functions
+        Util.prototype.execAll = function (array, data) {
+            var i = 0,
+                len = array.length;
+            
+            // loop and run if a function is found
+            for (i; i < len; i += 1) {
+                if (util.isFunction(array[i])) {
+                    array[i](data);
+                }
+            }
+        };
         
         // cookie lib
         Util.prototype.cookie = new Cookies();

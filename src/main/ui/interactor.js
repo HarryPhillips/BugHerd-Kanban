@@ -43,6 +43,8 @@ define(
             self = this;
             gui = instance;
             
+            this.activeTask = null;
+            
             // initialise
             this.init();
         }
@@ -106,6 +108,8 @@ define(
                 "Opening task #" + localId + "..."
             );
             
+            this.activeTask = localId;
+            
             if (typeof localId === "undefined") {
                 this.expandTaskDetails();
                 return;
@@ -133,6 +137,9 @@ define(
             if (status.interactor.taskDetailsExpanded) {
                 return;
             }
+            
+            this.activeTask = this.findLocalIdFromDetails();
+            util.log("context:interactor", "active task: #" + this.activeTask);
             
             // show overlay
             $(".kbs-overlay").show();
@@ -162,6 +169,8 @@ define(
             if (!status.interactor.taskDetailsExpanded) {
                 return;
             }
+            
+            this.activeTask = null;
             
             // hide elements
             task.removeClass("kbs-details-expand");
@@ -313,7 +322,7 @@ define(
             
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
-            $("#task_" + globalId).find(".task-id, .taskID").text();
+            return $("#task_" + globalId).find(".task-id, .taskID").text();
         };
             
             
@@ -333,16 +342,12 @@ define(
             return localId;
         };
             
-        // find/filter tasks by meta data
-        Interactor.prototype.findTaskFromMetadata = function (title, content) {
+        // find a local task id from task details
+        Interactor.prototype.findLocalIdFromDetails = function () {
+            var parent = $(".taskDetails"),
+                localId = parent.find(".local_task_id");
             
-        };
-            
-        // return all tasks for the current project in all boards
-        Interactor.prototype.getAllTasks = function () {
-            var tasks = [];
-            
-            return tasks;
+            return localId.text() || localId.val();
         };
             
         // navigate the ui to a specified task board
@@ -493,16 +498,19 @@ define(
             
             // on document mouse move - apply parallax to wallpaper
             // if there is one
-            if (config.gui.wallpaper && config.gui.parallax) {
+            if (config.gui.wallpaper && config.gui.parallax.enabled) {
                 var move = false,
                     frame = setInterval(function () {
                         move = (move) ? false : true;
-                    }, 32);
+                    }, 32),
+                    fc;
                 
                 $("body").on("mousemove", function (event) {
+                    fc = config.gui.parallax.factor;
+                    
                     if (move) {
-                        var deltaX = -(event.pageX / 10),
-                            deltaY = -(event.pageY / 10);
+                        var deltaX = -(event.pageX / fc),
+                            deltaY = -(event.pageY / fc);
 
                         $("#kanbanBoard").css(
                             "background-position",
@@ -546,8 +554,8 @@ define(
             );
             util.log(
                 "context:interactor",
-                "info",
-                "Interactor log output..."
+                "buffer",
+                "log-buffer: INTERACTOR"
             );
         };
             
@@ -562,7 +570,7 @@ define(
                 href = window.location.href,
                 hashId;
             
-            util.log("context:hash", "info", "Hash events...");
+            util.log("context:hash", "buffer", "log-buffer: HASH");
             
             // open task if hash is prefixed
             // or suffixed with a task

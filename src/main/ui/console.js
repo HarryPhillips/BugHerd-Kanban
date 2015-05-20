@@ -228,8 +228,8 @@ define(
                 self.createContext(doCreateContext, log.element);
             }
 
-            // refresh
-            self.refresh();
+            // scroll to log
+            self.scrollToElement(log.element);
         };
         
         // create toolbar widget
@@ -268,11 +268,11 @@ define(
             self.wrapper.addClass("kbs-closed");
         };
         
-        // refresh console
-        Console.prototype.refresh = function () {
-            // scroll to bottom of console
+        // scrolls to an element inside the console
+        Console.prototype.scrollToElement = function (element) {
+            // scroll to element in console
             var cons = self.wrapper.cons.element;
-            cons.scrollTop = cons.scrollHeight;
+            cons.scrollTop = element.offsetTop;
         };
             
         // toggle object logs
@@ -350,15 +350,12 @@ define(
         Console.prototype.destroy = function () {
             var
                 modalTitle = "Destroy the Console instance?",
-                
-                modalMsg = "Confirm destruction of the GUI Console? " +
-                "(irreversible until refresh).",
-                
+                modalMsg = "Confirm destruction of the GUI Console? ",
                 modal = new Modal("destructConsole", {
                     init: true,
                     confirm: function () {
-                        var parent = self.wrapper.parent(),
-                            child = self.wrapper.element;
+                        var parent = self.wrapper.cons.parent(),
+                            child = self.wrapper.cons.element;
                         
                         // destroy console node
                         parent.removeChild(child);
@@ -368,6 +365,9 @@ define(
                         
                         // clear the log buffer
                         cache.console.clearBuffer();
+                        
+                        // add disabled class to cons-box
+                        self.wrapper.addClass("kbs-disabled");
                         
                         // destroy the modal
                         modal.destroy();

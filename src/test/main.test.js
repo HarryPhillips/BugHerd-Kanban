@@ -36,7 +36,7 @@ define(
             );
 
             // run
-            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
+            require([window.KBS_BASE_URL + "src/test/" + test + ".test.js"]);
         };
 
         // executes all tests in the configured modules array

@@ -12,14 +12,16 @@ define(
         'main/components/node',
         'main/components/view',
         'main/components/field',
-        'main/components/configurator'
+        'main/components/configurator',
+        'main/ui/modal'
     ],
     function (
         util,
         Node,
         View,
         Field,
-        Configurator
+        Configurator,
+        Modal
     ) {
         'use strict';
         
@@ -65,15 +67,28 @@ define(
                 ));
                 
                 // enable/disable parallax
-                node.addChild(new Field(
-                    "Enable Parallax:",
-                    "checkbox",
-                    function (value, refresh) {
-                        config.set("gui/parallax", value);
-                        util.refresh(200);
-                    },
-                    config.get("gui/parallax")
-                ));
+                if (config.get("gui/wallpaper")) {
+                    // shown only if a wallpaper is present
+                    node.addChild(new Field(
+                        "Enable Parallax:",
+                        "checkbox",
+                        function (value) {
+                            config.set("gui/parallax/enabled", value);
+                            util.refresh(200);
+                        },
+                        config.get("gui/parallax/enabled")
+                    ));
+                    
+                    if (config.get("gui/parallax/enabled")) {
+                        node.addChild(new Field(
+                            "Parallax Factor:",
+                            "number",
+                            function (value) {
+                                config.set("gui/parallax/factor", value);
+                            }
+                        ));
+                    }
+                }
                 
                 // console state
                 node.addChild(new Field(
@@ -103,6 +118,16 @@ define(
                     config.get("logs/enabled")
                 ));
                 
+                // console object logs to buffer
+                node.addChild(new Field(
+                    "Log Objects to Buffer:",
+                    "checkbox",
+                    function (value) {
+                        config.set("logs/obj2buffer", value);
+                    },
+                    config.get("logs/obj2buffer")
+                ));
+                
                 // reset config button
                 node.createChild("span", "kbs-confirm")
                     .text("Reset Settings")
@@ -114,7 +139,8 @@ define(
                 node.createChild("span", "kbs-confirm")
                     .text("Show Data")
                     .on("click", function () {
-                        window.alert(config.getUserCookie());
+                        // log and show user data
+                        var modal = new Modal("userData");
                     });
 
                 return node;

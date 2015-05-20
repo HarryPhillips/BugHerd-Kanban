@@ -34,7 +34,7 @@ define(
             go = node.createChild("div", "kbs-continue")
                 .text("Go")
                 .on("click", function () {
-                    modal.onProceed(input.text());
+                    modal.trigger("proceed", input.text());
                 });
             
             return node;
