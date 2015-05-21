@@ -37,29 +37,29 @@ define(
     [
         'config',
         'main/components/util',
-        'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',
+        'main/components/repository',
         'main/components/http',
         'main/components/configurator',
-        'main/components/repository',
         'main/components/bugherd',
         'main/ui/gui',
+        'main/ui/interactor',
         'test/main.test'
     ],
-    function (
+    function KanbanInitialise(
         config,
         util,
-        Interactor,
         events,
         status,
         cache,
-        http,
         repo,
+        Http,
         Configurator,
         BugHerd,
         GUI,
+        Interactor,
         tests
     ) {
         'use strict';
@@ -67,35 +67,8 @@ define(
         // components
         var kanban, end, gui, interactor, settings, bugherd;
 
-        // get a new configurator and load data
-        settings = new Configurator();
-        settings.loadExisting();
-            
-        // check if disabled
-        if (!config.enabled) {
-            return;
-        }
-
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
-        });
-
-        // initialise gui first so log buffer is constructed
-        if (config.gui.enabled) {
-            gui = new GUI();
-        }
-
-        // initialise interactor
-        if (config.interactor.enabled) {
-            interactor = new Interactor(gui);
-        }
-            
-        // initialise the bugherd api wrapper
-        bugherd = new BugHerd(interactor, gui);
-        bugherd.init();
-            
-        // execute kanban
+        /* end of init call
+        ------------------------------------------------------*/
         end = function () {
             // get performance delta
             window.KBS_DELTA_TIME =
@@ -130,6 +103,83 @@ define(
                 tests.execAll();
             }
         };
+            
+        /* initialise
+        ------------------------------------------------------*/
+        // wait for kbs loaded event
+        events.subscribe("kbs/loaded", end);
+            
+        // get a new configurator and load data
+        try {
+            settings = new Configurator();
+            settings.loadExisting();
+        } catch (configuratorException) {
+            util.log(
+                "error",
+                "Configurator failed to initialise " +
+                    " cleanly. Exception thrown in " +
+                    configuratorException.fileName + " at line " +
+                    configuratorException.lineNumber + ". Error: " +
+                    configuratorException.message
+            );
+        }
+
+        // check if disabled
+        if (!config.enabled) {
+            return;
+        }
+
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
+        });
+
+        // initialise gui first so log buffer is constructed
+        try {
+            if (config.gui.enabled) {
+                gui = new GUI();
+            }
+        } catch (guiException) {
+            util.log(
+                "error",
+                "GUI failed to initialise " +
+                    " cleanly. Exception thrown in " +
+                    guiException.fileName + " at line " +
+                    guiException.lineNumber + ". Error: " +
+                    guiException.message
+            );
+        }
+
+        // initialise interactor
+        try {
+            if (config.interactor.enabled) {
+                interactor = new Interactor(gui);
+            }
+        } catch (interactorException) {
+            util.log(
+                "error",
+                "Interactor failed to initialise " +
+                    " cleanly. Exception thrown in " +
+                    interactorException.fileName + " at line " +
+                    interactorException.lineNumber + ". Error: " +
+                    interactorException.message
+            );
+        }
+            
+        // initialise the bugherd api wrapper
+        try {
+            bugherd = new BugHerd(interactor, gui);
+            bugherd.init();
+        } catch (bugherdException) {
+            util.log(
+                "error",
+                "BugHerd API failed to initialise " +
+                    " cleanly. Exception thrown in " +
+                    bugherdException.fileName + " at line " +
+                    bugherdException.lineNumber + ". Error: " +
+                    bugherdException.message
+            );
+        }
 
         // kbs data/api object
         kanban = {
@@ -139,14 +189,17 @@ define(
             cache: cache,
             config: config,
             events: events,
-            http: http,
             util: util,
             gui: gui,
             configurator: settings,
-            repo: repo
+            repo: repo,
+            Api: {
+                "Configurator": Configurator,
+                "Interactor": Interactor,
+                "GUI": GUI,
+                "BugHerd": BugHerd,
+                "Http": Http
+            }
         };
-
-        // wait for kbs loaded event
-        events.subscribe("kbs/loaded", end);
     }
 );

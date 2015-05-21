@@ -105,7 +105,7 @@ define(function () {
 //        offline: true,
         httpToken: "Fw43Iueh87aw7",
         theme: "default",
-//        test: true,
+        test: false,
         logs: {
             enabled: true,
             gui: true,

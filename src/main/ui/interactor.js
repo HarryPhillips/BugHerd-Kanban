@@ -78,9 +78,6 @@ define(
             this.applyContext();
             this.applyHash();
             
-            // begin observing
-            this.observe();
-            
             inited = true;
         };
             
@@ -400,37 +397,6 @@ define(
 
             if (hashId) {
                 this.openTask(hashId);
-            }
-        };
-            
-        // mutation observer, listen for creation of tasks
-        Interactor.prototype.observe = function () {
-            util.log("context:inter/init", "+ observing...");
-            
-            var
-                // observer instance
-                observer = new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                        util.log(
-                            "context:interactor",
-                            mutation
-                        );
-                    });
-                }),
-                
-                // observer config
-                observerSettings = {
-                    attributes: true,
-                    childList: true,
-                    characterData: true
-                },
-                
-                // target element
-                target = document.querySelector(".task");
-            
-            // begin observing
-            if (config.interactor.observe) {
-                observer.observe(target, observerSettings);
             }
         };
 

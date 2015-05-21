@@ -33,7 +33,8 @@ define(
             view = new View(function (args) {
                 var node = new Node("div", "kbs-view"),
                     gui = args[0],
-                    modal = args[1];
+                    modal = args[1],
+                    defFilter;
 
                 // modal text
                 node.title = "Kanban Settings";
@@ -118,14 +119,59 @@ define(
                     config.get("logs/enabled")
                 ));
                 
-                // console object logs to buffer
+                // console log filter
+                if (config.get("logs/enabled")) {
+                    // console log filter
+                    defFilter = config.get("logs/filter");
+                    
+                    // filter is array
+                    if (util.isArray(defFilter)) {
+                        defFilter = defFilter.join(", ");
+                    }
+
+                    // no filter
+                    if (!defFilter) {
+                        defFilter = "";
+                    }
+                    
+                    node.addChild(new Field(
+                        "Log Filter:",
+                        "text",
+                        function (value) {
+                            var i = 0,
+                                len;
+                            
+                            // get array of filter values
+                            value = value.replace(/\s/g, "");
+                            value = value.split(",");
+                            len = value.length;
+                            
+                            // set filter
+                            config.set("logs/filter", value);
+                        },
+                        defFilter
+                    ));
+                    
+                    // console object logs to buffer
+                    node.addChild(new Field(
+                        "Log Objects to Buffer:",
+                        "checkbox",
+                        function (value) {
+                            config.set("logs/obj2buffer", value);
+                        },
+                        config.get("logs/obj2buffer")
+                    ));
+                }
+                
+                // app tests
                 node.addChild(new Field(
-                    "Log Objects to Buffer:",
+                    "Tests:",
                     "checkbox",
                     function (value) {
-                        config.set("logs/obj2buffer", value);
+                        config.set("test");
+                        util.refresh(200);
                     },
-                    config.get("logs/obj2buffer")
+                    config.get("test")
                 ));
                 
                 // reset config button

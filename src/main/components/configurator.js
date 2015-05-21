@@ -21,6 +21,7 @@ define(
         function Configurator() {
             self = this;
             this.modal = null;
+            this.launchModal = this.rLaunchModal.bind(this);
         }
         
         // get user config object from cookie
@@ -70,12 +71,12 @@ define(
         };
         
         // launch the configurator ui
-        Configurator.prototype.launchModal = function () {
+        Configurator.prototype.rLaunchModal = function () {
             // initialise the modal
-            if (self.modal) {
-                self.modal.init();
+            if (this.modal) {
+                this.modal.init();
             } else {
-                self.modal = new Modal("userConfig", {init: true});
+                this.modal = new Modal("userConfig", {init: true});
             }
         };
 

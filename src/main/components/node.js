@@ -14,7 +14,7 @@ define(
         // node constructor
         function Node(type, classes, id) {
             // check if passed an HTML node
-            if (typeof type.appendChild !== "undefined") {
+            if (util.isDomElement(type)) {
                 this.element = type;
             } else {
                 // set props
@@ -208,6 +208,21 @@ define(
             this.element = null;
         };
         
+        // find a child element within our element tree
+        Node.prototype.find = function (selector) {
+            var nodeList = this.element.querySelectorAll(":scope > " + selector),
+                len = nodeList.length,
+                results = [],
+                i = 0;
+            
+            // convert to node
+            for (i; i < len; i += 1) {
+                results.push(new Node(nodeList[i]));
+            }
+            
+            return results;
+        };
+        
         // clone node instance and return
         Node.prototype.clone = function () {
             var clone = new Node(
@@ -240,10 +255,15 @@ define(
         };
         
         // write or return node text
-        Node.prototype.text = function (text) {
+        Node.prototype.text = function (text, clear) {
             if (typeof text === "undefined") {
                 return this.element.textContent
                     || this.element.value;
+            }
+            
+            if (clear) {
+                this.element.textContent = "";
+                this.element.value = "";
             }
             
             text = document.createTextNode(text);

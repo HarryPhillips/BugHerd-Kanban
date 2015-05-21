@@ -33,7 +33,8 @@ define(
             view = new View(function (args) {
                 var node = new Node("div", "kbs-view"),
                     gui = args[0],
-                    modal = args[1];
+                    modal = args[1],
+                    dataNode;
 
                 // modal title
                 node.title = "Raw User Config Data";
@@ -43,8 +44,13 @@ define(
                     .text("User configuration settings in JSON format:");
                 
                 // formatted cookie string
-                node.createChild("pre")
+                dataNode = node.createChild("pre")
                     .text(config.getFormattedUserCookie());
+                
+                // reload data on open
+                modal.on("open", function () {
+                    dataNode.text(config.getFormattedUserCookie(), true);
+                });
                 
                 return node;
             });
