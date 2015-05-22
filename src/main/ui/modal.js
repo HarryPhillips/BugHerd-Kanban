@@ -302,6 +302,11 @@ define(
             var self = this,
                 view;
             
+            // return if already loaded
+            if (this.loaded) {
+                return;
+            }
+            
             // make sure can't load twice!
             this.loaded = true;
             
@@ -325,6 +330,15 @@ define(
                     }
                 }
             );
+        };
+        
+        // reload modal a modals content
+        Modal.prototype.reload = function () {
+            var fn = (this.inited) ? this.init : function () {};
+            this.node.clear();
+            this.loaded = false;
+            this.inited = false;
+            this.load(fn);
         };
         
         // attach an event handler to modal
@@ -485,8 +499,9 @@ define(
                 this.rClose();
             }
             
-            // reset inited flag
+            // reset flags
             this.inited = false;
+            this.loaded = false;
             
             // remove from ctrl modal array
             ctrl.removeModal(this);

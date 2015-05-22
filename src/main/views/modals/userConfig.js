@@ -39,6 +39,16 @@ define(
                 // modal text
                 node.title = "Kanban Settings";
 
+                // open tasks on click setting
+                node.addChild(new Field(
+                    "Open Task on Click:",
+                    "checkbox",
+                    function (value) {
+                        config.set("interactor/expandOnclick", value);
+                    },
+                    config.get("interactor/expandOnclick")
+                ));
+                
                 // theme
                 node.addChild(new Field(
                     "Theme:",
@@ -188,6 +198,17 @@ define(
                         // log and show user data
                         var modal = new Modal("userData");
                     });
+                
+                // restore console
+                if (config.get("gui/console/destroyed")) {
+                    node.createChild("span", "kbs-confirm")
+                        .text("Restore Console")
+                        .on("click", function () {
+                            gui.console.restore();
+                            config.set("gui/console/destroyed", false);
+                            modal.reload();
+                        });
+                }
 
                 return node;
             });

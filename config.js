@@ -125,6 +125,7 @@ define(function () {
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
+                destroyed: false,
                 icons: {
                     save: "file-text",
                     clear: "trash",
@@ -149,7 +150,8 @@ define(function () {
         },
         interactor: {
             enabled: true,
-            observe: false
+            observe: false,
+            expandOnclick: true
         },
         events: {
             silent: false

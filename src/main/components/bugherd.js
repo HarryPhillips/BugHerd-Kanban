@@ -8,6 +8,14 @@
 
 /*jslint nomen: true*/
 
+/*
+*   TODO:
+*   + When setting the severity styles, store the class in cache for
+*     each task id (global), maybe watch for changes to the task array
+*     for additions.
+*
+*/
+
 define(
     [
         'config',
@@ -51,7 +59,7 @@ define(
         TaskController.prototype.init = function () {
             // setup task event listeners
             this.applyHandlers();
-            this.periodicallySetSeverityStyles();
+            //this.setAllSeverityStyles();
         };
         
         TaskController.prototype.applyHandlers = function () {

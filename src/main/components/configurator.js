@@ -22,6 +22,7 @@ define(
             self = this;
             this.modal = null;
             this.launchModal = this.rLaunchModal.bind(this);
+            this.reloadModal = this.rReloadModal.bind(this);
         }
         
         // get user config object from cookie
@@ -77,6 +78,13 @@ define(
                 this.modal.init();
             } else {
                 this.modal = new Modal("userConfig", {init: true});
+            }
+        };
+        
+        // reload the configurator ui
+        Configurator.prototype.rReloadModal = function () {
+            if (this.modal) {
+                this.modal.reload();
             }
         };
 

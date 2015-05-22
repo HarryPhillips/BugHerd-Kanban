@@ -52,6 +52,9 @@ define(
                 throw new Error("No GUI instance passed to Console");
             }
             
+            // array of tool nodes
+            this.tools = [];
+            
             // set gui and build the tree
             gui = instance;
             this.buildNodeTree();
@@ -248,7 +251,15 @@ define(
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
+            // add to tools
+            this.tools[tool] = toolbar[tool];
+            
             return toolbar[tool];
+        };
+            
+        // remove a toolbar widget
+        Console.prototype.removeTool = function (tool) {
+            this.tools[tool].destroy();
         };
         
         // get toolbar widget icon from config
@@ -354,28 +365,54 @@ define(
                 modal = new Modal("destructConsole", {
                     init: true,
                     confirm: function () {
-                        var parent = self.wrapper.cons.parent(),
-                            child = self.wrapper.cons.element;
-                        
-                        // destroy console node
-                        parent.removeChild(child);
-                        
-                        // set console status
-                        status.console = false;
-                        
-                        // clear the log buffer
-                        cache.console.clearBuffer();
-                        
-                        // add disabled class to cons-box
-                        self.wrapper.addClass("kbs-disabled");
-                        
-                        // destroy the modal
-                        modal.destroy();
+                        self.commitDestroy(modal, "soft");
                     },
                     cancel: function () {
-                        modal.destroy();
+                        modal.close();
                     }
                 });
+        };
+            
+        // committed destroy
+        Console.prototype.commitDestroy = function (modal, method) {
+            if (method === "hard") {
+                var parent = self.wrapper.cons.parent(),
+                    child = self.wrapper.cons.element;
+
+                // store in cache to allow same session
+                // restoration
+                cache.console.parent = parent;
+                cache.console.child = child;
+
+                // destroy console node
+                parent.removeChild(child);
+            }
+            
+            // set console status
+            status.console = false;
+
+            // clear the log buffer
+            cache.console.clearBuffer();
+            
+            // add disabled class to cons-box
+            self.wrapper.addClass("kbs-disabled");
+
+            // remove tool
+            self.removeTool("destroy");
+
+            // destroy the modal
+            if (modal) {
+                modal.close();
+            }
+            
+            // update configurator
+            configurator.set("gui/console/destroyed", true);
+            configurator.reloadModal();
+        };
+            
+        // restore console after being destroyed
+        Console.prototype.restore = function () {
+            this.wrapper.removeClass("kbs-disabled");
         };
         
         // build the console
@@ -505,7 +542,11 @@ define(
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
-
+            
+            if (config.gui.console.destroyed) {
+                this.commitDestroy(false, "soft");
+            }
+                
             // return wrapper element
             return wrapper;
         };

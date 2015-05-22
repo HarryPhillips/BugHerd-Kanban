@@ -13,6 +13,8 @@ define(
         
         // node constructor
         function Node(type, classes, id) {
+            this.children = [];
+            
             // check if passed an HTML node
             if (util.isDomElement(type)) {
                 this.element = type;
@@ -178,17 +180,24 @@ define(
             // check if node is an instance of class Node
             if (child.constructor === Node || child instanceof Node) {
                 this.element.appendChild(child.element);
+                this.children.push(child);
                 return;
             }
             
-            // just a HTML node, append
+            // if is a dom element, create new node and push
+            // to children
+            if (util.isDomElement(child)) {
+                this.children.push(new Node(child));
+            }
+
+            // append
             this.element.appendChild(child);
         };
 
         // create and add child to node
         Node.prototype.createChild = function (type, classes, id) {
             var child = new Node(type, classes, id);
-            this.addChild(child.element);
+            this.addChild(child);
             return child;
         };
         
@@ -221,6 +230,16 @@ define(
             }
             
             return results;
+        };
+        
+        // clear a node of its children
+        Node.prototype.clear = function () {
+            var i = 0,
+                len = this.children.length;
+            
+            for (i; i < len; i += 1) {
+                this.children[i].destroy();
+            }
         };
         
         // clone node instance and return

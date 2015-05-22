@@ -457,7 +457,7 @@ define(
                 var target = $(event.target),
                     task = self.isTask(target);
                 
-                if (task) {
+                if (task && config.interactor.expandOnclick) {
                     self.expandTaskDetails();
                 }
             });
