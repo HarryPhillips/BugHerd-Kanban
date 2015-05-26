@@ -53,6 +53,8 @@ define(
                 modded = data;
                 util.merge(config, data, true);
                 return;
+            } else {
+                util.log("error", "no user data found!");
             }
         };
         

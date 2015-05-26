@@ -27,7 +27,7 @@ define(
             // message
             node
                 .createChild("p")
-                .text("Confirm destruction of GUI console and toolbar?");
+                .text("Confirm destruction of GUI console?");
             
             // confirm
             node

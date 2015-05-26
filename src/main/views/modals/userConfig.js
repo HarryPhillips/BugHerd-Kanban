@@ -206,7 +206,7 @@ define(
                         .on("click", function () {
                             gui.console.restore();
                             config.set("gui/console/destroyed", false);
-                            modal.reload();
+                            modal.reload(true);
                         });
                 }
 

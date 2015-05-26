@@ -85,6 +85,7 @@ define(
             // expose the api if in dev mode
             if (config.mode === "dev") {
                 window[config.appName] = kanban;
+                window[config.appName + "_REPO"] = repo;
             }
 
             // expose logging api to window.log
@@ -111,7 +112,7 @@ define(
             
         // get a new configurator and load data
         try {
-            settings = new Configurator();
+            repo.settings = settings = new Configurator();
             settings.loadExisting();
         } catch (configuratorException) {
             util.log(
@@ -137,7 +138,7 @@ define(
         // initialise gui first so log buffer is constructed
         try {
             if (config.gui.enabled) {
-                gui = new GUI();
+                repo.gui = gui = new GUI();
             }
         } catch (guiException) {
             util.log(
@@ -153,7 +154,7 @@ define(
         // initialise interactor
         try {
             if (config.interactor.enabled) {
-                interactor = new Interactor(gui);
+                repo.interactor = interactor = new Interactor();
             }
         } catch (interactorException) {
             util.log(
@@ -168,8 +169,7 @@ define(
             
         // initialise the bugherd api wrapper
         try {
-            bugherd = new BugHerd(interactor, gui);
-            bugherd.init();
+            repo.bugherd = bugherd = new BugHerd();
         } catch (bugherdException) {
             util.log(
                 "error",
@@ -192,7 +192,6 @@ define(
             util: util,
             gui: gui,
             configurator: settings,
-            repo: repo,
             Api: {
                 "Configurator": Configurator,
                 "Interactor": Interactor,

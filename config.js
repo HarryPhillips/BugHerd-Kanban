@@ -125,6 +125,7 @@ define(function () {
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
+                allowDestruction: false,
                 destroyed: false,
                 icons: {
                     save: "file-text",

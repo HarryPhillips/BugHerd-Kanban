@@ -502,10 +502,12 @@ define(
                 );
                 
                 // console destructor tool
-                this.createTool("destroy").on(
-                    "click",
-                    self.destroy
-                );
+                if (config.gui.console.allowDestruction) {
+                    this.createTool("destroy").on(
+                        "click",
+                        self.destroy
+                    );
+                }
                 
                 // clear tool
                 this.createTool("clear").on(

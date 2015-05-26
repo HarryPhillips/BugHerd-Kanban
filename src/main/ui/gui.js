@@ -13,6 +13,7 @@ define(
         'config',
         'main/components/util',
         'main/components/events',
+        'main/components/status',
         'main/components/counter',
         'main/components/configurator',
         'main/components/node',
@@ -23,6 +24,7 @@ define(
         config,
         util,
         events,
+        status,
         Counter,
         Configurator,
         Node,
@@ -228,6 +230,22 @@ define(
             url = "url('" + url + "')";
             
             el.css("background-image", url);
+        };
+            
+        // show overlay
+        GUI.prototype.showOverlay = function () {
+            if (!status.gui.overlay) {
+                this.tree.main.overlay.fadeIn();
+                status.gui.overlay = true;
+            }
+        };
+            
+        // hide overlay
+        GUI.prototype.hideOverlay = function () {
+            if (!status.interactor.taskDetailsExpanded) {
+                this.tree.main.overlay.fadeOut();
+                status.gui.overlay = false;
+            }
         };
 
         // build gui node tree

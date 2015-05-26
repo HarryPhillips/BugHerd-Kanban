@@ -168,6 +168,8 @@ define(
             
             // set 
             this.element.style[rule] = property;
+            
+            return this;
         };
         
         // get parent node
@@ -217,7 +219,7 @@ define(
             this.element = null;
         };
         
-        // find a child element within our element tree
+        // find occurences of a child element within our element tree
         Node.prototype.find = function (selector) {
             var nodeList = this.element.querySelectorAll(":scope > " + selector),
                 len = nodeList.length,

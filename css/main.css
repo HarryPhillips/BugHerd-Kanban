@@ -98,6 +98,16 @@
     margin-top: -100px;
 }
 
+.kbs-modal.kbs-viewScreenshot {
+    background-color: #2a2a2a;
+    position: fixed;
+    top: 100px; bottom: 100px;
+    left: 100px; right: 100px;
+    width: auto; height: auto;
+    margin-left: 0;
+    margin-top: 0;
+}
+
 .kbs-modal.kbs-destructConsole {
     width: 400px; height: 200px;
     margin-top: -100px;
@@ -182,6 +192,20 @@
     -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
     -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
     transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+.kbs-screenshot-wrap {
+    position: absolute;
+    top: 40px; bottom: 0;
+    left: 0; right: 0;
+    text-align: center;
+    overflow: auto;
+}
+
+.kbs-screenshot {
+    width: auto; height: auto;
+    max-width: initial !important;
+    max-height: initial !important;
 }
 
 /* gui console wrapper 

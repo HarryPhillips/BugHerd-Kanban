@@ -8,60 +8,136 @@
 
 /*jslint nomen: true*/
 
-/*
-*   TODO:
-*   + When setting the severity styles, store the class in cache for
-*     each task id (global), maybe watch for changes to the task array
-*     for additions.
-*
-*/
-
 define(
     [
         'config',
         'main/components/util',
         'main/components/cache',
         'main/components/status',
+        'main/components/repository',
         'main/components/node'
     ],
-    function (config, util, cache, status, Node) {
+    function (config, util, cache, status, repo, Node) {
         'use strict';
         
         // bugherd's global api
         var bh = window.bugherd,
             $ = window.jQuery,
             interactor,
+            instance,
             gui;
         
         /* Class Definitions
         ------------------------------------------*/
         // task api controller
-        function TaskController(base) {
+        function TaskController() {
             this.api = bh.application.tasksCollection;
-            this.baseApi = base;
+            this.baseApi = instance;
             this.setSeverityStyle = this.rSetSeverityStyle.bind(this);
             this.setAllSeverityStyles = this.rSetAllSeverityStyles.bind(this);
             this.periodicallySetSeverityStyles = this.rPeriodicallySetSeverityStyles.bind(this);
         }
         
         // bugherd api wrapper
-        function BugHerd(interInstance, guiInstance) {
+        function BugHerd() {
+            // return the instance if already exists
+            if (instance) {
+                return instance;
+            }
+            
             // set instances
-            interactor = interInstance;
-            gui = guiInstance;
+            instance = this;
+            interactor = interactor || repo.interactor;
+            gui = gui || repo.gui;
             
             this.api = bh;
-            this.tasks = new TaskController(this);
+            this.TaskApi = new TaskController();
+            this.init();
         }
         
         /* TaskController Prototype
         ------------------------------------------*/
         TaskController.prototype.init = function () {
+            var self = this;
+            
             // setup task event listeners
             this.applyHandlers();
-            //this.setAllSeverityStyles();
+            
+            // severity styling handling
+            this.setAllSeverityStyles();
+            bh.application.on("change", function () {
+                setTimeout(self.setAllSeverityStyles, 10);
+            });
         };
         
+        // get task data by local id
+        TaskController.prototype.findTaskByLocalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the local_task_id attribute
+            for (i; i < len; i += 1) {
+                if (tasks[i].attributes.local_task_id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // get task data by global id
+        TaskController.prototype.findTaskByGlobalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the global id
+            for (i; i < len; i += 1) {
+                if (tasks[i].id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // gets the browser info from a task
+        TaskController.prototype.getBrowserInfo = function (task, key) {
+            // catch invalid task types
+            if (!util.isObject(task) && !util.isNumber(task)) {
+                util.log("error", "Unable to get task from parameter of type " +
+                        typeof task);
+            }
+            
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findTaskByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findTaskByLocalId(task);
+                }
+            }
+            
+            return task.attributes.browser_info[key] ||
+                task.attributes.browser_info;
+        };
+        
+        // gets the user meta data from a task
+        TaskController.prototype.getMeta = function (task) {
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findTaskByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findTaskByLocalId(task);
+                }
+            }
+            
+            return task.attributes.data.userMetaData;
+        };
+        
+        // apply event handlers
         TaskController.prototype.applyHandlers = function () {
             // event logger
             var
@@ -230,15 +306,13 @@ define(
         ------------------------------------------*/
         // init the bugherd api wrapper
         BugHerd.prototype.init = function () {
-            this.tasks.init();
+            this.TaskApi.init();
             this.applyContext();
             this.applyHandlers();
         };
         
         // apply handlers/listeners
-        BugHerd.prototype.applyHandlers = function () {
-            
-        };
+        BugHerd.prototype.applyHandlers = function () {};
         
         // apply bugherd api logging context
         BugHerd.prototype.applyContext = function () {

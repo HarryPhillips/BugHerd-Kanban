@@ -36,10 +36,10 @@ define(
         'use strict';
         
         // event logger
-        function event_log(modal, event) {
+        function evtlog(modal, event) {
             util.log(
                 "context:gui/modals",
-                "log",
+                "debug",
                 "Modal '" + modal.viewName + "' " +
                     "event '" + event + "' fired"
             );
@@ -63,16 +63,22 @@ define(
             
             // create events and process queue
             // on close and destruction
-            events.subscribe("gui/modal/init", event_log);
-            events.subscribe("gui/modal/load", event_log);
-            events.subscribe("gui/modal/open", event_log);
-            events.subscribe("gui/modal/close", event_log);
-            events.subscribe("gui/modal/destruct", event_log);
-            events.subscribe("gui/modal/confirm", event_log);
-            events.subscribe("gui/modal/proceed", event_log);
-            events.subscribe("gui/modal/cancel", event_log);
+            this.events = [
+                "init", "load", "open", "close",
+                "destruct", "confirm", "proceed", "cancel"
+            ];
             
-            // queue processing
+            var len = this.events.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                events.subscribe(
+                    "gui/modal/" + this.events[i],
+                    evtlog
+                );
+            }
+            
+            // queue processor
             events.subscribe(
                 "gui/modal/close",
                 this.processQueue.bind(this)
@@ -224,6 +230,10 @@ define(
             // default params
             params = params || {init: true};
             
+            if (typeof params.init === "undefined") {
+                params.init = true;
+            }
+            
             // return current instance
             // if already exists
             if (ctrl.exists(view)) {
@@ -239,7 +249,9 @@ define(
             
             // store props
             this.viewName = view;
+            this.viewParams = params.viewParams || {};
             this.params = params;
+            this.classes = params.classes || "";
             this.inited = false;
             this.loaded = false;
             
@@ -248,6 +260,7 @@ define(
             
             // create and hide node
             this.node = new Node("div", "kbs-modal kbs-" + view);
+            this.node.addClass(this.classes);
             this.node.hide();
             
             // view element
@@ -265,7 +278,6 @@ define(
             this.applyHandlers(params);
             
             // load view and init
-            params.init = params.init || true;
             this.load((params.init) ? this.init : function () {});
             
             // add modal to controller
@@ -274,25 +286,21 @@ define(
         
         // setup and create modal events
         Modal.prototype.createEvents = function () {
-            var i,
-                emptyfn = function () {};
+            var x = 0, y,
+                len = ctrl.events.length,
+                evtcreate = function () {};
             
-            // modal event names
-            this.eventName = {
-                init: "gui/modal/" + this.viewName + "/init",
-                open: "gui/modal/" + this.viewName + "/open",
-                close: "gui/modal/" + this.viewName + "/close",
-                destruct: "gui/modal/" + this.viewName + "/destruct",
-                load: "gui/modal/" + this.viewName + "/load",
-                confirm: "gui/modal/" + this.viewName + "/confirm",
-                proceed: "gui/modal/" + this.viewName + "/proceed",
-                cancel: "gui/modal/" + this.viewName + "/cancel"
-            };
+            // setup modal specific events
+            this.eventName = {};
+            for (x; x < len; x += 1) {
+                this.eventName[ctrl.events[x]] = "gui/modal/" +
+                    this.viewName + x;
+            }
             
             // loop through events and create them
-            for (i in this.eventName) {
-                if (this.eventName.hasOwnProperty(i)) {
-                    events.subscribe(this.eventName[i], emptyfn);
+            for (y in this.eventName) {
+                if (this.eventName.hasOwnProperty(y)) {
+                    events.subscribe(this.eventName[y], evtcreate);
                 }
             }
         };
@@ -300,6 +308,7 @@ define(
         // load view into modal
         Modal.prototype.load = function (callback) {
             var self = this,
+                params = this.viewParams,
                 view;
             
             // return if already loaded
@@ -314,7 +323,7 @@ define(
                 "modals/" + this.viewName,
                 function (mod) {
                     // get new view
-                    view = mod.createView([gui, self]);
+                    view = mod.createView([gui, self, params]);
                     
                     // set view to modal
                     self.view = view;
@@ -333,8 +342,8 @@ define(
         };
         
         // reload modal a modals content
-        Modal.prototype.reload = function () {
-            var fn = (this.inited) ? this.init : function () {};
+        Modal.prototype.reload = function (init) {
+            var fn = (init) ? this.init : function () {};
             this.node.clear();
             this.loaded = false;
             this.inited = false;
@@ -470,7 +479,7 @@ define(
             ctrl.addToOpened(this);
             
             // show overlay and node
-            gui.tree.main.overlay.fadeIn();
+            gui.showOverlay();
             this.node.fadeIn();
             
             // publish
@@ -481,7 +490,7 @@ define(
         // closes the modal
         Modal.prototype.rClose = function () {
             // hide overlay and node
-            gui.tree.main.overlay.hide();
+            gui.hideOverlay();
             this.node.hide();
             
             // remove from controller opened modals
@@ -494,7 +503,7 @@ define(
         
         // destroys a modal instance
         Modal.prototype.rDestroy = function () {
-            // check if open
+            // close if open
             if (ctrl.isOpen(this)) {
                 this.rClose();
             }
@@ -509,6 +518,9 @@ define(
             // publish
             events.publish("gui/modal/destruct", this);
             events.publish(this.eventName.destruct, this);
+            
+            // destroy node
+            this.node.destroy();
         };
         
         // set gui instance

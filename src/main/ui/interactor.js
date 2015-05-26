@@ -12,6 +12,8 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
+        'main/components/repository',
+        'main/components/configurator',
         'main/components/node',
         'main/ui/modal'
     ],
@@ -20,6 +22,8 @@ define(
         util,
         events,
         status,
+        repo,
+        Configurator,
         Node,
         Modal
     ) {
@@ -29,10 +33,12 @@ define(
         var $,
             self,
             inited = false,
+            configurator = new Configurator(),
+            bugherd,
             gui;
 
         // interactor constructor
-        function Interactor(instance) {
+        function Interactor() {
             util.log(
                 "context:inter/init",
                 "info",
@@ -41,7 +47,7 @@ define(
             
             // set references
             self = this;
-            gui = instance;
+            gui = repo.gui;
             
             this.activeTask = null;
             
@@ -91,11 +97,6 @@ define(
             element = element.closest("[id^=task_]");
             
             return (element.length) ? element : false;
-        };
-        
-        // get the wrapper task element from a component
-        Interactor.prototype.getTaskFromComponent = function (component) {
-            return component.closest("[id^=task_]");
         };
 
         // expand the currently active task or a specified task id
@@ -346,6 +347,19 @@ define(
             
             return localId.text() || localId.val();
         };
+        
+        // get the task element from an inner component
+        // note: only applies to board tasks
+        Interactor.prototype.findTaskFromComponent = function (component) {
+            var task = component.closest("[id^=task_]");
+            
+            // if not found - return false
+            if (!task.length) {
+                return false;
+            }
+            
+            return this.findLocalIdFromTask(task);
+        };
             
         // navigate the ui to a specified task board
         Interactor.prototype.navigateTo = function (board) {
@@ -363,6 +377,36 @@ define(
             }
         };
             
+        // view a screenshot in a modal
+        Interactor.prototype.viewScreenshot = function (link) {
+            var bugherd = repo.bugherd,
+                size = {},
+                winsize,
+                modal,
+                id;
+            
+            id = parseInt(self.findLocalIdFromDetails(), 10);
+            winsize = bugherd.TaskApi
+                .getBrowserInfo(id, "window_size").split("x");
+            size.x = winsize[0] / 3 * 2.5;
+            size.y = winsize[1] / 3 * 2.5;
+            
+            util.log(
+                "context:interactor",
+                "debug",
+                "Viewing screenshot for task #" + id
+            );
+            
+            modal = new Modal("viewScreenshot", {
+                viewParams: {
+                    id: id,
+                    url: link[0].href,
+                    width: size.x,
+                    height: size.y
+                }
+            });
+        };
+            
         // return current hash
         Interactor.prototype.getHash = function () {
             return window.location.hash;
@@ -372,31 +416,30 @@ define(
         Interactor.prototype.parseHash = function () {
             var hash = this.getHash(),
                 href = window.location.href,
-                hashId;
+                taskId;
             
             util.log(
                 "context:hash",
                 "parsing new hash: " + hash
             );
 
-            // prefixed
+            // open task
             if (hash === "#open") {
-                // check if prefixed
+                // get task id
                 if (href.indexOf("tasks/") !== -1) {
-                    hashId = parseInt(href.split("tasks/")[1], 10);
-
-                    // open
-                    if (hashId) {
-                        this.openTask(hashId);
-                    }
+                    taskId = parseInt(href.split("tasks/")[1], 10);
+                } else {
+                    taskId = parseInt(hash.replace("#open", ""), 10);
                 }
             }
+            
+            // settings
+            if (hash === "#settings") {
+                configurator.launchModal();
+            }
 
-            // suffixed
-            hashId = parseInt(hash.replace("#open", ""), 10);
-
-            if (hashId) {
-                this.openTask(hashId);
+            if (taskId) {
+                this.openTask(taskId);
             }
         };
 
@@ -457,13 +500,24 @@ define(
                 var target = $(event.target),
                     task = self.isTask(target);
                 
+                // capture task clicks
                 if (task && config.interactor.expandOnclick) {
                     self.expandTaskDetails();
+                    return;
+                }
+                
+                // capture "view_screenshot" clicks
+                if (target.hasClass("attachLink")) {
+                    // view screenshots only
+                    if (target.text().indexOf("view_screenshot") !== -1) {
+                        event.preventDefault();
+                        self.viewScreenshot(target);
+                    }
                 }
             });
             
             // on document mouse move - apply parallax to wallpaper
-            // if there is one
+            // if there is one (experimental)
             if (config.gui.wallpaper && config.gui.parallax.enabled) {
                 var move = false,
                     frame = setInterval(function () {
