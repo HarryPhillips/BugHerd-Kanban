@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name searchTask.js
+*   @name task-search.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

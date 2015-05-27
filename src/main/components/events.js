@@ -51,7 +51,8 @@ define(['config'], function (config) {
         for (i; i < len; i += 1) {
             // remove handler from array and return
             if (object) {
-                if (handler === list[i]) {
+                if (handler === list[i] ||
+                        handler.toSource() === list[i].toSource()) {
                     list.splice(list.indexOf(i), 1);
                     return;
                 }

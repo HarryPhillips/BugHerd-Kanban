@@ -10,14 +10,14 @@ define(function (util) {
     'use strict';
 
     // view class
-    function View(createFn) {
-        this.createFn = createFn;
+    function View(renderer) {
+        this.renderer = renderer;
     }
 
-    // create view
-    View.prototype.createView = function (params) {
-        if (typeof this.createFn === "function") {
-            return this.createFn(params);
+    // draw the view using the constructor
+    View.prototype.draw = function (params) {
+        if (typeof this.renderer === "function") {
+            return this.renderer(params);
         }
     };
 

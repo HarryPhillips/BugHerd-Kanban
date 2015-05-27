@@ -64,7 +64,7 @@ define(
             // create events and process queue
             // on close and destruction
             this.events = [
-                "init", "load", "open", "close",
+                "init", "load", "reload", "open", "close",
                 "destruct", "confirm", "proceed", "cancel"
             ];
             
@@ -316,22 +316,21 @@ define(
                 return;
             }
             
-            // make sure can't load twice!
             this.loaded = true;
             
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
                     // get new view
-                    view = mod.createView([gui, self, params]);
+                    view = mod.draw([gui, self, params]);
                     
                     // set view to modal
                     self.view = view;
+                    self.viewModule = mod;
                     self.title = view.title;
                     
                     // publish
-                    events.publish("gui/modal/load", self);
-                    events.publish(self.eventName.load, self);
+                    self.trigger("load", self);
                     
                     // run callback
                     if (util.isFunction(callback)) {
@@ -343,11 +342,14 @@ define(
         
         // reload modal a modals content
         Modal.prototype.reload = function (init) {
-            var fn = (init) ? this.init : function () {};
-            this.node.clear();
-            this.loaded = false;
-            this.inited = false;
-            this.load(fn);
+            var self = this,
+                view = this.viewModule,
+                render = view.draw([gui, self, self.viewParams]),
+                content = this.node.children[2];
+            
+            content.clear();
+            content.addChild(render);
+            this.trigger("reload", this);
         };
         
         // attach an event handler to modal
@@ -384,47 +386,8 @@ define(
         
         // trigger a modal event with data
         Modal.prototype.trigger = function (event, data) {
+            events.publish("gui/modal/" + event, data);
             events.publish(this.eventName[event], data);
-        };
-        
-        // init modal
-        Modal.prototype.rInit = function () {
-            if (this.inited) {
-                // skip build and open
-                this.open();
-                return;
-            }
-            
-            // declarations
-            var modal = this.node,
-                title = modal.createChild(
-                    "h2",
-                    "kbs-modal-title"
-                ),
-                close = modal.createChild(
-                    "i",
-                    "fa fa-times kbs-modal-closed"
-                ),
-                content = modal.createChild(
-                    "p",
-                    "kbs-modal-content"
-                );
-            
-            // set content and append to gui
-            title.text(this.title);
-            close.on("click", this.close);
-            content.addChild(this.view);
-            gui.addChild(modal);
-            
-            // flag inited
-            this.inited = true;
-            
-            // publish
-            events.publish("gui/modal/init", this);
-            events.publish(this.eventName.init, this);
-            
-            // open
-            this.open();
         };
         
         // handler/listener application for modal
@@ -461,6 +424,45 @@ define(
             });
         };
         
+        // init modal
+        Modal.prototype.rInit = function () {
+            if (this.inited) {
+                // skip build and open
+                this.open();
+                return;
+            }
+            
+            // declarations
+            var modal = this.node,
+                title = modal.createChild(
+                    "h2",
+                    "kbs-modal-title"
+                ),
+                close = modal.createChild(
+                    "i",
+                    "fa fa-times kbs-modal-closed"
+                ),
+                content = modal.createChild(
+                    "p",
+                    "kbs-modal-content"
+                );
+            
+            // set content and append to gui
+            title.text(this.title);
+            close.on("click", this.close);
+            content.addChild(this.view);
+            gui.addChild(modal);
+            
+            // flag inited
+            this.inited = true;
+            
+            // publish
+            this.trigger("init", this);
+            
+            // open
+            this.open();
+        };
+        
         // opens the modal
         Modal.prototype.rOpen = function () {
             // if a modal is already open
@@ -483,8 +485,7 @@ define(
             this.node.fadeIn();
             
             // publish
-            events.publish("gui/modal/open", this);
-            events.publish(this.eventName.open, this);
+            this.trigger("open", this);
         };
         
         // closes the modal
@@ -497,8 +498,7 @@ define(
             ctrl.removeFromOpened(this);
             
             // publish
-            events.publish("gui/modal/close", this);
-            events.publish(this.eventName.close, this);
+            this.trigger("close", this);
         };
         
         // destroys a modal instance
@@ -516,8 +516,7 @@ define(
             ctrl.removeModal(this);
             
             // publish
-            events.publish("gui/modal/destruct", this);
-            events.publish(this.eventName.destruct, this);
+            this.trigger("destruct", this);
             
             // destroy node
             this.node.destroy();

@@ -17,11 +17,12 @@ define(
         'main/components/repository',
         'main/components/node'
     ],
-    function (config, util, cache, status, repo, Node) {
+    function (config, util, cache, status, Repository, Node) {
         'use strict';
         
         // bugherd's global api
-        var bh = window.bugherd,
+        var repo = new Repository(),
+            bh = window.bugherd,
             $ = window.jQuery,
             interactor,
             instance,
@@ -47,8 +48,8 @@ define(
             
             // set instances
             instance = this;
-            interactor = interactor || repo.interactor;
-            gui = gui || repo.gui;
+            interactor = interactor || repo.get("interactor");
+            gui = gui || repo.get("gui");
             
             this.api = bh;
             this.TaskApi = new TaskController();
@@ -71,7 +72,7 @@ define(
         };
         
         // get task data by local id
-        TaskController.prototype.findTaskByLocalId = function (id) {
+        TaskController.prototype.findModelByLocalId = function (id) {
             var tasks = this.baseApi.tasks(),
                 len = tasks.length,
                 i = 0;
@@ -85,7 +86,7 @@ define(
         };
         
         // get task data by global id
-        TaskController.prototype.findTaskByGlobalId = function (id) {
+        TaskController.prototype.findModelByGlobalId = function (id) {
             var tasks = this.baseApi.tasks(),
                 len = tasks.length,
                 i = 0;
@@ -110,10 +111,10 @@ define(
             if (util.isNumber(task)) {
                 // passed a global id
                 if (task > 1000000) {
-                    task = this.findTaskByGlobalId(task);
+                    task = this.findModelByGlobalId(task);
                 } else {
                     // passed a local id
-                    task = this.findTaskByLocalId(task);
+                    task = this.findModelByLocalId(task);
                 }
             }
             
@@ -127,14 +128,36 @@ define(
             if (util.isNumber(task)) {
                 // passed a global id
                 if (task > 1000000) {
-                    task = this.findTaskByGlobalId(task);
+                    task = this.findModelByGlobalId(task);
                 } else {
                     // passed a local id
-                    task = this.findTaskByLocalId(task);
+                    task = this.findModelByLocalId(task);
                 }
             }
             
             return task.attributes.data.userMetaData;
+        };
+        
+        // retrieves tasks that have a certain tag
+        TaskController.prototype.findAllWithTag = function (tag) {
+            var tasks = this.api.models,
+                len = tasks.length,
+                matches = [],
+                i = 0,
+                task,
+                tags;
+
+            // check all tasks
+            for (i; i < len; i += 1) {
+                task = tasks[i];
+                tags = task.attributes.tag_names;
+
+                if (util.contains(tags, tag)) {
+                    matches.push(task.id);
+                }
+            }
+            
+            return matches;
         };
         
         // apply event handlers

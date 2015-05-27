@@ -22,7 +22,7 @@ define(
         util,
         events,
         status,
-        repo,
+        Repository,
         Configurator,
         Node,
         Modal
@@ -34,6 +34,7 @@ define(
             self,
             inited = false,
             configurator = new Configurator(),
+            repo = new Repository(),
             bugherd,
             gui;
 
@@ -47,7 +48,7 @@ define(
             
             // set references
             self = this;
-            gui = repo.gui;
+            gui = repo.get("gui");
             
             this.activeTask = null;
             
@@ -116,7 +117,9 @@ define(
             // get global id
             this.findGlobalId(localId, function (task) {
                 // once found - click the task
-                task.trigger("click");
+                setTimeout(function () {
+                    task.trigger("click");
+                }, 500);
             });
         };
 
@@ -283,7 +286,7 @@ define(
                             errMsg
                         );
                         
-                        errModal = new Modal("taskNotFound", {
+                        errModal = new Modal("task-not-found", {
                             init: true,
                             id: localId,
                             confirm: function () {
@@ -293,7 +296,7 @@ define(
                                 // re-open search task
                                 errModal
                                     .getController()
-                                    .getModalByName("searchTask")
+                                    .getModalByName("task-search")
                                     .open();
                             },
                             cancel: function () {
@@ -379,17 +382,14 @@ define(
             
         // view a screenshot in a modal
         Interactor.prototype.viewScreenshot = function (link) {
-            var bugherd = repo.bugherd,
+            var bugherd = repo.get("bugherd"),
                 size = {},
                 winsize,
                 modal,
                 id;
             
+            // get the task id from detail panel
             id = parseInt(self.findLocalIdFromDetails(), 10);
-            winsize = bugherd.TaskApi
-                .getBrowserInfo(id, "window_size").split("x");
-            size.x = winsize[0] / 3 * 2.5;
-            size.y = winsize[1] / 3 * 2.5;
             
             util.log(
                 "context:interactor",
@@ -397,7 +397,7 @@ define(
                 "Viewing screenshot for task #" + id
             );
             
-            modal = new Modal("viewScreenshot", {
+            modal = new Modal("view-screenshot", {
                 viewParams: {
                     id: id,
                     url: link[0].href,
@@ -407,6 +407,45 @@ define(
             });
         };
             
+        // hide all tasks with the following tag(s)
+        Interactor.prototype.hideTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.TaskApi.findAllWithTag(tag),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i])
+                    .style.display = "none";
+            }
+        };
+            
+        // show all tasks with the followings tag(s)
+        Interactor.prototype.showTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.tasks,
+                len = tasks.length,
+                i = 0,
+                task,
+                id;
+            
+            // hide all tasks
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i].id)
+                    .style.display = "none";
+            }
+            
+            // show all tasks with the given tag
+            tasks = bugherd.TaskApi.findAllWithTag(tag);
+            len = tasks.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i])
+                    .style.display = "block";
+            }
+        };
+        
         // return current hash
         Interactor.prototype.getHash = function () {
             return window.location.hash;
@@ -436,6 +475,7 @@ define(
             // settings
             if (hash === "#settings") {
                 configurator.launchModal();
+                location.hash = "";
             }
 
             if (taskId) {
@@ -446,24 +486,26 @@ define(
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
             // declarations
-            var taskExpander,
-                taskContractor,
-                taskSearch;
+            var search,
+                filter,
+                detailClose,
+                taskSearch,
+                taskFilter,
+                nav;
             
             util.log(
                 "context:inter/init",
                 "+ appending elements to bugherd"
             );
 
-            // task expander list element
-            taskExpander = new Node("li");
+            // task search list element
+            search = new Node("li");
             
-            // task expander anchor element
-            taskExpander.createChild("a")
+            // task search anchor element
+            search.createChild("a")
                 .text("Search Task")
                 .on("click", function (event) {
-                    taskSearch = new Modal("searchTask", {
-                        init: true,
+                    taskSearch = new Modal("task-search", {
                         proceed: function (localId) {
                             if (!localId) {
                                 // return if no id passed
@@ -476,16 +518,28 @@ define(
                     });
                 });
             
-            // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-closed");
-            taskContractor.createChild("i", "fa fa-times");
-            taskContractor.on("click", function (event) {
+           // task filter list element
+            filter = new Node("li");
+            
+            // task filter anchor element
+            filter.createChild("a")
+                .text("Filter")
+                .on("click", function (event) {
+                    taskFilter = new Modal("task-filter");
+                });
+            
+            // task details close button
+            detailClose = new Node("div", "kbs-details-closed");
+            detailClose.createChild("i", "fa fa-times");
+            detailClose.on("click", function (event) {
                 self.closeTask();
             });
             
             // write
-            taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($("body")[0]);
+            nav = $(".nav.main-nav")[0];
+            search.writeTo(nav);
+            filter.writeTo(nav);
+            detailClose.writeTo($("body")[0]);
         };
             
         // apply event handlers
@@ -506,10 +560,11 @@ define(
                     return;
                 }
                 
-                // capture "view_screenshot" clicks
+                // capture screenshot clicks
                 if (target.hasClass("attachLink")) {
                     // view screenshots only
-                    if (target.text().indexOf("view_screenshot") !== -1) {
+                    if (target.text().indexOf("view_screenshot") !== -1 ||
+                            target.text().indexOf("fix-result") !== -1) {
                         event.preventDefault();
                         self.viewScreenshot(target);
                     }

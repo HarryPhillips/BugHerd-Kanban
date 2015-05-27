@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name destructConsole.js
+*   @name console-destruct.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

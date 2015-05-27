@@ -8,10 +8,36 @@
 
 define(function () {
     'use strict';
-    
-    var repo = {
-        
+
+    // shared
+    var box = {},
+        instance;
+
+    // repository class
+    function Repository() {}
+
+    // add an object to the repo under key
+    Repository.prototype.add = function (key, object) {
+        // already exists
+        if (box[key]) {
+            throw new Error(
+                "Couldn't add '" + key + "' to the repository, " +
+                    " key already exists. Delete the key first."
+            );
+        }
+
+        box[key] = object;
     };
-    
-    return repo;
+
+    // get an object from the repo
+    Repository.prototype.get = function (key) {
+        return box[key];
+    };
+
+    // delete an object from the repo
+    Repository.prototype.del = function (key) {
+        delete box[key];
+    };
+
+    return Repository;
 });

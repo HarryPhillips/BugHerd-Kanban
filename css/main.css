@@ -98,7 +98,7 @@
     margin-top: -100px;
 }
 
-.kbs-modal.kbs-viewScreenshot {
+.kbs-modal.kbs-view-screenshot {
     background-color: #2a2a2a;
     position: fixed;
     top: 100px; bottom: 100px;
@@ -108,55 +108,55 @@
     margin-top: 0;
 }
 
-.kbs-modal.kbs-destructConsole {
+.kbs-modal.kbs-console-destruct {
     width: 400px; height: 200px;
     margin-top: -100px;
     margin-left: -200px;
     margin-right: -100px;
 }
 
-.kbs-destructConsole .kbs-modal-content {
+.kbs-console-destruct .kbs-modal-content {
     text-align: center;
 }
 
-.kbs-modal.kbs-searchTask {
+.kbs-modal.kbs-task-search {
     width: 400px; height: 200px;
     margin-top: -80px;
     margin-left: -200px;
     margin-right: -100px;
 }
 
-.kbs-searchTask .kbs-modal-content {
+.kbs-task-search .kbs-modal-content {
     text-align: center;
 }
 
-.kbs-modal.kbs-searchTask .kbs-modal-content {
+.kbs-modal.kbs-task-search .kbs-modal-content {
     height: auto;
 }
 
-.kbs-modal.kbs-searchTask .kbs-input-field {
+.kbs-modal.kbs-task-search .kbs-input-field {
     -moz-appearance: textfield;
 }
 
-.kbs-modal.kbs-taskNotFound {
+.kbs-modal.kbs-task-not-found {
     width: 350px;
     height: 175px;
     margin-top: -68px;
     margin-left: -175px;
 }
 
-.kbs-modal.kbs-taskNotFound .kbs-modal-content {
+.kbs-modal.kbs-task-not-found .kbs-modal-content {
     text-align: center;
 }
 
-.kbs-modal.kbs-userConfig {
+.kbs-modal.kbs-user-config {
     width: 520px;
     height: 550px;
     margin-left: -260px;
     margin-top: -275px;
 }
 
-.kbs-modal.kbs-userData pre {
+.kbs-modal.kbs-user-data pre {
     max-height: 250px;
     overflow-y: scroll;
 }
@@ -251,12 +251,8 @@
     border-radius: 0px;
 }
 
-.kbs-cons-box.kbs-disabled.kbs-open {
-    width: auto;
-}
-
-.kbs-cons-box.kbs-disabled .kbs-cons-title {
-    display: none;
+.kbs-cons-box.kbs-disabled.kbs-closed {
+    height: 30px;
 }
 
 /* console toolbar 
@@ -457,6 +453,10 @@
 
 .kbs-clearfix {
     clear: both;
+}
+
+.kbs-hide {
+    display: none;
 }
 
 /* kbs bugherd classes

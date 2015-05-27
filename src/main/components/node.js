@@ -150,6 +150,15 @@ define(
             this.element.className = classes;
         };
         
+        // toggles a class on a node
+        Node.prototype.toggleClass = function (name) {
+            if (this.hasClass(name)) {
+                this.removeClass(name);
+            } else {
+                this.addClass(name);
+            }
+        };
+        
         // css rule changes
         Node.prototype.css = function (rule, property) {
             var rules = rule.split("-"),
@@ -174,6 +183,10 @@ define(
         
         // get parent node
         Node.prototype.parent = function () {
+            if (!this.element) {
+                return null;
+            }
+            
             return this.element.parentNode;
         };
         
@@ -215,8 +228,11 @@ define(
         
         // delete and reset node and it's children
         Node.prototype.destroy = function () {
+            if (!this.parent()) {
+                this.element = null;
+                return;
+            }
             this.parent().removeChild(this.element);
-            this.element = null;
         };
         
         // find occurences of a child element within our element tree

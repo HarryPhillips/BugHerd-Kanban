@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name viewScreenshot.js
+*   @name view-screenshot.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

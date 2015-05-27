@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name userData.js
+*   @name user-data.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

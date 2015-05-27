@@ -99,7 +99,7 @@ define(function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0",
+        version: "1.4.0-pre",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -127,10 +127,12 @@ define(function () {
                 autoscroll: true,
                 allowDestruction: false,
                 destroyed: false,
+                displayed: true,
                 icons: {
+                    menu: "bars",
+                    toggle: "terminal",
                     save: "file-text",
                     clear: "trash",
-                    toggle: "terminal",
                     close: "times",
                     destroy: "unlink",
                     example: "plus-circle",
@@ -169,7 +171,8 @@ define(function () {
         tooltips: {
             save: "Save the output buffer to text file",
             clear: "Clear all logs",
-            toggle: "GUI Console State",
+            menu: "Kanban Menu",
+            toggle: "Toggle the console",
             close: "Close the console",
             destroy: "Destroy this console instance",
             benchmark: "Run the benchmark",

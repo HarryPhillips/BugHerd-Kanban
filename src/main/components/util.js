@@ -453,7 +453,7 @@ define(
                     
                     // push to result
                     if (util.isString(value)) {
-                        result += "'" + value + "'";
+                        result += "\"" + value + "\"";
                     } else if (util.isNumber(value)) {
                         result += value;
                     } else {

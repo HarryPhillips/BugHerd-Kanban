@@ -116,6 +116,17 @@ body {
     color: #429e7e;
 }
 
+.kbs-menu {
+    background-color: #fafafa;
+    color: #6E8694;
+}
+
+.kbs-menu:hover {
+    background-color: #fff;
+    border-bottom-color: #6E8694;
+    color: #fff;
+}
+
 .kbs-toggle {
     background-color: #91d467;
     color: #fff;

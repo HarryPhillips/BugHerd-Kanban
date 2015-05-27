@@ -19,6 +19,11 @@ define(
         
         // configurator class
         function Configurator() {
+            // don't need multiple instances
+            if (self) {
+                return self;
+            }
+            
             self = this;
             this.modal = null;
             this.launchModal = this.rLaunchModal.bind(this);
@@ -79,7 +84,7 @@ define(
             if (this.modal) {
                 this.modal.init();
             } else {
-                this.modal = new Modal("userConfig", {init: true});
+                this.modal = new Modal("user-config", {init: true});
             }
         };
         
@@ -108,7 +113,7 @@ define(
         };
 
         // set/create a config value
-        Configurator.prototype.set = function (selector, value) {
+        Configurator.prototype.set = function (selector, value, reload) {
             var segments = selector.split("/"),
                 len = segments.length,
                 got = config,
@@ -116,6 +121,8 @@ define(
                 tree = modded,
                 parent,
                 parentName;
+            
+            reload = reload || false;
 
             // if a simple selector
             if (len === 1) {
@@ -130,6 +137,11 @@ define(
                     "settings",
                     util.serialise(modded)
                 );
+                
+                // reload the modal
+                if (reload) {
+                    this.modal.reload(true);
+                }
                 
                 return config[selector];
             }
@@ -168,6 +180,11 @@ define(
                 util.serialise(modded)
             );
             
+            // reload the modal
+            if (reload) {
+                this.modal.reload(true);
+            }
+            
             return parent[segments[len - 1]];
         };
 
@@ -180,6 +197,7 @@ define(
             util.cookie.del("settings");
             
             // refresh page
+            location.hash = "settings";
             location.reload();
         };
 

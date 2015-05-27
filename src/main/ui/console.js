@@ -35,7 +35,7 @@ define(
             
         // instance pointers
         var self, gui,
-            configurator;
+            configurator = new Configurator();
         
         // console constructor
         function Console(instance) {
@@ -52,8 +52,8 @@ define(
                 throw new Error("No GUI instance passed to Console");
             }
             
-            // array of tool nodes
-            this.tools = [];
+            // tool nodes
+            this.tools = {};
             
             // set gui and build the tree
             gui = instance;
@@ -362,10 +362,10 @@ define(
             var
                 modalTitle = "Destroy the Console instance?",
                 modalMsg = "Confirm destruction of the GUI Console? ",
-                modal = new Modal("destructConsole", {
+                modal = new Modal("console-destruct", {
                     init: true,
                     confirm: function () {
-                        self.commitDestroy(modal, "soft");
+                        self.commitDestroy(modal, "hard");
                     },
                     cancel: function () {
                         modal.close();
@@ -400,14 +400,13 @@ define(
             // remove tool
             self.removeTool("destroy");
 
-            // destroy the modal
+            // close the modal
             if (modal) {
                 modal.close();
             }
             
             // update configurator
             configurator.set("gui/console/destroyed", true);
-            configurator.reloadModal();
         };
             
         // restore console after being destroyed
@@ -457,8 +456,9 @@ define(
             // tools for console
             if (config.logs.enabled) {
                 // console toggle state tool
-                this.createTool("toggle")
-                    .element.onclick = function () {
+                this.createTool("menu").on(
+                    "click",
+                    function () {
                         var closed = wrapper.hasClass("kbs-closed"),
                             full = wrapper.hasClass("kbs-full");
 
@@ -479,7 +479,24 @@ define(
                             // open
                             self.open();
                         }
-                    };
+                    }
+                );
+                
+                // console toggle tool
+                this.createTool("toggle").on(
+                    "click",
+                    function () {
+                        var displayed = configurator.get(
+                            "gui/console/displayed"
+                        );
+                        
+                        wrapper.toggleClass("kbs-disabled");
+                        configurator.set(
+                            "gui/console/displayed",
+                            (!displayed) ? true : false
+                        );
+                    }
+                );
                 
                 // save tool - only on localhost base url's
                 if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
@@ -517,7 +534,6 @@ define(
             }
             
             // configurator tool
-            configurator = new Configurator();
             this.createTool("settings").on(
                 "click",
                 configurator.launchModal
@@ -546,7 +562,11 @@ define(
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
             
             if (config.gui.console.destroyed) {
-                this.commitDestroy(false, "soft");
+                this.commitDestroy(false, "hard");
+            }
+            
+            if (!config.gui.console.displayed) {
+                this.wrapper.addClass("kbs-disabled");
             }
                 
             // return wrapper element

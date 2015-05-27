@@ -10,27 +10,21 @@
 *   TODO
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + A place for Kanban tools? Not attached to the console toolbar?
-*
-*   + Add a repository/deposit component for storing instances of Kanban objects,
-*     making them globally accessible within Kanban. Should remove the
-*     need to pass instances between function calls.
-*
-*   + Add a modal to view screenshots instead of opening in a new tab
+*   + A place for Kanban tools? Not attached to the console toolbar? Maybe
+*     even make the "console" the menu component, with the ability to toggle
+*     the console window leaving the toolbar on its own?
 *
 *   + Monitor status of all components and defer kbs/loaded event until
 *     all components have finished initialising, more reliable than hard coding
-*     the event fire (maybe combine with the repository/deposit component?)
+*     the event fire (maybe combine with the repository component?)
 *
 *   + Allow searching of tasks by meta data such as references, browser and
-*     version etc. Maybe allowing pulling into a local file?? Would require
-*     local sourcing... possibly.
-*
-*   + Just discovered a very in-depth and exposed API under window.bugherd
-*     this opens up a LOT of possibilities...
+*     version etc.
 *
 *   + Possibly add more info about the task to expanded details? Such as
 *     the last updated at and update by etc?
+*
+*   + Is it possible to add a setting to scale the entire KBS gui?
 */
 
 define(
@@ -54,7 +48,7 @@ define(
         events,
         status,
         cache,
-        repo,
+        Repository,
         Http,
         Configurator,
         BugHerd,
@@ -65,8 +59,10 @@ define(
         'use strict';
 
         // components
-        var kanban, end, gui, interactor, settings, bugherd;
-
+        var kanban, end, gui,
+            interactor, settings, bugherd,
+            repo = new Repository();
+            
         /* end of init call
         ------------------------------------------------------*/
         end = function () {
@@ -112,8 +108,9 @@ define(
             
         // get a new configurator and load data
         try {
-            repo.settings = settings = new Configurator();
+            settings = new Configurator();
             settings.loadExisting();
+            repo.add("settings", settings);
         } catch (configuratorException) {
             util.log(
                 "error",
@@ -138,7 +135,8 @@ define(
         // initialise gui first so log buffer is constructed
         try {
             if (config.gui.enabled) {
-                repo.gui = gui = new GUI();
+                gui = new GUI();
+                repo.add("gui", gui);
             }
         } catch (guiException) {
             util.log(
@@ -154,7 +152,8 @@ define(
         // initialise interactor
         try {
             if (config.interactor.enabled) {
-                repo.interactor = interactor = new Interactor();
+                interactor = new Interactor();
+                repo.add("interactor", interactor);
             }
         } catch (interactorException) {
             util.log(
@@ -169,7 +168,8 @@ define(
             
         // initialise the bugherd api wrapper
         try {
-            repo.bugherd = bugherd = new BugHerd();
+            bugherd = new BugHerd();
+            repo.add("bugherd", bugherd);
         } catch (bugherdException) {
             util.log(
                 "error",

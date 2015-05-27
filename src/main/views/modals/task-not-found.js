@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name taskNotFound.js
+*   @name task-not-found.js
 *   @copy Copyright 2015 Harry Phillips
 */
 

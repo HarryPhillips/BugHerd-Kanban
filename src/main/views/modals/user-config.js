@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name userConfig.js
+*   @name user-config.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -69,7 +69,7 @@ define(
                     "text",
                     function (url) {
                         // set wallpaper config
-                        config.set("gui/wallpaper", url);
+                        config.set("gui/wallpaper", url, true);
                         
                         // load the new wallpaper
                         gui.loadWallpaper(url);
@@ -96,14 +96,15 @@ define(
                             "number",
                             function (value) {
                                 config.set("gui/parallax/factor", value);
-                            }
+                            },
+                            config.get("gui/parallax/factor")
                         ));
                     }
                 }
                 
                 // console state
                 node.addChild(new Field(
-                    "Console State on Load:",
+                    "Menu State on Load:",
                     "text",
                     function (value) {
                         // make sure is a valid state class
@@ -195,20 +196,9 @@ define(
                 node.createChild("span", "kbs-confirm")
                     .text("Show Data")
                     .on("click", function () {
-                        // log and show user data
-                        var modal = new Modal("userData");
+                        // show user data
+                        var modal = new Modal("user-data");
                     });
-                
-                // restore console
-                if (config.get("gui/console/destroyed")) {
-                    node.createChild("span", "kbs-confirm")
-                        .text("Restore Console")
-                        .on("click", function () {
-                            gui.console.restore();
-                            config.set("gui/console/destroyed", false);
-                            modal.reload(true);
-                        });
-                }
 
                 return node;
             });
