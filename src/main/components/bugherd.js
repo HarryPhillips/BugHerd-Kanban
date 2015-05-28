@@ -52,7 +52,7 @@ define(
             gui = gui || repo.get("gui");
             
             this.api = bh;
-            this.TaskApi = new TaskController();
+            this.tasks = new TaskController();
             this.init();
         }
         
@@ -329,7 +329,7 @@ define(
         ------------------------------------------*/
         // init the bugherd api wrapper
         BugHerd.prototype.init = function () {
-            this.TaskApi.init();
+            this.tasks.init();
             this.applyContext();
             this.applyHandlers();
         };
@@ -382,7 +382,7 @@ define(
         };
         
         // returns all tasks for the current project
-        BugHerd.prototype.tasks = function () {
+        BugHerd.prototype.getTasks = function () {
             return bh.application.tasksCollection.models;
         };
         

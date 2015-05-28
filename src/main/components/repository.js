@@ -38,6 +38,11 @@ define(function () {
     Repository.prototype.del = function (key) {
         delete box[key];
     };
+    
+    // list all repo objects
+    Repository.prototype.all = function () {
+        return box;
+    };
 
     return Repository;
 });

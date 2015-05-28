@@ -133,6 +133,11 @@ define(
                             typeof obj.nodeName === "string"
             );
         };
+            
+        // checks if input is a text node
+        Util.prototype.isTextNode = function (obj) {
+            return obj.nodeType === 3;
+        };
         
         // parse a html string into DOM element
         Util.prototype.parseHTML = function (html) {
@@ -364,21 +369,40 @@ define(
         
         // merge two objects
         Util.prototype.merge = function (one, two, overwrite) {
-            var i,
-                exists;
+            var duplicate,
+                exists,
+                len,
+                i;
             
-            // loop through all two's props
-            // and push into one
-            for (i in two) {
-                if (two.hasOwnProperty(i)) {
-                    exists = typeof one[i] !== "undefined";
-                    
-                    if (!exists || (exists && overwrite)) {
-                        if (util.isObject(two[i])) {
-                            util.merge(one[i], two[i], overwrite);
-                        } else {
-                            one[i] = two[i];
+            // object merge
+            if (util.isObject(one)) {
+                // loop through all two's props
+                // and push into one
+                for (i in two) {
+                    if (two.hasOwnProperty(i)) {
+                        exists = typeof one[i] !== "undefined";
+
+                        if (!exists || (exists && overwrite)) {
+                            if (util.isObject(two[i])) {
+                                util.merge(one[i], two[i], overwrite);
+                            } else {
+                                one[i] = two[i];
+                            }
                         }
+                    }
+                }
+            }
+            
+            // array merge
+            if (util.isArray(one)) {
+                // loop through all two's items
+                // and push into one
+                duplicate = overwrite;
+                len = two.length;
+                i = 0;
+                for (i; i < len; i += 1) {
+                    if (!util.contains(one, two[i]) || duplicate) {
+                        one.push(two[i]);
                     }
                 }
             }
@@ -638,6 +662,73 @@ define(
             }
             
             return list;
+        };
+            
+        // returns *approximated* object size in bytes
+        Util.prototype.sizeof = function (object) {
+            var bytes = 0,
+                len,
+                i;
+            
+            //debugger;
+            
+            if (object !== null && object !== undefined) {
+                switch (typeof object) {
+                case "string":
+                    bytes += object.length * 2;
+                    break;
+                case "number":
+                    bytes += 8;
+                    break;
+                case "boolean":
+                    bytes += 4;
+                    break;
+                case "object":
+                    // object
+                    if (util.isObject(object)) {
+                        for (i in object) {
+                            if (object.hasOwnProperty(i)) {
+                                bytes += util.sizeof(object[i]);
+                            }
+                        }
+                    }
+                        
+                    // array
+                    if (util.isArray(object)) {
+                        len = object.length;
+                        i = 0;
+                        
+                        for (i; i < len; i += 1) {
+                            bytes += util.sizeof(object[i]);
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            return bytes;
+        };
+            
+        // format number to bytes
+        Util.prototype.bytesFormat = function (x) {
+            // bytes
+            if (x < 1014) {
+                return x + "bytes";
+            }
+            
+            // kilobytes
+            if (x < 1048576) {
+                return (x / 1024).toFixed(3) + "KB";
+            }
+            
+            // megabytes
+            if (x < 1073741824) {
+                return (x / 1048576).toFixed(3) + "MB";
+            }
+            
+            // gigabytes
+            return (x / 1073741824).toFixed(3) + "GB";
         };
         
         // log wrapper

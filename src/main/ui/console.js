@@ -83,7 +83,7 @@ define(
             
             // set log context array
             this.contexts = {
-                def: self.wrapper.cons.out.element
+                def: self.wrapper.cons.out
             };
         };
         
@@ -104,7 +104,7 @@ define(
             }
             
             // declarations
-            var logContext;
+            var contextNode;
             
             // make sure not already defined
             if (this.contexts[context]) {
@@ -113,17 +113,17 @@ define(
             }
             
             if (util.isNode(element)) {
-                logContext = element.createChild("div", "kbs-log-context", context);
+                contextNode = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
-                element.appendChild(logContext.element);
+                contextNode = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
+                element.appendChild(contextNode.element);
             }
             
             // apply to global contexts
-            this.contexts[context] = logContext.element;
+            this.contexts[context] = contextNode;
             
-            return element;
+            return contextNode;
         };
             
         // clear/remove a logging context
@@ -135,6 +135,7 @@ define(
                 return;
             }
             
+            self.contexts[context] = null;
             delete self.contexts[context];
         };
         
@@ -208,9 +209,9 @@ define(
                     }
                 };
                 
-                objwrap.addChild(objexp.element);
+                objwrap.addChild(objexp);
                 objwrap.addChild(objtxt);
-                log.addChild(objwrap.element);
+                log.addChild(objwrap);
             }
             
             // check if test node within exec node
@@ -223,12 +224,11 @@ define(
             }
                 
             // write to context
-            context.appendChild(log.element);
+            context.addChild(log);
             
             // create context with new log node
-            // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(doCreateContext, log);
             }
 
             // scroll to log
@@ -593,8 +593,8 @@ define(
             
             // log specified amount
             util.log("context:benchmark/output", "buffer", "benchmark output...");
-            while (i <= amount) {
-                util.log("context:benchmark/output", "debug", "log #" + i);
+            while (i < amount) {
+                util.log("context:benchmark/output", "debug", "log #" + (i + 1));
                 i += 1;
             }
 
@@ -622,6 +622,7 @@ define(
             // clear the benchmark context
             util.log.endContext();
             self.clearContext("benchmark");
+            self.clearContext("benchmark/output");
         };
         
         return Console;

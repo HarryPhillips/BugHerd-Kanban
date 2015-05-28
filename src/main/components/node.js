@@ -11,9 +11,28 @@ define(
     function (config, util) {
         'use strict';
         
+        // instance monitoring
+        var ALL_NODES = [];
+        
         // node constructor
         function Node(type, classes, id) {
+            // check if a node with this exact element
+            // already exists - if it does, return it
+            var len = ALL_NODES.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (ALL_NODES[i].element === type) {
+                    return ALL_NODES[i];
+                }
+            }
+            
+            // update instance monitor
+            ALL_NODES.push(this);
+            
+            // props
             this.children = [];
+            this.textNodes = [];
             
             // check if passed an HTML node
             if (util.isDomElement(type)) {
@@ -192,21 +211,33 @@ define(
         
         // add a child to node
         Node.prototype.addChild = function (child) {
-            // check if node is an instance of class Node
+            // check if child is an instance of class Node
             if (child.constructor === Node || child instanceof Node) {
                 this.element.appendChild(child.element);
                 this.children.push(child);
-                return;
+                return child;
             }
             
-            // if is a dom element, create new node and push
-            // to children
+            // if is a dom element, then call add again
             if (util.isDomElement(child)) {
-                this.children.push(new Node(child));
+                child = new Node(child);
+                return this.addChild(child);
             }
-
-            // append
-            this.element.appendChild(child);
+            
+            // if is a text node just append
+            if (util.isTextNode(child)) {
+                this.textNodes.push(child);
+                this.element.appendChild(child);
+                return child;
+            }
+            
+            // failed
+            util.log(
+                "error",
+                this,
+                "Attempt to add a child element to Node failed, " +
+                    "child is not of type Node or HTMLElement."
+            );
         };
 
         // create and add child to node
@@ -218,12 +249,24 @@ define(
         
         // detach from parent
         Node.prototype.detach = function () {
-            this.element.parentNode.removeChild(this.element);
+            return this.element.parentNode.removeChild(this.element);
         };
         
         // (re)attach to parent
         Node.prototype.attach = function () {
             this.element.parentNode.appendChild(this.element);
+        };
+        
+        // move to another element
+        Node.prototype.move = function (destination) {
+            var el = this.detach();
+            
+            // attach to destination
+            if (util.isNode(destination)) {
+                destination.addChild(el);
+            } else if (util.isDomElement(destination)) {
+                destination.appendChild(el);
+            }
         };
         
         // delete and reset node and it's children
@@ -235,14 +278,16 @@ define(
             this.parent().removeChild(this.element);
         };
         
-        // find occurences of a child element within our element tree
+        // find occurences of an element by selector within this node
         Node.prototype.find = function (selector) {
-            var nodeList = this.element.querySelectorAll(":scope > " + selector),
+            var nodeList = this.element.querySelectorAll(":scope " + selector),
                 len = nodeList.length,
                 results = [],
                 i = 0;
             
-            // convert to node
+            // iterate over results
+            // convert to Node - will get existing
+            // node if element is already a node
             for (i; i < len; i += 1) {
                 results.push(new Node(nodeList[i]));
             }
@@ -333,6 +378,23 @@ define(
             
             element.appendChild(this.element);
         };
+        
+        // checks if node has child nodes
+        Node.prototype.hasChildren = function () {
+            return this.children.length;
+        };
+        
+        // checks if the node's element matches this element
+        Node.prototype.is = function (element) {
+            return this.element === element;
+        };
+        
+        // monitoring
+        Node.prototype.count = function () {
+            return ALL_NODES.length;
+        };
+        
+        Node.prototype.ALL_NODES = ALL_NODES;
         
         return Node;
     }

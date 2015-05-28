@@ -410,7 +410,7 @@ define(
         // hide all tasks with the following tag(s)
         Interactor.prototype.hideTasksWithTag = function (tag) {
             var bugherd = repo.get("bugherd"),
-                list = bugherd.TaskApi.findAllWithTag(tag),
+                list = bugherd.tasks.findAllWithTag(tag),
                 len = list.length,
                 i = 0;
             
@@ -423,7 +423,7 @@ define(
         // show all tasks with the followings tag(s)
         Interactor.prototype.showTasksWithTag = function (tag) {
             var bugherd = repo.get("bugherd"),
-                tasks = bugherd.tasks,
+                tasks = bugherd.getTasks(),
                 len = tasks.length,
                 i = 0,
                 task,
@@ -436,7 +436,7 @@ define(
             }
             
             // show all tasks with the given tag
-            tasks = bugherd.TaskApi.findAllWithTag(tag);
+            tasks = bugherd.tasks.findAllWithTag(tag);
             len = tasks.length;
             i = 0;
             

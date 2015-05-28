@@ -246,13 +246,17 @@
 }
 
 .kbs-cons-box.kbs-disabled {
-    height: auto;
+    width: auto; height: 30px;
     border-bottom: solid transparent 0px !important;
     border-radius: 0px;
 }
 
+.kbs-cons-box.kbs-disabled .kbs-cons-title {
+    display: none;
+}
+
 .kbs-cons-box.kbs-disabled.kbs-closed {
-    height: 30px;
+    width: 30px; height: 30px;
 }
 
 /* console toolbar 
@@ -347,6 +351,10 @@
     height: 25px;
 }
 
+.kbs-log-closed > * {
+    display: none;
+}
+
 /* object log node */
 .kbs-object {
     position: relative;
@@ -363,6 +371,10 @@
 
 .kbs-object.kbs-expand {
     height: 450px;
+}
+
+.kbs-full .kbs-object.kbs-expand {
+    height: 750px;
 }
 
 .kbs-object-expand {

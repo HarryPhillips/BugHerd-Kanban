@@ -12,12 +12,16 @@ define(
         'main/components/configurator',
         'main/components/node',
         'main/components/view',
-        'main/components/field'
+        'main/components/field',
+        'main/ui/modal'
     ],
-    function (util, Configurator, Node, View, Field) {
+    function (util, Configurator, Node, View, Field, Modal) {
         'use strict';
 
         var config = new Configurator(),
+            filters = {
+                displayMethod: "hide"
+            },
             view;
         
         // create a new view
@@ -25,28 +29,39 @@ define(
             var node = new Node("div", "kbs-view"),
                 gui = args[0],
                 modal = args[1],
-                filters = {},
+                filterData,
+                reset,
+                apply,
                 show,
-                hide,
-                apply;
+                hide;
             
             // modal text
             node.title = "Task Filters";
             
             // show results
-            node.addChild(new Field(
+            show = node.addChild(new Field(
                 "Show:",
                 "checkbox",
-                function (value) {},
-                filters.show
+                function (value) {
+                    filters.displayMethod = "show";
+                    
+                    hide.find(".kbs-input-field")[0]
+                        .element.checked = false;
+                },
+                (filters.displayMethod === "show") ? true : false
             ));
 
             // hide results
-            node.addChild(new Field(
+            hide = node.addChild(new Field(
                 "Hide:",
                 "checkbox",
-                function (value) {},
-                filters.hide
+                function (value) {
+                    filters.displayMethod = "hide";
+                    
+                    show.find(".kbs-input-field")[0]
+                        .element.checked = false;
+                },
+                (filters.displayMethod === "hide") ? true : false
             ));
             
             // apply filters with above options
@@ -56,8 +71,20 @@ define(
             
                 });
             
+            // show filters
+            filterData = node.createChild("span", "kbs-confirm")
+                .text("show filter")
+                .on("click", function () {
+                    var modal = new Modal("view-object", {
+                        viewParams: {
+                            message: "Filter settings:",
+                            object: filters
+                        }
+                    });
+                });
+            
             // reset filters
-            apply = node.createChild("span", "kbs-confirm")
+            reset = node.createChild("span", "kbs-confirm")
                 .text("reset")
                 .on("click", function () {
             

@@ -10,10 +10,6 @@
 *   TODO
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + A place for Kanban tools? Not attached to the console toolbar? Maybe
-*     even make the "console" the menu component, with the ability to toggle
-*     the console window leaving the toolbar on its own?
-*
 *   + Monitor status of all components and defer kbs/loaded event until
 *     all components have finished initialising, more reliable than hard coding
 *     the event fire (maybe combine with the repository component?)
@@ -25,6 +21,9 @@
 *     the last updated at and update by etc?
 *
 *   + Is it possible to add a setting to scale the entire KBS gui?
+*
+*   + Animated modal interface? When opening another popup, push other
+*     modals into a stack at the side of the screen?
 */
 
 define(
@@ -38,7 +37,9 @@ define(
         'main/components/http',
         'main/components/configurator',
         'main/components/bugherd',
+        'main/components/node',
         'main/ui/gui',
+        'main/ui/modal',
         'main/ui/interactor',
         'test/main.test'
     ],
@@ -52,7 +53,9 @@ define(
         Http,
         Configurator,
         BugHerd,
+        Node,
         GUI,
+        Modal,
         Interactor,
         tests
     ) {
@@ -75,7 +78,8 @@ define(
                 "okay",
                 kanban,
                 "Kanban initialised in " +
-                    window.KBS_DELTA_TIME
+                    window.KBS_DELTA_TIME +
+                    ". Total size: " + util.bytesFormat(util.sizeof(kanban))
             );
 
             // expose the api if in dev mode
@@ -197,7 +201,9 @@ define(
                 "Interactor": Interactor,
                 "GUI": GUI,
                 "BugHerd": BugHerd,
-                "Http": Http
+                "Http": Http,
+                "Node": Node,
+                "Modal": Modal
             }
         };
     }
