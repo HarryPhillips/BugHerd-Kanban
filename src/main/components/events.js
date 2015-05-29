@@ -23,21 +23,38 @@ define(['config'], function (config) {
     
     // subscribe/create event topic
     Events.prototype.subscribe = function (event, handler) {
-        if (!this.topics[event]) {
-            // create a event topic
-            this.topics[event] = [];
-        }
+        var len, i,
+            attach = function (topic, handler) {
+                if (!this.topics[topic]) {
+                    // create an event topic
+                    this.topics[topic] = [];
+                }
+
+                // apply handler to event
+                this.topics[topic].push(handler);
+            }.bind(this);
         
-        // apply handler to event
-        this.topics[event].push(handler);
+        // if event is an array of topics
+        if (event instanceof Array) {
+            len = event.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                attach(event[i], handler);
+            }
+        } else {
+            attach(event, handler);
+        }
     };
     
     // unsubscribe a handler from a topic
     Events.prototype.unsubscribe = function (event, handler) {
-        var list = this.topics[event],
+        var list,
             object = false,
-            len = list.length,
-            i = 0;
+            xlen,
+            ylen,
+            x = 0,
+            y = 0;
         
         // not a name - we need to do object comparison
         // we shouldn't need to do deep comparison,
@@ -47,19 +64,30 @@ define(['config'], function (config) {
             object = true;
         }
         
-        // check names of all handlers
-        for (i; i < len; i += 1) {
-            // remove handler from array and return
-            if (object) {
-                if (handler === list[i] ||
-                        handler.toSource() === list[i].toSource()) {
-                    list.splice(list.indexOf(i), 1);
-                    return;
-                }
-            } else {
-                if (list[i].name === handler) {
-                    list[i].splice(list.indexOf(i), 1);
-                    return;
+        // convert event to array
+        if (!event instanceof Array) {
+            event = [event];
+        }
+        
+        // remove all matched handlers from event
+        for (x, xlen = event.length; x < xlen; x += 1) {
+            // get event
+            list = this.topics[event[x]];
+                               
+            // check names of all handlers
+            for (y, ylen = list.length; y < ylen; y += 1) {
+                // remove handler from array and return
+                if (object) {
+                    if (handler === list[y] ||
+                            handler.toSource() === list[y].toSource()) {
+                        list.splice(list.indexOf(y), 1);
+                        return;
+                    }
+                } else {
+                    if (list[y].name === handler) {
+                        list[y].splice(list.indexOf(y), 1);
+                        return;
+                    }
                 }
             }
         }
@@ -78,14 +106,6 @@ define(['config'], function (config) {
         var i;
         for (i = 0; i < this.topics[event].length; i += 1) {
             this.topics[event][i](data, event);
-        }
-        
-        // make data an object if it isn't already so
-        // so we can log it nicely
-        if (typeof data !== "object") {
-            data = {
-                "data": data
-            };
         }
     };
     

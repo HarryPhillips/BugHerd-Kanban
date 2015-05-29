@@ -15,7 +15,7 @@ define(
         'main/components/status',
         'main/components/router',
         'main/components/cache',
-        'main/components/node',
+        'main/ui/node',
         'main/components/configurator',
         'main/ui/modal'
     ],

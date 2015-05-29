@@ -738,6 +738,9 @@ define(
                 return;
             }
 
+            // increment log count
+            cache.logCount += 1;
+            
             // declarations
             var i = 0, param, args = [],
                 filter = config.logs.filter,

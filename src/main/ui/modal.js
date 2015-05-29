@@ -15,8 +15,23 @@
 *     one at a time perhaps?)
 *
 *   + Dynamic modal event handler attachment
+*   + Rewrite the modal queueing system (again!) as currently it doesn't
+*     scale too well.
 *
-*   + Modal event fires should be done in one function call
+*
+*   NOTES
+*   + Open and closing of a single modal should behave as normal.
+*
+*   + If a modal is opened and another modal is already open, the
+*     active modal needs to be pushed into the stack or hidden
+*     (depending on configured behaviour) and the requested modal
+*     opens as normal.
+*
+*   + If a stacked modal is clicked, it should be made the active modal
+*     and the previously active modal needs to be pushed to stack
+*
+*   + If a stacked modal's close button is clicked it should be removed
+*     from the stack without affecting other modals
 */
 
 define(
@@ -26,7 +41,7 @@ define(
         'main/components/events',
         'main/components/status',
         'main/components/http',
-        'main/components/node',
+        'main/ui/node',
         'main/components/viewloader'
     ],
     function (config,
@@ -38,7 +53,7 @@ define(
         // event logger
         function evtlog(modal, event) {
             util.log(
-                "context:gui/modals",
+                "context:gui",
                 "debug",
                 "Modal '" + modal.viewName + "' " +
                     "event '" + event + "' fired"
@@ -53,13 +68,26 @@ define(
         /* ModalController Class
         ---------------------------------------------*/
         function ModalController() {
-            // modal objects/arrays
+            // list of all modal objects/arrays
             this.list = {};
-            this.openModals = [];
-            this.queuedModals = [];
             
-            // create logging context
-            this.applyContext();
+            // modal states
+            this.active = null;
+            this.stacked = [];
+            this.opened = [];
+            
+            // overlay preservation flag
+            this.preserveOverlay = false;
+            
+            // queue processing
+            events.subscribe(
+                [
+                    "gui/modal/open",
+                    "gui/modal/close",
+                    "gui/modal/destruct"
+                ],
+                this.processStack.bind(this)
+            );
             
             // create events and process queue
             // on close and destruction
@@ -71,33 +99,60 @@ define(
             var len = this.events.length,
                 i = 0;
             
+            // event logging
             for (i; i < len; i += 1) {
                 events.subscribe(
                     "gui/modal/" + this.events[i],
                     evtlog
                 );
             }
-            
-            // queue processor
-            events.subscribe(
-                "gui/modal/close",
-                this.processQueue.bind(this)
-            );
-            events.subscribe(
-                "gui/modal/destruct",
-                this.processQueue.bind(this)
-            );
         }
         
-        // apply gui/modals logging context
-        ModalController.prototype.applyContext = function () {
-            events.subscribe("gui/loaded", function () {
-                util.log(
-                    "context:gui/modals",
-                    "buffer",
-                    "log-buffer: GUI-MODALS"
-                );
-            });
+        // begin processing the modal queue
+        ModalController.prototype.processStack = function processStack(data, event) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                modal = data;
+            
+            util.log("context:gui", "debug", "processing modal stack");
+            
+            if (stacked.length || opened.length) {
+                this.preserveOverlay = true;
+            }
+            
+            // new modal opened
+            if (event === "gui/modal/open") {
+                // push current modal into stack
+                if (active) {
+                    this.addToStack(active);
+                }
+                
+                this.addToOpened(modal);
+            }
+            
+            // modal closed - re-open first in stack
+            if (event === "gui/modal/close") {
+                // if in stack, remove it
+                if (this.isStacked(modal)) {
+                    this.removeFromStack(modal);
+                }
+                
+                if (stacked.length) {
+                    // take out of stack and open
+                    modal = stacked[stacked.length - 1];
+                    modal.open();
+                    this.removeFromStack(modal);
+                    
+                } else {
+                    // reset
+                    this.active = null;
+                    this.preserveOverlay = false;
+                    gui.hideOverlay();
+                }
+                
+                this.removeFromOpened(modal);
+            }
         };
         
         // add a new modal instance
@@ -110,92 +165,83 @@ define(
             delete this.list[modal.viewName || modal];
         };
         
-        // adds a modal to the queue
+        // adds a modal to the stack
+        ModalController.prototype.addToStack = function (modal) {
+            // add stacked class
+            util.log(
+                "context:gui",
+                "debug",
+                "Adding modal '" + modal.viewName + "' to stack"
+            );
+            
+            modal.node.addClass("kbs-stacked");
+            
+            // push to stacked
+            this.stacked.push(modal);
+        };
+        
+        // removes a modal from the stack
+        ModalController.prototype.removeFromStack = function (modal) {
+            var array = this.stacked,
+                index = array.indexOf(modal);
+            
+            // remove from stack
+            this.stacked.splice(index, 1);
+            
+            // remove stacked class
+            modal.node.removeClass("kbs-stacked");
+            
+            util.log(
+                "context:gui",
+                "debug",
+                "Removed modal '" + modal.viewName + "' from stack"
+            );
+        };
+        
+        // adds a modals to the queue
         ModalController.prototype.addToQueue = function (modal) {
-            // make sure not already in queue and not open
-            if (this.isQueued(modal) || this.isOpen(modal)) {
-                return;
-            }
-            
-            // close current and open recent request
-            // reopen the current modal when the new one
-            // is closed
-            if (this.getBehaviour("modalHopping")) {
-                var prevModal = this.getModalByName(this.openModals[0]),
-                    handler = function () {
-                        // open the previously active modal
-                        prevModal.open();
-                        
-                        // unsubscribe from the event
-                        // to prevent more than on call
-                        modal.off("close", handler);
-                    };
-                
-                // close the active modal
-                prevModal.close();
-                
-                // open the new modal and attach
-                // a close handler to reopen the prev modal
-                modal.open();
-                modal.on("close", handler);
-                         
-                return;
-            }
-            
-            // default behaviour - queded until current modal
-            // has been closed
-            this.queuedModals.push(modal.viewName || modal);
+            this.queued.push(modal);
         };
         
         // removes a modal from the queue
         ModalController.prototype.removeFromQueue = function (modal) {
-            var array = this.queuedModals,
+            var array = this.queued,
                 index = array.indexOf(modal.viewName || modal);
             
-            this.queuedModals.splice(index, 1);
+            this.queued.splice(index, 1);
         };
         
         // adds a modal to the opened modals array
         ModalController.prototype.addToOpened = function (modal) {
-            this.openModals.push(modal.viewName || modal);
+            this.opened.push(modal);
         };
         
         // removes a modal from the opened modals array
         ModalController.prototype.removeFromOpened = function (modal) {
-            var array = this.openModals,
+            var array = this.opened,
                 index = array.indexOf(modal.viewName || modal);
             
-            this.openModals.splice(index, 1);
+            this.opened.splice(index, 1);
         };
         
-        // begin processing the modal queue
-        ModalController.prototype.processQueue = function () {
-            var opened = this.openModals,
-                queued = this.queuedModals,
-                modal = queued[0];
-            
-            // check if there are no open modals
-            // and there is at least one in queue
-            if (!opened.length && queued.length) {
-                // get modal and init
-                modal = this.getModalByName(queued[0]);
-                modal.init();
-                
-                // remove from queue
-                this.removeFromQueue(modal);
-            }
+        // checks if a modal is active
+        ModalController.prototype.isActive = function (modal) {
+            return this.active === modal;
         };
         
         // checks if a modal is open
         ModalController.prototype.isOpen = function (modal) {
-            modal = modal.viewName || modal;
-            return this.openModals.indexOf(modal) !== -1;
+            return this.opened.indexOf(modal) !== -1;
         };
         
         // checks if a modal is queued
         ModalController.prototype.isQueued = function (modal) {
-            modal = modal.viewName || modal;
-            return this.queuedModals.indexOf(modal) !== -1;
+            return this.queued.indexOf(modal) !== -1;
+        };
+        
+        // checks if a modal is stacked
+        ModalController.prototype.isStacked = function (modal) {
+            return this.stacked.indexOf(modal) !== -1;
         };
         
         // returns a modal by view name
@@ -390,6 +436,16 @@ define(
             events.publish(this.eventName[event], data);
         };
         
+        // hide modal
+        Modal.prototype.hide = function () {
+            this.node.hide();
+        };
+        
+        // show modal
+        Modal.prototype.show = function () {
+            this.node.show();
+        };
+        
         // handler/listener application for modal
         Modal.prototype.applyHandlers = function () {
             var
@@ -429,7 +485,7 @@ define(
             if (this.inited) {
                 // skip build and open
                 this.open();
-                return;
+                return this;
             }
             
             // declarations
@@ -465,20 +521,15 @@ define(
         
         // opens the modal
         Modal.prototype.rOpen = function () {
-            // if a modal is already open
-            if (ctrl.openModals.length) {
-                ctrl.addToQueue(this);
+            // if we are already open - return
+            if (ctrl.isActive(this)) {
                 return;
             }
             
             // make sure we have inited
             if (!this.inited) {
-                this.init();
-                return;
+                return this.init();
             }
-            
-            // add this modal to the open modals array
-            ctrl.addToOpened(this);
             
             // show overlay and node
             gui.showOverlay();
@@ -486,12 +537,19 @@ define(
             
             // publish
             this.trigger("open", this);
+            
+            ctrl.active = this;
+            
+            return this;
         };
         
         // closes the modal
         Modal.prototype.rClose = function () {
             // hide overlay and node
-            gui.hideOverlay();
+            if (!ctrl.preserveOverlay) {
+                gui.hideOverlay();
+            }
+            
             this.node.hide();
             
             // remove from controller opened modals

@@ -10,9 +10,9 @@ define(
     [
         'main/components/util',
         'main/components/configurator',
-        'main/components/node',
-        'main/components/view',
-        'main/components/field',
+        'main/ui/node',
+        'main/ui/view',
+        'main/ui/field',
         'main/ui/modal'
     ],
     function (util, Configurator, Node, View, Field, Modal) {

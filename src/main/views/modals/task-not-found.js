@@ -9,8 +9,8 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view'
+        'main/ui/node',
+        'main/ui/view'
     ],
     function (util, Node, View) {
         'use strict';
@@ -26,24 +26,21 @@ define(
             node.title = "Task Not Found";
             
             // message
-            node
-                .createChild("p")
+            node.createChild("p")
                 .text("Couldn't find task #" + id + "!");
             
             // confirm
-            node
-                .createChild("span", "kbs-confirm")
+            node.createChild("span", "kbs-confirm")
                 .text("search again")
                 .on("click", function () {
-                    modal.trigger("confirm");
+                    modal.trigger("confirm", modal);
                 });
             
             // cancel
-            node
-                .createChild("span", "kbs-cancel")
+            node.createChild("span", "kbs-cancel")
                 .text("close")
                 .on("click", function () {
-                    modal.trigger("cancel");
+                    modal.trigger("cancel", modal);
                 });
             
             return node;

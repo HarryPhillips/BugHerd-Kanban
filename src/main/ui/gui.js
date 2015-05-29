@@ -16,7 +16,7 @@ define(
         'main/components/status',
         'main/components/counter',
         'main/components/configurator',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/console',
         'main/ui/modal'
     ],
@@ -47,6 +47,9 @@ define(
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
             
+            // setup logging context
+            this.applyContext();
+            
             // modals api
             this.setModalApi();
             
@@ -69,7 +72,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("gui/loaded");
+                    events.publish("kbs/gui/loaded");
                 }),
 
                 // create link elements
@@ -112,7 +115,7 @@ define(
                 }
 
                 // gui load event listener
-                events.subscribe("gui/loaded", publish);
+                events.subscribe("kbs/gui/loaded", publish);
             }
 
             // props
@@ -172,6 +175,18 @@ define(
             }
             document.head.appendChild(mainlink);
             document.head.appendChild(themelink);
+        };
+            
+        // apply gui logging context
+        GUI.prototype.applyContext = function () {
+            // have to wait for gui loaded
+            events.subscribe("kbs/gui/loaded", function () {
+                util.log(
+                    "context:gui",
+                    "buffer",
+                    "log-buffer: GUI"
+                );
+            });
         };
             
         // return current theme name or theme name from url

@@ -147,7 +147,8 @@ define(function () {
             },
             modals: {
                 behaviour: {
-                    modalHopping: true
+                    stack: true,
+                    animate: false
                 }
             }
         },
@@ -169,15 +170,15 @@ define(function () {
             }
         },
         tooltips: {
-            save: "Save the output buffer to text file",
-            clear: "Clear all logs",
+            save: "Save log buffer",
+            clear: "Clear console",
             menu: "Kanban Menu",
             toggle: "Toggle the console",
-            close: "Close the console",
-            destroy: "Destroy this console instance",
-            benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings",
-            toggleObjs: "Toggle object logs display"
+            close: "Close",
+            destroy: "Destroy console",
+            benchmark: "Benchmark",
+            settings: "Settings",
+            toggleObjs: "Toggle object logs"
         }
     }).obj;
     

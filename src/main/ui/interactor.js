@@ -14,7 +14,7 @@ define(
         'main/components/status',
         'main/components/repository',
         'main/components/configurator',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (

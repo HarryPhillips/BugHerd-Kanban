@@ -9,8 +9,8 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view'
+        'main/ui/node',
+        'main/ui/view'
     ],
     function (util, Node, View) {
         'use strict';
@@ -25,21 +25,18 @@ define(
             node.title = "Destruct GUI Console/Toolbar";
             
             // message
-            node
-                .createChild("p")
+            node.createChild("p")
                 .text("Confirm destruction of GUI console?");
             
             // confirm
-            node
-                .createChild("span", "kbs-confirm")
+            node.createChild("span", "kbs-confirm")
                 .text("confirm")
                 .on("click", function () {
                     modal.trigger("confirm");
                 });
             
             // cancel
-            node
-                .createChild("span", "kbs-cancel")
+            node.createChild("span", "kbs-cancel")
                 .text("cancel")
                 .on("click", function () {
                     modal.trigger("cancel");

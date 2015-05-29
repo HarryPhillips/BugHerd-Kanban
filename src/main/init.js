@@ -24,6 +24,8 @@
 *
 *   + Animated modal interface? When opening another popup, push other
 *     modals into a stack at the side of the screen?
+*
+*   + Might want to add max length parameters for the console. *Might*.
 */
 
 define(
@@ -37,7 +39,7 @@ define(
         'main/components/http',
         'main/components/configurator',
         'main/components/bugherd',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/gui',
         'main/ui/modal',
         'main/ui/interactor',
@@ -79,7 +81,7 @@ define(
                 kanban,
                 "Kanban initialised in " +
                     window.KBS_DELTA_TIME +
-                    ". Total size: " + util.bytesFormat(util.sizeof(kanban))
+                    ". Approx. size: " + util.bytesFormat(util.sizeof(kanban))
             );
 
             // expose the api if in dev mode
@@ -109,6 +111,11 @@ define(
         ------------------------------------------------------*/
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", end);
+
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
+        });
             
         // get a new configurator and load data
         try {
@@ -119,7 +126,7 @@ define(
             util.log(
                 "error",
                 "Configurator failed to initialise " +
-                    " cleanly. Exception thrown in " +
+                    "cleanly. Exception thrown in " +
                     configuratorException.fileName + " at line " +
                     configuratorException.lineNumber + ". Error: " +
                     configuratorException.message
@@ -131,11 +138,6 @@ define(
             return;
         }
 
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
-        });
-
         // initialise gui first so log buffer is constructed
         try {
             if (config.gui.enabled) {
@@ -146,7 +148,7 @@ define(
             util.log(
                 "error",
                 "GUI failed to initialise " +
-                    " cleanly. Exception thrown in " +
+                    "cleanly. Exception thrown in " +
                     guiException.fileName + " at line " +
                     guiException.lineNumber + ". Error: " +
                     guiException.message
@@ -163,7 +165,7 @@ define(
             util.log(
                 "error",
                 "Interactor failed to initialise " +
-                    " cleanly. Exception thrown in " +
+                    "cleanly. Exception thrown in " +
                     interactorException.fileName + " at line " +
                     interactorException.lineNumber + ". Error: " +
                     interactorException.message
@@ -178,7 +180,7 @@ define(
             util.log(
                 "error",
                 "BugHerd API failed to initialise " +
-                    " cleanly. Exception thrown in " +
+                    "cleanly. Exception thrown in " +
                     bugherdException.fileName + " at line " +
                     bugherdException.lineNumber + ". Error: " +
                     bugherdException.message

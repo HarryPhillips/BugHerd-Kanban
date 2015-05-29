@@ -9,9 +9,9 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view',
-        'main/components/field',
+        'main/ui/node',
+        'main/ui/view',
+        'main/ui/field',
         'main/components/configurator',
         'main/ui/modal'
     ],

@@ -15,7 +15,7 @@ define(
         'main/components/cache',
         'main/components/status',
         'main/components/repository',
-        'main/components/node'
+        'main/ui/node'
     ],
     function (config, util, cache, status, Repository, Node) {
         'use strict';

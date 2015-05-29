@@ -9,7 +9,7 @@
 define(
     [
         'main/components/util',
-        'main/components/node'
+        'main/ui/node'
     ],
     function (
         util,

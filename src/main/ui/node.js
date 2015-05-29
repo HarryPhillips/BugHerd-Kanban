@@ -19,12 +19,13 @@ define(
             // check if a node with this exact element
             // already exists - if it does, return it
             var len = ALL_NODES.length,
+                assoc = this.findAssociatedNode(type),
                 i = 0;
             
-            for (i; i < len; i += 1) {
-                if (ALL_NODES[i].element === type) {
-                    return ALL_NODES[i];
-                }
+            
+            // return associated Node instance if found
+            if (assoc) {
+                return assoc;
             }
             
             // update instance monitor
@@ -271,10 +272,36 @@ define(
         
         // delete and reset node and it's children
         Node.prototype.destroy = function () {
+            var xlen = this.children.length,
+                ylen = ALL_NODES.length,
+                x = 0,
+                y = 0;
+            
+            // call destroy on children
+            if (xlen) {
+                for (x; x < xlen; x += 1) {
+                    this.children[x].destroy();
+                    this.children[x] = null;
+                }
+            }
+            
+            // remove from global node list
+            if (ylen) {
+                for (y; y < ylen; y += 1) {
+                    if (ALL_NODES[y].element === this.element) {
+                        util.log("debug", "Destroyed Node at index " + y);
+                        ALL_NODES.splice(y, 1);
+                    }
+                }
+            }
+            
+            // nullify if no parent node
             if (!this.parent()) {
                 this.element = null;
                 return;
             }
+            
+            // remove from DOM by detaching from parent
             this.parent().removeChild(this.element);
         };
         
@@ -387,6 +414,26 @@ define(
         // checks if the node's element matches this element
         Node.prototype.is = function (element) {
             return this.element === element;
+        };
+        
+        // find the node which belongs to passed element
+        Node.prototype.findAssociatedNode = function (element) {
+            var len = ALL_NODES.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (ALL_NODES[i].element === element) {
+                    util.log(
+                        "context:gui",
+                        "debug",
+                        "Node found for given element at index " + i +
+                            ". Returning reference."
+                    );
+                    return ALL_NODES[i];
+                }
+            }
+            
+            return false;
         };
         
         // monitoring

@@ -51,6 +51,19 @@
     text-align: center;
     z-index: 2147483647;
     overflow: hidden;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    -o-transition: all 0.3s;
+    transition: all 0.3s;
+}
+
+.kbs-modal.kbs-stacked {
+    top: 50px;
+    -webkit-transform: scale(0.7);
+    -moz-transform: scale(0.7);
+    -o-transform: scale(0.7);
+    transform: scale(0.7);
+    opacity: 0.5;
 }
 
 .kbs-modal-title {
@@ -332,6 +345,10 @@
 .kbs-log-context {
     max-height: 240px;
     overflow-y: scroll;
+}
+
+.kbs-full .kbs-log-context {
+    max-height: 750px;
 }
 
 .kbs-log-context-expand {

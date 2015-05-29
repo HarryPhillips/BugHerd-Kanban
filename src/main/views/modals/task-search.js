@@ -9,8 +9,8 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view'
+        'main/ui/node',
+        'main/ui/view'
     ],
     function (util, Node, View) {
         'use strict';
