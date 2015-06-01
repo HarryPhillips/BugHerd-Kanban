@@ -164,7 +164,6 @@ define(
         // shrinks the task details panel
         Interactor.prototype.shrinkTaskDetails = function () {
             var task = $(".taskDetails"),
-                overlay = $(".kbs-overlay"),
                 btn = $(".kbs-details-closed");
             
             if (!status.interactor.taskDetailsExpanded) {
@@ -173,13 +172,13 @@ define(
             
             this.activeTask = null;
             
+            // set status
+            status.interactor.taskDetailsExpanded = false;
+            
             // hide elements
             task.removeClass("kbs-details-expand");
             btn.fadeOut();
-            overlay.fadeOut();
-            
-            // set status
-            status.interactor.taskDetailsExpanded = false;
+            gui.hideOverlay();
         };
             
         // perform a task search
@@ -544,13 +543,20 @@ define(
             
         // apply event handlers
         Interactor.prototype.applyHandlers = function () {
+            var appwrap = new Node(".app-wrap"),
+                body = new Node(document.body),
+                kanban = new Node("#kanbanBoard"),
+                move,
+                frame,
+                fc;
+            
             util.log(
                 "context:inter/init",
                 "+ applying handlers to bugherd"
             );
             
             // delegate clicks on app wrapper
-            $(".app-wrap").on("click", function (event) {
+            appwrap.on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
                 
@@ -574,20 +580,19 @@ define(
             // on document mouse move - apply parallax to wallpaper
             // if there is one (experimental)
             if (config.gui.wallpaper && config.gui.parallax.enabled) {
-                var move = false,
-                    frame = setInterval(function () {
-                        move = (move) ? false : true;
-                    }, 32),
-                    fc;
+                move = false;
+                frame = setInterval(function () {
+                    move = (move) ? false : true;
+                }, 32);
                 
-                $("body").on("mousemove", function (event) {
+                body.on("mousemove", function (event) {
                     fc = config.gui.parallax.factor;
                     
                     if (move) {
                         var deltaX = -(event.pageX / fc),
                             deltaY = -(event.pageY / fc);
 
-                        $("#kanbanBoard").css(
+                        kanban.css(
                             "background-position",
                             deltaX + "px " + deltaY + "px"
                         );

@@ -19,9 +19,11 @@ define(['config'], function (config) {
             cookie,
             i;
 
+        // iterate through cookies
         for (i = 0; i < cookies.length; i += 1) {
             cookie = cookies[i];
 
+            // eliminate whitespace
             while (cookie.charAt(0) === ' ') {
                 cookie = cookie.substring(1);
             }
@@ -39,6 +41,7 @@ define(['config'], function (config) {
     Cookies.prototype.set = function (name, value, days) {
         var expires, date;
 
+        // set expiry
         if (days) {
             date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));

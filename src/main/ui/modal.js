@@ -40,14 +40,15 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
+        'main/components/repository',
         'main/components/http',
-        'main/ui/node',
-        'main/components/viewloader'
+        'main/components/viewloader',
+        'main/ui/node'
     ],
     function (config,
         util, events,
-        status, Http,
-        Node, ViewLoader) {
+        status, repo, Http,
+        ViewLoader, Node) {
         'use strict';
         
         // event logger
@@ -75,9 +76,6 @@ define(
             this.active = null;
             this.stacked = [];
             this.opened = [];
-            
-            // overlay preservation flag
-            this.preserveOverlay = false;
             
             // queue processing
             events.subscribe(
@@ -113,18 +111,15 @@ define(
             var active = this.active,
                 opened = this.opened,
                 stacked = this.stacked,
+                
                 modal = data;
             
             util.log("context:gui", "debug", "processing modal stack");
             
-            if (stacked.length || opened.length) {
-                this.preserveOverlay = true;
-            }
-            
             // new modal opened
             if (event === "gui/modal/open") {
                 // push current modal into stack
-                if (active) {
+                if (active && !active.dueRemoval) {
                     this.addToStack(active);
                 }
                 
@@ -139,19 +134,23 @@ define(
                 }
                 
                 if (stacked.length) {
-                    // take out of stack and open
+                    // take out new modal from stack and open it
                     modal = stacked[stacked.length - 1];
                     modal.open();
                     this.removeFromStack(modal);
-                    
-                } else {
+                } else if (!opened.length) {
                     // reset
                     this.active = null;
-                    this.preserveOverlay = false;
+                    gui.preserveOverlay = false;
                     gui.hideOverlay();
                 }
                 
                 this.removeFromOpened(modal);
+            }
+            
+            // should preserve overlay?
+            if (stacked.length || opened.length) {
+                gui.preserveOverlay = true;
             }
         };
         
@@ -167,17 +166,20 @@ define(
         
         // adds a modal to the stack
         ModalController.prototype.addToStack = function (modal) {
-            // add stacked class
             util.log(
                 "context:gui",
                 "debug",
                 "Adding modal '" + modal.viewName + "' to stack"
             );
             
+            // add stacked class
             modal.node.addClass("kbs-stacked");
             
             // push to stacked
             this.stacked.push(modal);
+            
+            // shift stack
+            this.shiftStack();
         };
         
         // removes a modal from the stack
@@ -191,11 +193,60 @@ define(
             // remove stacked class
             modal.node.removeClass("kbs-stacked");
             
+            // shift stack
+            this.shiftStack();
+            
             util.log(
                 "context:gui",
                 "debug",
                 "Removed modal '" + modal.viewName + "' from stack"
             );
+        };
+        
+        // shifts elements in the stack
+        ModalController.prototype.shiftStack = function () {
+            var stack = this.stacked,
+                len = stack.length,
+                i = 0,
+                modal,
+                offset;
+            
+            if (!this.getBehaviour("shift")) {
+                return;
+            }
+            
+            util.log(
+                "context:gui",
+                "debug",
+                "shifting stack"
+            );
+            
+            for (i; i < len; i += 1) {
+                modal = stack[i];
+                
+                // remove initial shift classes
+                modal.node.removeClass(["kbs-shift-left", "kbs-shift-right"]);
+                
+                // get an offset
+                if (i !== 0) {
+                    if (util.isEven(i)) {
+                        offset = "kbs-shift-left";
+                    }
+
+                    if (util.isOdd(i)) {
+                        offset = "kbs-shift-right";
+                    }
+
+                    modal.node.addClass(offset);
+
+                    util.log(
+                        "context:gui",
+                        "debug",
+                        "set offset of " + offset + " to '" +
+                            modal.viewName + "'"
+                    );
+                }
+            }
         };
         
         // adds a modals to the queue
@@ -490,6 +541,7 @@ define(
             
             // declarations
             var modal = this.node,
+                self = this,
                 title = modal.createChild(
                     "h2",
                     "kbs-modal-title"
@@ -505,7 +557,12 @@ define(
             
             // set content and append to gui
             title.text(this.title);
-            close.on("click", this.close);
+            close.on("click", function () {
+                // signal the stack processor that we
+                // shouldn't be captured
+                self.dueRemoval = true;
+                self.close();
+            });
             content.addChild(this.view);
             gui.addChild(modal);
             
@@ -531,6 +588,9 @@ define(
                 return this.init();
             }
             
+            // reset due removal flag
+            this.dueRemoval = false;
+            
             // show overlay and node
             gui.showOverlay();
             this.node.fadeIn();
@@ -545,11 +605,6 @@ define(
         
         // closes the modal
         Modal.prototype.rClose = function () {
-            // hide overlay and node
-            if (!ctrl.preserveOverlay) {
-                gui.hideOverlay();
-            }
-            
             this.node.hide();
             
             // remove from controller opened modals

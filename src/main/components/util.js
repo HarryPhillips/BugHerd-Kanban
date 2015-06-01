@@ -6,6 +6,8 @@
 
 /*global define: true */
 
+/*jslint regexp: true */
+
 define(
     [
         'config',
@@ -28,11 +30,10 @@ define(
         // util class
         function Util() {}
         
-        // set instance for internal references
-        var util = new Util(),
-            instance;
+        // create new instance of Util
+        var util = new Util();
             
-        // refresh/reload the page
+        // refresh/reload the page with optional delay
         Util.prototype.refresh = function (delay) {
             if (typeof delay !== "undefined") {
                 setTimeout(function () {
@@ -86,6 +87,11 @@ define(
                 date = util.zerofy(time.getDate(), 2);
 
             return year + "-" + month + "-" + date;
+        };
+            
+        // get diff between two numbers
+        Util.prototype.diff = function (num1, num2) {
+            return (num1 > num2) ? num1 - num2 : num2 - num1;
         };
 
         // escapes regex meta characters from a string
@@ -203,15 +209,89 @@ define(
             return typeof obj === "boolean";
         };
             
-        // capitilise the first letter of every word in string
+        // checks if a number is even
+        Util.prototype.isEven = function (num) {
+            return (num % 2) ? true : false;
+        };
+            
+        // checks if a number is odd
+        Util.prototype.isOdd = function (num) {
+            return (num % 2) ? false : true;
+        };
+            
+        // checks if a value is defined
+        Util.prototype.isDefined = function (obj) {
+            return typeof obj !== "undefined";
+        };
+            
+        // matrix function
+        Util.prototype.matrix = function (matrix) {
+            var result,
+                len = 6,
+                i = 0,
+                err = function (msg) {
+                    util.log("warn", msg + " arguments supplied to kbs.util.matrix, " +
+                            "unexpected results may occur");
+                };
+            
+            // convert string matrices to arrays
+            if (util.isString(matrix)) {
+                // expecting: "matrix(a, b, c, d, tx, ty)"
+                
+                // check if matrix is in the string
+                if (matrix.indexOf("matrix") !== -1) {
+                    result = matrix.match(/\(([^)]+)\)/);
+                    result = result[0].replace("(", "[").replace(")", "]");
+                    result = util.unserialise(result);
+                } else {
+                    // try an unserialise as a fallback
+                    result = util.unserialise(matrix);
+                }
+                
+                return result;
+            }
+            
+            // convert array to string matrices
+            if (util.isArray(matrix)) {
+                // expecting: [a, b, c, d, tx, ty]
+                result = "";
+                
+                if (matrix.length < 6) {
+                    err("Insufficient");
+                }
+                
+                if (matrix.length > 6) {
+                    err("Redundant");
+                }
+                
+                // remove excess values
+                matrix = matrix.slice(0, 6);
+                
+                // add missing values
+                for (i = 0, len = 6; i < len; i += 1) {
+                    if (!util.isDefined(matrix[i])) {
+                        matrix[i] = 0;
+                    }
+                }
+                
+                // serialise array
+                result = "matrix(" +
+                    util.serialise(matrix).replace("[", "").replace("]", "") +
+                    ")";
+                
+                return result;
+            }
+        };
+            
+        // capitalise the first letter of every word in string
         // doesn't support multiple whitespaces currently
-        Util.prototype.capitilise = function (string) {
+        Util.prototype.capitalise = function (string) {
             var words = string.split(" "),
                 len = words.length,
                 i = 0,
                 ch;
             
-            // make every word capitilised
+            // make every word capitalised
             for (i; i < len; i += 1) {
                 ch = words[i].charAt(0).toUpperCase();
                 words[i] = ch + words[i].slice(1);
@@ -419,8 +499,8 @@ define(
                 value,
                 separate = false;
             
-            // default to json usage
-            json = json || true;
+            // default to not using json lib
+            json = (typeof json !== "undefined") ? json : false;
             
             // this should capture simple types
             // e.g. strings and numbers
@@ -439,7 +519,7 @@ define(
                     for (index in object) {
                         if (object.hasOwnProperty(index)) {
                             // add object value?
-                            result += index + ":" +
+                            result += "\"" + index + "\":" +
                                 util.serialise(object[index], json);
 
                             // if is last element
@@ -477,7 +557,7 @@ define(
                     
                     // push to result
                     if (util.isString(value)) {
-                        result += "\"" + value + "\"";
+                        result += value;
                     } else if (util.isNumber(value)) {
                         result += value;
                     } else {
@@ -488,9 +568,9 @@ define(
                 result += "]";
             }
             
-            // wrap string with '
+            // wrap string with "'s
             if (util.isString(object)) {
-                return "'" + result + "'";
+                return "\"" + result + "\"";
             }
             
             return result;
@@ -504,8 +584,8 @@ define(
                 length,
                 props;
             
-            // default to json usage
-            json = json || true;
+            // default to use json lib (no object parser yet)
+            json = (typeof json !== "undefined") ? json : true;
             
             // parse an array from string
             function parseArray(str) {
@@ -563,6 +643,7 @@ define(
                            && !depth
                            && !instr);
                     
+                    // end of current value - unserialise it and continue
                     if (eov || i === len) {
                         result.push(util.unserialise(value, json));
                         value = "";
@@ -607,8 +688,12 @@ define(
                         str.charAt(str.length - 1).match(quote)) {
                     str = str.substring(1, str.length - 1);
                 } else {
-                    // assume number if no quotes
-                    str = Number(str);
+                    // check if number - return string if not
+                    if (isNaN(parseFloat(str, 10))) {
+                        return str;
+                    } else {
+                        str = parseFloat(str, 10);
+                    }
                 }
                 
                 return str;
@@ -669,8 +754,6 @@ define(
             var bytes = 0,
                 len,
                 i;
-            
-            //debugger;
             
             if (object !== null && object !== undefined) {
                 switch (typeof object) {
@@ -945,14 +1028,20 @@ define(
         };
             
         // logging aliases
-        Util.prototype.debug = function () {};
-        Util.prototype.warn = function () {};
-        Util.prototype.error = function () {};
+        Util.prototype.debug = function () {
+            util.log("debug");
+        };
+        Util.prototype.warn = function () {
+            util.log("warn");
+        };
+        Util.prototype.error = function () {
+            util.log("error");
+        };
         
-        // create instance
-        instance = new Util();
+        // log
         util.log("+ util.js loaded");
 
-        return instance;
+        // return instance
+        return util;
     }
 );

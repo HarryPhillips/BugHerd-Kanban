@@ -16,6 +16,13 @@ define(
         
         // node constructor
         function Node(type, classes, id) {
+            // is a selector passed
+            if (util.isString(type)) {
+                if (type.charAt(0) === "#" || type.charAt(0) === ".") {
+                    return new Node(document.querySelector(type), classes, id);
+                }
+            }
+            
             // check if a node with this exact element
             // already exists - if it does, return it
             var len = ALL_NODES.length,
@@ -136,7 +143,6 @@ define(
             var curr = this.element.className,
                 newclass,
                 i,
-                
                 remove = function (name) {
                     if (curr.indexOf(" " + name) !== -1) {
                         newclass = curr.replace(" " + name, "");
@@ -154,7 +160,7 @@ define(
                 
                 // remove all classes
                 for (i = 0; i < classes.length; i += 1) {
-                    remove(classes[i]);
+                    this.removeClass(classes[i]);
                 }
             } else {
                 remove(classes);
@@ -186,17 +192,22 @@ define(
             
             // if more than one piece to rule name
             if (rules.length > 1) {
-                // capitilise names after first name
+                // capitalise names after first name
                 for (i = 1; i < rules.length; i += 1) {
-                    rules[i] = util.capitilise(rules[i]);
+                    rules[i] = util.capitalise(rules[i]);
                 }
             }
             
             // join to form new rule
             rule = rules.join("");
             
-            // set 
-            this.element.style[rule] = property;
+            // get or set?
+            if (typeof property === "undefined") {
+                // return computed style
+                return window.getComputedStyle(this.element, null).getPropertyValue(rule);
+            } else {
+                this.element.style[rule] = property;
+            }
             
             return this;
         };
@@ -270,6 +281,37 @@ define(
             }
         };
         
+        // translate the element by (x, y)
+        Node.prototype.translate = function (x, y) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+        
+            if (currMatrix === "none") {
+                // if no matrix found just create one
+                matrix = [0, 0, 0, 0, x, y];
+            } else {
+                // get array of matrix
+                matrix = util.matrix(currMatrix);
+                
+                // add x & y values to matrix
+                matrix[4] = x;
+                matrix[5] = y;
+            }
+            
+            // reserialise matrix to string
+            matrix = util.matrix(matrix);
+            
+            // apply new transformation matrix
+            this.css("transform", matrix);
+        };
+        
+        // get node x
+        Node.prototype.getBounds = function (pos) {
+            var bounds = this.element.getBoundingClientRect();
+            return bounds[pos];
+        };
+        
         // delete and reset node and it's children
         Node.prototype.destroy = function () {
             var xlen = this.children.length,
@@ -280,17 +322,20 @@ define(
             // call destroy on children
             if (xlen) {
                 for (x; x < xlen; x += 1) {
-                    this.children[x].destroy();
-                    this.children[x] = null;
+                    if (this.children[x]) {
+                        this.children[x].destroy();
+                        this.children[x] = null;
+                    }
                 }
             }
             
             // remove from global node list
             if (ylen) {
                 for (y; y < ylen; y += 1) {
-                    if (ALL_NODES[y].element === this.element) {
-                        util.log("debug", "Destroyed Node at index " + y);
-                        ALL_NODES.splice(y, 1);
+                    if (ALL_NODES[y]) {
+                        if (ALL_NODES[y].element === this.element) {
+                            ALL_NODES.splice(y, 1);
+                        }
                     }
                 }
             }
@@ -390,9 +435,15 @@ define(
             return this;
         };
         
-        // Node event listeners
+        // add node event handler
         Node.prototype.on = function (event, listener) {
             this.element.addEventListener(event, listener);
+            return this;
+        };
+        
+        // remove node event handler
+        Node.prototype.off = function (event, listener) {
+            this.element.removeEventListener(event, listener);
             return this;
         };
         

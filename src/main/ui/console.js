@@ -62,6 +62,9 @@ define(
             // log contexts
             this.setContexts();
             
+            // log nodes
+            this.logs = [];
+            
             // setup context clearance event
             events.subscribe("gui/contexts/clear", function (context) {
                 self.clearContext(context);
@@ -226,6 +229,9 @@ define(
             // write to context
             context.addChild(log);
             
+            // add to list of log nodes
+            self.logs.push(log);
+            
             // create context with new log node
             if (doCreateContext) {
                 self.createContext(doCreateContext, log);
@@ -305,16 +311,19 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
+                logs = self.logs,
+                len = logs.length,
                 deltaTime,
-                count = 0;
+                count = 0,
+                i = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
-            while (out.firstChild) {
+            for (i; i < len; i += 1) {
+                logs[i].destroy();
                 count += 1;
-                out.removeChild(out.firstChild);
             }
 
             // reattach
@@ -326,6 +335,9 @@ define(
             
             // clear buffer
             cache.console.clearBuffer();
+            
+            // reset log count
+            cache.logCount = 0;
         };
         
         // save the output buffer to a text file on the local system
@@ -341,7 +353,7 @@ define(
             
             // setup request
             req = new Http({
-                url: router.getRoute("console", "save"),
+                url: router.getRoute("console/save"),
                 method: "POST",
                 send: true,
                 data: {

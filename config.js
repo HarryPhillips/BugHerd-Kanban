@@ -148,7 +148,7 @@ define(function () {
             modals: {
                 behaviour: {
                     stack: true,
-                    animate: false
+                    shift: true
                 }
             }
         },

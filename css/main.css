@@ -58,11 +58,11 @@
 }
 
 .kbs-modal.kbs-stacked {
-    top: 50px;
-    -webkit-transform: scale(0.7);
-    -moz-transform: scale(0.7);
-    -o-transform: scale(0.7);
-    transform: scale(0.7);
+    top: 120px;
+    -webkit-transform: scale(0.5);
+    -moz-transform: scale(0.5);
+    -o-transform: scale(0.5);
+    transform: scale(0.5);
     opacity: 0.5;
 }
 
@@ -112,7 +112,7 @@
 }
 
 .kbs-modal.kbs-view-screenshot {
-    background-color: #2a2a2a;
+    background-color: #435A6D;
     position: fixed;
     top: 100px; bottom: 100px;
     left: 100px; right: 100px;
@@ -212,13 +212,15 @@
     top: 40px; bottom: 0;
     left: 0; right: 0;
     text-align: center;
-    overflow: auto;
+    overflow: hidden;
+    cursor: grab;
 }
 
 .kbs-screenshot {
     width: auto; height: auto;
     max-width: initial !important;
     max-height: initial !important;
+    transform: scale(1.0);
 }
 
 /* gui console wrapper 
@@ -486,6 +488,14 @@
 
 .kbs-hide {
     display: none;
+}
+
+.kbs-stacked.kbs-shift-left {
+    left: 25%;
+}
+
+.kbs-stacked.kbs-shift-right {
+    left: 75%;
 }
 
 /* kbs bugherd classes

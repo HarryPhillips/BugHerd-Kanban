@@ -56,6 +56,9 @@ define(
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
+            
+            // overlay preservation flag
+            this.preserveOverlay = false;
 
             // init
             this.init();
@@ -250,15 +253,15 @@ define(
         // show overlay
         GUI.prototype.showOverlay = function () {
             if (!status.gui.overlay) {
-                this.tree.main.overlay.fadeIn();
+                self.tree.main.overlay.fadeIn();
                 status.gui.overlay = true;
             }
         };
             
         // hide overlay
         GUI.prototype.hideOverlay = function () {
-            if (!status.interactor.taskDetailsExpanded) {
-                this.tree.main.overlay.fadeOut();
+            if (!status.interactor.taskDetailsExpanded || !self.preserveOverlay) {
+                self.tree.main.overlay.fadeOut();
                 status.gui.overlay = false;
             }
         };
