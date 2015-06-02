@@ -65,10 +65,14 @@ define(
             this.applyHandlers();
             
             // severity styling handling
-            this.setAllSeverityStyles();
-            bh.application.on("change", function () {
-                setTimeout(self.setAllSeverityStyles, 10);
-            });
+            if (config.gui.severityStyles) {
+                setTimeout(function () {
+                    self.setAllSeverityStyles();
+                }, 100);
+                bh.application.on("change", function () {
+                    setTimeout(self.setAllSeverityStyles, 10);
+                });
+            }
         };
         
         // get task data by local id

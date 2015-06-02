@@ -69,7 +69,7 @@ define(
                     "text",
                     function (url) {
                         // set wallpaper config
-                        config.set("gui/wallpaper", url, true);
+                        config.set("gui/wallpaper", url);
                         
                         // load the new wallpaper
                         gui.loadWallpaper(url);
@@ -101,6 +101,16 @@ define(
                         ));
                     }
                 }
+                
+                // enable/disable severity styles
+                node.addChild(new Field(
+                    "Severity Styling",
+                    "checkbox",
+                    function (value) {
+                        config.set("gui/severityStyles", value);
+                    },
+                    config.get("gui/severityStyles")
+                ));
                 
                 // console state
                 node.addChild(new Field(

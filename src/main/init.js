@@ -22,10 +22,15 @@
 *
 *   + Is it possible to add a setting to scale the entire KBS gui?
 *
-*   + Animated modal interface? When opening another popup, push other
-*     modals into a stack at the side of the screen?
-*
 *   + Might want to add max length parameters for the console. *Might*.
+*/
+
+/*
+*   PROJECTS & PRACTICE
+*   + Re-write the report an error widget and possibly move away from BugHerd
+*     exclusivity
+*
+*   + Write a game in JavaScript
 */
 
 define(

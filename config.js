@@ -107,7 +107,7 @@ define(function () {
         theme: "default",
         test: false,
         logs: {
-            enabled: true,
+            enabled: false,
             gui: true,
             contexts: true,
             contextFlag: "context:",
@@ -118,6 +118,7 @@ define(function () {
             enabled: true,
             autorefresh: true,
             wallpaper: "",
+            severityStyles: true,
             parallax: {
                 enabled: false,
                 factor: 100

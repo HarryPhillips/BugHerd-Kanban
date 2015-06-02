@@ -66,32 +66,46 @@ define(
         // show node
         Node.prototype.show = function () {
             this.element.style.display = "block";
+            return this;
         };
         
         // hide node
         Node.prototype.hide = function () {
             this.element.style.display = "none";
+            return this;
+        };
+        
+        // toggle node
+        Node.prototype.toggle = function () {
+            var method = (this.element.style.display === "none") ? "block" : "none";
+            this.element.style.display = method;
+            return this;
         };
         
         // fade in node
         Node.prototype.fadeIn = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.show();
+                return this;
             }
             
             // jquery fade in
             window.jQuery(this.element).fadeIn(args);
+            
+            return this;
         };
         
         // fade out node
         Node.prototype.fadeOut = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.hide();
-                return;
+                return this;
             }
             
             // jquery fade out
             window.jQuery(this.element).fadeOut(args);
+            
+            return this;
         };
         
         // return current element id
@@ -128,6 +142,10 @@ define(
         
         // add class(es) to node
         Node.prototype.addClass = function (classes) {
+            if (this.element.className.indexOf(classes) !== -1) {
+                return;
+            }
+            
             if (this.element.className === "") {
                 // no previous classes
                 this.element.className = classes;
@@ -186,7 +204,7 @@ define(
         };
         
         // css rule changes
-        Node.prototype.css = function (rule, property) {
+        Node.prototype.css = function (rule, property, after) {
             var rules = rule.split("-"),
                 i;
             
@@ -202,7 +220,7 @@ define(
             rule = rules.join("");
             
             // get or set?
-            if (typeof property === "undefined") {
+            if (typeof property === "undefined" || property === "") {
                 // return computed style
                 return window.getComputedStyle(this.element, null).getPropertyValue(rule);
             } else {
@@ -210,6 +228,11 @@ define(
             }
             
             return this;
+        };
+        
+        // return computed style
+        Node.prototype.getComputedStyle = function (rule) {
+            return window.getComputedStyle(this.element, null).getPropertyValue(rule);
         };
         
         // get parent node
@@ -474,12 +497,6 @@ define(
             
             for (i; i < len; i += 1) {
                 if (ALL_NODES[i].element === element) {
-                    util.log(
-                        "context:gui",
-                        "debug",
-                        "Node found for given element at index " + i +
-                            ". Returning reference."
-                    );
                     return ALL_NODES[i];
                 }
             }

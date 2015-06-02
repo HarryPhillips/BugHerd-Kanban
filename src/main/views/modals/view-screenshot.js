@@ -14,7 +14,7 @@ define(
     ],
     function (util, Node, View) {
         'use strict';
-
+        
         // create a new view
         var view = new View(function (args) {
             var node = new Node("div", "kbs-view"),
@@ -22,10 +22,18 @@ define(
                 modal = args[1],
                 params = args[2],
                 wrap,
-                img;
+                body,
+                img,
+                guides,
+                updateGuides,
+                wb,
+                hb;
             
             // modal title
-            node.title = "Screenshot for task #" + params.id;
+            node.title = params.title + " for task #" + params.id;
+            
+            // body node
+            body = new Node(document.body);
             
             // screenshot wrapper
             wrap = node.createChild("div", "kbs-screenshot-wrap");
@@ -36,42 +44,165 @@ define(
                 .css("width", "auto")
                 .css("height", "auto");
             
+            // screenshot guides
+            guides = {
+                top: wrap.createChild("div", "kbs-ln-horiz"),
+                bottom: wrap.createChild("div", "kbs-ln-horiz"),
+                left: wrap.createChild("div", "kbs-ln-verti"),
+                right: wrap.createChild("div", "kbs-ln-verti")
+            };
+            
+            // add badges to guidelines
+            wb = guides.bottom.addChild(new Node("div", "", "kbs-ss-width"));
+            hb = guides.right.addChild(new Node("div", "", "kbs-ss-height"));
+            
+            // guide update fn
+            updateGuides = function () {
+                var i, bounds, offset,
+                    width, height;
+                
+                // update guideline position
+                for (i in guides) {
+                    if (guides.hasOwnProperty(i)) {
+                        bounds = img.getBounds(i);
+                        
+                        //set x axis guides
+                        if (i.match(/(left)|(right)/)) {
+                            offset = wrap.getBounds("left");
+                            guides[i].css(
+                                "left",
+                                bounds - offset + "px"
+                            );
+                        }
+                        
+                        // set y axis guides
+                        if (i.match(/(top)|(bottom)/)) {
+                            offset = wrap.getBounds("top");
+                            guides[i].css(
+                                "top",
+                                bounds - offset + "px"
+                            );
+                        }
+                    }
+                }
+                
+                // have to manually compute width and height
+                // transformed elements do not report back
+                // a correct computed style value
+                width = util.diff(
+                    parseInt(guides.left.css("left"), 10),
+                    parseInt(guides.right.css("left"), 10)
+                );
+                
+                height = util.diff(
+                    parseInt(guides.top.css("top"), 10),
+                    parseInt(guides.bottom.css("top"), 10)
+                );
+                
+                // apply values
+                wb.text(width + "px", true);
+                hb.text(height + "px", true);
+                
+                // set position
+                hb.css(
+                    "top",
+                    (img.getBounds("top") - wrap.getBounds("top")) +
+                        (height / 2) + "px"
+                );
+                
+                wb.css(
+                    "left",
+                    img.getBounds("right") - (width / 2) + "px"
+                );
+            };
+            
             // screenshot zooming
-            //TODO(harry): Check for existing matrix data then amend
             wrap.on("DOMMouseScroll", function (e) {
-                var existing = util.matrix(img.css("transform")),
-                    dir = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))) / 20,
-                    scale = img.css("transform"),
-                    delta = util.matrix(scale)[0] + dir;
+                var curr, dirfact, scale, delta, sf, matrix, bsize;
+                
+                // existing matrix array
+                curr = util.matrix(img.css("transform"));
+                // scale factor
+                sf = 20;
+                // scaling factor and direction
+                dirfact = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))) / sf;
+                // get scale from matrix (2d scale is always 1st/4th index)
+                scale = curr[0];
+                // delta amount
+                delta = scale + dirfact;
+                // new transformation matrix
+                matrix = [delta, curr[1], curr[2], delta, curr[4], curr[5]];
                 
                 // apply scale to image
-                img.css("transform", "scale(" + delta + ")");
+                img.css("transform", util.matrix(matrix));
                 
-                // move image to keep centred
-                img.css("margin-top", -((delta * 100) + (100 * delta)) + "px");
+                // update guidelines
+                updateGuides();
             });
             
             // screenshot dragging
-            wrap.on("mousedown", function (e) {
+            img.on("mousedown", function (e) {
+                var ondrag, dirX = 0, dirY = 0,
+                    clickX = e.clientX,
+                    clickY = e.clientY;
+                
+                // stop bubbling and prevent default behaviour
                 e.stopPropagation();
                 e.preventDefault();
                 
+                // add grabber class
+                img.addClass("kbs-grabbed");
+                
                 // mousemove/dragging handler
-                var ondrag = function (e) {
-                    var deltaX = (img.getBounds("left") / 3) + (e.clientX / 10),
-                        deltaY = (img.getBounds("top") / 3) + (e.clientY / 10);
+                ondrag = function (e) {
+                    var curr, top, bottom, left, right,
+                        deltaX, deltaY;
                     
+                    // current transformation matrix
+                    curr = util.matrix(img.css("transform"));
+                    
+                    // img bounds
+                    top = img.getBounds("top");
+                    bottom = img.getBounds("bottom");
+                    left = img.getBounds("left");
+                    right = img.getBounds("right");
+
+                    // distance travelled in x & y
+                    deltaX = (clickX - e.clientX);
+                    deltaY = (clickY - e.clientY);
+                    
+                    // invert delta values
+                    // this way dragging feels more natural
+                    deltaX = -(deltaX);
+                    deltaY = -(deltaY);
+                    
+                    // add the existing tx & ty values onto delta
+                    deltaX += curr[4];
+                    deltaY += curr[5];
+                    
+                    // move to new location
                     img.translate(deltaX, deltaY);
+                    wrap.css("background-position", deltaX + "px " + deltaY + "px");
                     
+                    // set new click locations
+                    clickX = e.clientX;
+                    clickY = e.clientY;
+                    
+                    // update guidelines
+                    updateGuides();
+                    
+                    // return false to further
+                    // prevent default behaviour
                     return false;
                 };
                 
                 // on mousemove - move the image
-                wrap.on("mousemove", ondrag);
+                body.on("mousemove", ondrag);
                 
                 // on mouseup - remove drag handler
-                wrap.on("mouseup", function () {
-                    wrap.off("mousemove", ondrag);
+                body.on("mouseup", function () {
+                    body.off("mousemove", ondrag);
+                    img.removeClass("kbs-grabbed");
                     return false;
                 });
                 
@@ -80,6 +211,9 @@ define(
             
             // destroy the modal when it is closed
             modal.on("close", modal.destroy);
+            
+            // initial guide update
+            updateGuides();
             
             return node;
         });

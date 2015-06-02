@@ -260,7 +260,7 @@ define(
             
         // hide overlay
         GUI.prototype.hideOverlay = function () {
-            if (!status.interactor.taskDetailsExpanded || !self.preserveOverlay) {
+            if (!status.interactor.taskDetailsExpanded && !self.preserveOverlay) {
                 self.tree.main.overlay.fadeOut();
                 status.gui.overlay = false;
             }

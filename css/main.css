@@ -43,14 +43,13 @@
 /* gui modals */
 .kbs-modal {
     position: fixed;
-    top: 50%; left: 50%;
+    top: 54%; left: 50%;
     width: 600px; height: 400px;
     margin-left: -300px;
     margin-top: -200px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     text-align: center;
     z-index: 2147483647;
-    overflow: hidden;
     -webkit-transition: all 0.3s;
     -moz-transition: all 0.3s;
     -o-transition: all 0.3s;
@@ -58,7 +57,7 @@
 }
 
 .kbs-modal.kbs-stacked {
-    top: 120px;
+    top: 150px;
     -webkit-transform: scale(0.5);
     -moz-transform: scale(0.5);
     -o-transform: scale(0.5);
@@ -68,7 +67,7 @@
 
 .kbs-modal-title {
     float: left;
-    width: 90%; height: 40px;
+    width: 100%; height: 40px;
     margin: 0;
     padding: 5px;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
@@ -77,24 +76,27 @@
 }
 
 .kbs-modal-closed {
-    float: left;
-    width: 10%; height: 40px;
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 34px; height: 34px;
     margin: 0; padding: 0;
     border: solid transparent 0px;
+    border-radius: 100%;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
-    font-size: 22px;
-    line-height: 1.6em;
+    font-size: 18px;
+    line-height: 1.7em;
     text-align: center;
     cursor: pointer;
     
-    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    -o-transition: background-color 0.3s, color 0.3s, border 0.3s;
-    transition: background-color 0.3s, color 0.3s, border 0.3s;
+    -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
+    -moz-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
+    -o-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
+    transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
 }
 
 .kbs-modal-closed:hover {
-    border-bottom: solid #ff0000 40px;
+    border-bottom: solid #ff0000 34px;
+    border-radius: 0;
 }
 
 .kbs-modal-content {
@@ -105,6 +107,23 @@
     text-align: left;
 }
 
+.kbs-modal-shield {
+    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -3px; right: 0;
+    display: none;
+    cursor: pointer;
+    -webkit-transition: background 0.3s;
+    -moz-transition: background 0.3s;
+    -o-transition: background 0.3s;
+    transition: background 0.3s;
+}
+
+.kbs-modal-shield:hover {
+    background-color: rgba(0, 0, 0, 0.0);
+}
+
 .kbs-modal.kbs-small {
     width: 350px; height: 200px;
     margin-left: -175px;
@@ -112,7 +131,6 @@
 }
 
 .kbs-modal.kbs-view-screenshot {
-    background-color: #435A6D;
     position: fixed;
     top: 100px; bottom: 100px;
     left: 100px; right: 100px;
@@ -208,19 +226,24 @@
 }
 
 .kbs-screenshot-wrap {
+    background-color: #353535;
+    background-image: url(http://subtlepatterns.com/patterns/black_lozenge.png);
+    background-size: 30px;
     position: absolute;
     top: 40px; bottom: 0;
     left: 0; right: 0;
     text-align: center;
     overflow: hidden;
-    cursor: grab;
 }
 
 .kbs-screenshot {
+    position: relative;
     width: auto; height: auto;
     max-width: initial !important;
     max-height: initial !important;
-    transform: scale(1.0);
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.8);
+    transform: scale(0.75);
+    cursor: grab;
 }
 
 /* gui console wrapper 
@@ -492,10 +515,58 @@
 
 .kbs-stacked.kbs-shift-left {
     left: 25%;
+    -webkit-transform: scale(0.4, 0.42) rotateZ(-5deg);
+    -moz-transform: scale(0.4, 0.42) rotateZ(-5deg);
+    -o-transform: scale(0.4, 0.42) rotateZ(-5deg);
+    transform: scale(0.4, 0.42) rotateZ(-5deg);
 }
 
 .kbs-stacked.kbs-shift-right {
     left: 75%;
+    -webkit-transform: scale(0.4, 0.42) rotateZ(5deg);
+    -moz-transform: scale(0.4, 0.42) rotateZ(5deg);
+    -o-transform: scale(0.4, 0.42) rotateZ(5deg);
+    transform: scale(0.4, 0.42) rotateZ(5deg);
+}
+
+.kbs-stacked .kbs-modal-shield {
+    display: block;
+}
+
+.kbs-grabbed {
+    cursor: grabbing;
+}
+
+.kbs-ln-horiz,
+.kbs-ln-verti {
+    position: absolute;
+}
+
+.kbs-ln-horiz {
+    width: 100%;
+    height: 1px;
+    border-top: dashed #3d91ea 1px;
+}
+
+.kbs-ln-verti {
+    top: 0px;
+    bottom: 0px;
+    width: 1px;
+    height: 100%;
+    border-left: dashed #3d91ea 1px;
+}
+
+/* width and height pseudo badges */
+#kbs-ss-width {
+    position: absolute;
+    top: 10px; left: 0;
+    color: #1685ED;
+}
+
+#kbs-ss-height {
+    position: absolute;
+    top: 0; right: -50px;
+    color: #1685ED;
 }
 
 /* kbs bugherd classes

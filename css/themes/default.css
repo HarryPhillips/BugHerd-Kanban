@@ -23,7 +23,11 @@ body {
 .kbs-modal {
     background-color: #fff;
     color: #1a1a1a;
+    border: solid #57758E 3px;
+    border-top: 0;
 }
+
+.kbs-modal-content {}
 
 .kbs-modal-title {
     background-color: #57758e;
@@ -33,6 +37,7 @@ body {
 .kbs-modal-closed {
     background-color: #7e1a1a;
     color: #fff;
+    max-width: 50px;
 }
 
 .kbs-modal-closed:hover {
@@ -92,6 +97,15 @@ body {
 .kbs-cons-title {
     color: #fff;
 }
+
+/* modals
+--------------------------------------------------------------------*/
+.kbs-modal.kbs-view-screenshot {}
+
+.kbs-screenshot {
+    box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.4);
+}
+
 
 /* tools
 --------------------------------------------------------------------*/

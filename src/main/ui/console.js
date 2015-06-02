@@ -230,7 +230,7 @@ define(
             context.addChild(log);
             
             // add to list of log nodes
-            self.logs.push(log);
+            //self.logs.push(log);
             
             // create context with new log node
             if (doCreateContext) {

@@ -399,6 +399,10 @@ define(
             modal = new Modal("view-screenshot", {
                 viewParams: {
                     id: id,
+                    title: (link[0]
+                            .textContent
+                            .indexOf("screenshot") !== -1
+                           ) ? "Screenshot" : "Fix Result",
                     url: link[0].href,
                     width: size.x,
                     height: size.y
@@ -569,8 +573,7 @@ define(
                 // capture screenshot clicks
                 if (target.hasClass("attachLink")) {
                     // view screenshots only
-                    if (target.text().indexOf("view_screenshot") !== -1 ||
-                            target.text().indexOf("fix-result") !== -1) {
+                    if (target.text().match(/(fix-result)|(view_screenshot)|(\.png)|(\.jpg)/)) {
                         event.preventDefault();
                         self.viewScreenshot(target);
                     }

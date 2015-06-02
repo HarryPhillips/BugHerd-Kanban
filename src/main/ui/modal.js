@@ -142,7 +142,10 @@ define(
                     // reset
                     this.active = null;
                     gui.preserveOverlay = false;
-                    gui.hideOverlay();
+                    
+                    if (!status.interactor.taskDetailsExpanded) {
+                        gui.hideOverlay();
+                    }
                 }
                 
                 this.removeFromOpened(modal);
@@ -154,18 +157,8 @@ define(
             }
         };
         
-        // add a new modal instance
-        ModalController.prototype.addModal = function (modal) {
-            this.list[modal.viewName] = modal;
-        };
-        
-        // remove a modal instance
-        ModalController.prototype.removeModal = function (modal) {
-            delete this.list[modal.viewName || modal];
-        };
-        
         // adds a modal to the stack
-        ModalController.prototype.addToStack = function (modal) {
+        ModalController.prototype.addToStack = function (modal, index) {
             util.log(
                 "context:gui",
                 "debug",
@@ -175,8 +168,12 @@ define(
             // add stacked class
             modal.node.addClass("kbs-stacked");
             
-            // push to stacked
-            this.stacked.push(modal);
+            // push to stack
+            if (!index) {
+                this.stacked.push(modal);
+            } else {
+                this.stacked[index] = modal;
+            }
             
             // shift stack
             this.shiftStack();
@@ -225,7 +222,8 @@ define(
                 modal = stack[i];
                 
                 // remove initial shift classes
-                modal.node.removeClass(["kbs-shift-left", "kbs-shift-right"]);
+                modal.node.removeClass("kbs-shift-left");
+                modal.node.removeClass("kbs-shift-right");
                 
                 // get an offset
                 if (i !== 0) {
@@ -247,6 +245,65 @@ define(
                     );
                 }
             }
+        };
+        
+        // swap active modal with one in stack
+        ModalController.prototype.swapStack = function (index) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                modal;
+            
+            // passed an index
+            if (util.isNumber(index)) {
+                modal = stacked[index];
+                return;
+            }
+            
+            // passed a modal view name
+            if (util.isString(index)) {
+                modal = this.getModalByName(index);
+            }
+            
+            // passed a modal object
+            if (util.isObject(index)) {
+                modal = index;
+            }
+            
+            // remove clicked from stack
+            this.removeFromStack(modal);
+            
+            // update stack positions
+            this.shiftStack();
+            
+            // add active modal to stack
+            this.addToStack(active);
+            
+            // set active modal
+            this.active = modal;
+        };
+        
+        // returns index for modal in stack
+        ModalController.prototype.getStackIndex = function (modal) {
+            var stacked = this.stacked,
+                len = stacked.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (stacked[i] === modal) {
+                    return i;
+                }
+            }
+        };
+        
+        // add a new modal instance
+        ModalController.prototype.addModal = function (modal) {
+            this.list[modal.viewName] = modal;
+        };
+        
+        // remove a modal instance
+        ModalController.prototype.removeModal = function (modal) {
+            delete this.list[modal.viewName || modal];
         };
         
         // adds a modals to the queue
@@ -336,6 +393,12 @@ define(
             if (ctrl.exists(view)) {
                 var modal = ctrl.getModalByName(view);
                 
+                // if stacked
+                if (ctrl.isStacked(modal)) {
+                    ctrl.swapStack(modal);
+                    return modal;
+                }
+                
                 // check if call to init
                 if (params.init) {
                     modal.init();
@@ -359,6 +422,9 @@ define(
             this.node = new Node("div", "kbs-modal kbs-" + view);
             this.node.addClass(this.classes);
             this.node.hide();
+            
+            // shield node
+            this.shieldNode = this.node.createChild("div", "kbs-modal-shield");
             
             // view element
             this.view = null;
@@ -516,6 +582,11 @@ define(
                 
                 // modal params
                 params = this.params;
+            
+            // when shield is clicked - swap stack
+            this.shieldNode.on("click", function () {
+                ctrl.swapStack(self.viewName);
+            });
 
             // attach modal event handlers
             this.on("confirm", params.confirm || function () {
