@@ -15,8 +15,8 @@ define(
         'main/components/status',
         'main/components/router',
         'main/components/cache',
-        'main/ui/node',
         'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -27,8 +27,8 @@ define(
         status,
         router,
         cache,
-        Node,
         Configurator,
+        Node,
         Modal
     ) {
         'use strict';
@@ -230,7 +230,7 @@ define(
             context.addChild(log);
             
             // add to list of log nodes
-            //self.logs.push(log);
+            self.logs.push(log);
             
             // create context with new log node
             if (doCreateContext) {

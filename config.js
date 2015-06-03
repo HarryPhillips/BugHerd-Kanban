@@ -143,7 +143,7 @@ define(function () {
                     toggleObjs: "list-alt"
                 },
                 benchmark: {
-                    amount: 10000
+                    amount: 1000
                 }
             },
             modals: {
@@ -156,7 +156,10 @@ define(function () {
         interactor: {
             enabled: true,
             observe: false,
-            expandOnclick: true
+            expandOnclick: true,
+            filters: {
+                
+            }
         },
         events: {
             silent: false

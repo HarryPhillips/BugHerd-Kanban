@@ -332,6 +332,12 @@ define(
         // get node x
         Node.prototype.getBounds = function (pos) {
             var bounds = this.element.getBoundingClientRect();
+            
+            // center of element
+            if (pos === "center") {
+                return util.diff(bounds.left, bounds.right) / 2;
+            }
+            
             return bounds[pos];
         };
         

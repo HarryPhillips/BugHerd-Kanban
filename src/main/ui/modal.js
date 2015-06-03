@@ -508,7 +508,7 @@ define(
             var self = this,
                 view = this.viewModule,
                 render = view.draw([gui, self, self.viewParams]),
-                content = this.node.children[2];
+                content = this.node.find(".kbs-modal-content")[0];
             
             content.clear();
             content.addChild(render);

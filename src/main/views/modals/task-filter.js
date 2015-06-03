@@ -9,19 +9,28 @@
 define(
     [
         'main/components/util',
+        'main/components/repository',
         'main/components/configurator',
         'main/ui/node',
         'main/ui/view',
         'main/ui/field',
         'main/ui/modal'
     ],
-    function (util, Configurator, Node, View, Field, Modal) {
+    function (
+        util,
+        Repository,
+        Configurator,
+        Node,
+        View,
+        Field,
+        Modal
+    ) {
         'use strict';
-
+            
         var config = new Configurator(),
-            filters = {
-                displayMethod: "hide"
-            },
+            repo = new Repository(),
+            bugherd = repo.get("bugherd"),
+            interactor = repo.get("interactor"),
             view;
         
         // create a new view
@@ -30,10 +39,12 @@ define(
                 gui = args[0],
                 modal = args[1],
                 filterData,
+                filters = config.get("interactor/filters"),
                 reset,
                 apply,
                 show,
-                hide;
+                hide,
+                tags;
             
             // modal text
             node.title = "Task Filters";
@@ -43,8 +54,10 @@ define(
                 "Show:",
                 "checkbox",
                 function (value) {
+                    // set display method for the filter
                     filters.displayMethod = "show";
                     
+                    // uncheck hide
                     hide.find(".kbs-input-field")[0]
                         .element.checked = false;
                 },
@@ -56,19 +69,45 @@ define(
                 "Hide:",
                 "checkbox",
                 function (value) {
+                    // set display method for the filter
                     filters.displayMethod = "hide";
                     
+                    // uncheck show
                     show.find(".kbs-input-field")[0]
                         .element.checked = false;
                 },
                 (filters.displayMethod === "hide") ? true : false
             ));
             
+            // tag filter
+            tags = node.addChild(new Field(
+                "Tags:",
+                "text",
+                function (value) {
+                    var i = 0,
+                        len;
+                    
+                    // get values
+                    value = value.split(",");
+                    len = value.length;
+                    
+                    // trim whitespace
+                    for (i; i < len; i += 1) {
+                        value[i] = value[i].trim();
+                    }
+                    
+                    // concat filters
+                    filters.tags = value;
+                },
+                filters.tags
+            ));
+            
             // apply filters with above options
             apply = node.createChild("span", "kbs-confirm")
                 .text("apply")
                 .on("click", function () {
-            
+                    // run tag filter
+                    interactor[filters.displayMethod + "TasksWithTag"](filters.tags);
                 });
             
             // show filters
@@ -87,7 +126,11 @@ define(
             reset = node.createChild("span", "kbs-confirm")
                 .text("reset")
                 .on("click", function () {
-            
+                    var sortLink = new Node(".sortLink");
+                    config.set("interactor/filters", {});
+                    modal.reload();
+                    sortLink.element.click();
+                    bugherd.tasks.setAllSeverityStyles();
                 });
             
             return node;

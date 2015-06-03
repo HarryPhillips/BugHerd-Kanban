@@ -70,7 +70,7 @@ define(
                     self.setAllSeverityStyles();
                 }, 100);
                 bh.application.on("change", function () {
-                    setTimeout(self.setAllSeverityStyles, 10);
+                    setTimeout(self.setAllSeverityStyles, 100);
                 });
             }
         };
@@ -353,6 +353,11 @@ define(
         // apply a handler to bugherd taskCollection event
         BugHerd.prototype.on = function (event, handler) {
             bh.application.on(event, handler);
+        };
+        
+        // trigger a bugherd application event
+        BugHerd.prototype.trigger = function (event) {
+            bh.application.trigger(event);
         };
         
         // returns status name from id

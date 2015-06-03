@@ -545,7 +545,7 @@
 .kbs-ln-horiz {
     width: 100%;
     height: 1px;
-    border-top: dashed #3d91ea 1px;
+    border-top: dashed #3d91ea 2px;
 }
 
 .kbs-ln-verti {
@@ -553,7 +553,7 @@
     bottom: 0px;
     width: 1px;
     height: 100%;
-    border-left: dashed #3d91ea 1px;
+    border-left: dashed #3d91ea 2px;
 }
 
 /* width and height pseudo badges */

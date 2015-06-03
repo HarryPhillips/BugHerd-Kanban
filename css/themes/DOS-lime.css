@@ -23,23 +23,26 @@ body {
 .kbs-modal {
     background-color: #000;
     color: #18cd48;
-    border: solid #18cd48 1px;
+    border: solid #18cd48 3px;
+    border-top: 0;
 }
 
 .kbs-modal-title {
-    background-color: #222;
-    color: #18cd48;
+    background-color: #18cd48;
+    color: #1a1a1a;
 }
 
 .kbs-modal-closed {
     background-color: #18cd48;
     color: #1a1a1a;
+    border: solid #000 1px;
 }
 
 .kbs-modal-closed:hover {
     background-color: #18cd48;
     color: #18cd48;
-    border-bottom-color: #1a1a1a;
+    border: solid #18cd48 1px;
+    border-bottom: solid #000 34px;
 }
 
 .kbs-confirm,
@@ -318,6 +321,18 @@ body {
     color: #e8df68 !important;
 }
 
+/* misc
+--------------------------------------------------------------------*/
+.kbs-ln-horiz,
+.kbs-ln-verti {
+    border-color: #18cd48;
+}
+
+#kbs-ss-width,
+#kbs-ss-height {
+    color: #18cd48;
+}
+
 /* bugherd style overrides
 --------------------------------------------------------------------*/
 .kbs-details-expand {
@@ -484,7 +499,7 @@ body {
 }
 
 .cta-tag {
-    background-color: #353535 !important;
+    background-color: #1a1a1a !important;
     border-bottom: 0 !important;
 }
 

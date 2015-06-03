@@ -103,22 +103,33 @@ define(
                 wb.text(width + "px", true);
                 hb.text(height + "px", true);
                 
-                // set position
+                // apply position to height badge
                 hb.css(
                     "top",
                     (img.getBounds("top") - wrap.getBounds("top")) +
-                        (height / 2) + "px"
+                        (height / 2) - (parseInt(
+                            hb.getComputedStyle("height"),
+                            10
+                        ) / 2) + "px"
                 );
                 
+                // apply position to width badge
                 wb.css(
                     "left",
-                    img.getBounds("right") - (width / 2) + "px"
+                    img.getBounds("left") - wrap.getBounds("left") +
+                        (width / 2) - (parseInt(
+                            wb.getComputedStyle("width"),
+                            10
+                        ) / 2) + "px"
                 );
             };
             
             // screenshot zooming
             wrap.on("DOMMouseScroll", function (e) {
-                var curr, dirfact, scale, delta, sf, matrix, bsize;
+                var curr, dirfact, scale,
+                    delta, sf, tfx, tfy,
+                    matrix, bsize,
+                    bounds = img.getBounds.bind(img);
                 
                 // existing matrix array
                 curr = util.matrix(img.css("transform"));
@@ -133,7 +144,7 @@ define(
                 // new transformation matrix
                 matrix = [delta, curr[1], curr[2], delta, curr[4], curr[5]];
                 
-                // apply scale to image
+                // apply transformation matrix
                 img.css("transform", util.matrix(matrix));
                 
                 // update guidelines
