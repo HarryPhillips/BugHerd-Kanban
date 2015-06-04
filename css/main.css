@@ -234,6 +234,7 @@
     left: 0; right: 0;
     text-align: center;
     overflow: hidden;
+    cursor: grab;
 }
 
 .kbs-screenshot {
@@ -243,7 +244,6 @@
     max-height: initial !important;
     box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.8);
     transform: scale(0.75);
-    cursor: grab;
 }
 
 /* gui console wrapper 
@@ -467,6 +467,17 @@
     clear: both;
     display: block;
     visibility: hidden;
+}
+
+/* title */
+.kbs-field .kbs-title {
+    width: 200px;
+    margin: 0;
+    margin-left: 8px;
+    margin-bottom: 5px;
+    border-bottom: dashed #000 2px;
+    padding: 5px 0px;
+    font-weight: 400;
 }
 
 /* label */

@@ -35,19 +35,18 @@ define(
         
         // create a new view
         view = new View(function (args) {
-            var node = new Node("div", "kbs-view"),
-                gui = args[0],
-                modal = args[1],
-                filterData,
-                filters = config.get("interactor/filters"),
-                reset,
-                apply,
-                show,
-                hide,
-                tags;
+            var node = new Node("div", "kbs-view"), gui = args[0], modal = args[1],
+                filterData, filters = config.get("interactor/filters"),
+                reset, apply, show, hide, tags;
             
             // modal text
             node.title = "Task Filters";
+            
+            // display method title
+            node.addChild(new Field(
+                "Display Method",
+                "title"
+            ));
             
             // show results
             show = node.addChild(new Field(
@@ -77,6 +76,12 @@ define(
                         .element.checked = false;
                 },
                 (filters.displayMethod === "hide") ? true : false
+            ));
+            
+            // data title
+            node.addChild(new Field(
+                "Data Filters",
+                "title"
             ));
             
             // tag filter

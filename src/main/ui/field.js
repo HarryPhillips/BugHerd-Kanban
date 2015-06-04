@@ -31,6 +31,14 @@ define(
                     }, 1200);
                 };
 
+            // title
+            if (type === "title") {
+                label = field.createChild("h5", "kbs-title")
+                    .text(text);
+                
+                return field;
+            }
+            
             // label
             label = field.createChild("span", "kbs-label")
                 .text(text);

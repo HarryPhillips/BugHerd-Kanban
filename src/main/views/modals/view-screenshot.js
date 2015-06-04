@@ -152,7 +152,7 @@ define(
             });
             
             // screenshot dragging
-            img.on("mousedown", function (e) {
+            wrap.on("mousedown", function (e) {
                 var ondrag, dirX = 0, dirY = 0,
                     clickX = e.clientX,
                     clickY = e.clientY;
@@ -162,7 +162,7 @@ define(
                 e.preventDefault();
                 
                 // add grabber class
-                img.addClass("kbs-grabbed");
+                wrap.addClass("kbs-grabbed");
                 
                 // mousemove/dragging handler
                 ondrag = function (e) {
@@ -213,7 +213,7 @@ define(
                 // on mouseup - remove drag handler
                 body.on("mouseup", function () {
                     body.off("mousemove", ondrag);
-                    img.removeClass("kbs-grabbed");
+                    wrap.removeClass("kbs-grabbed");
                     return false;
                 });
                 
