@@ -504,10 +504,10 @@ define(
         };
         
         // reload modal a modals content
-        Modal.prototype.reload = function (init) {
+        Modal.prototype.reload = function (page) {
             var self = this,
                 view = this.viewModule,
-                render = view.draw([gui, self, self.viewParams]),
+                render = view.draw([gui, self, self.viewParams], page),
                 content = this.node.find(".kbs-modal-content")[0];
             
             content.clear();

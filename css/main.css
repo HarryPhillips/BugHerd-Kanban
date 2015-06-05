@@ -580,6 +580,22 @@
     color: #1685ED;
 }
 
+.kbs-page-next,
+.kbs-page-prev {
+    position: absolute;
+    bottom: 10px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.kbs-page-next {
+    right: 10px;
+}
+
+.kbs-page-prev {
+    left: 10px;
+}
+
 /* kbs bugherd classes
 ------------------------------------------------------------------------------*/
 /* task details expand */

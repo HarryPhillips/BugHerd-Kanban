@@ -33,13 +33,13 @@ define(
             interactor = repo.get("interactor"),
             view;
         
-        // create a new view
-        view = new View(function (args) {
+        // page one
+        function one(args) {
             var node = new Node("div", "kbs-view"), gui = args[0], modal = args[1],
                 filterData, filters = config.get("interactor/filters"),
-                reset, apply, show, hide, tags;
+                reset, apply, show, hide, tags, next;
             
-            // modal text
+            // modal title
             node.title = "Task Filters";
             
             // display method title
@@ -138,8 +138,66 @@ define(
                     bugherd.tasks.setAllSeverityStyles();
                 });
             
+            next = node.createChild("span", "kbs-page-next")
+                .text("next")
+                .on("click", function () {
+                    modal.reload(2);
+                });
+            
             return node;
-        });
+        }
+        
+        // page two
+        function two(args) {
+            var node = new Node("div", "kbs-view"), gui = args[0], modal = args[1],
+                filterData, filters = config.get("interactor/filters"),
+                reset, apply, prev;
+            
+            // modal title
+            node.title = "Task Filters";
+            
+            // apply filters with above options
+            apply = node.createChild("span", "kbs-confirm")
+                .text("apply")
+                .on("click", function () {
+                    // run tag filter
+                    interactor[filters.displayMethod + "TasksWithTag"](filters.tags);
+                });
+            
+            // show filters
+            filterData = node.createChild("span", "kbs-confirm")
+                .text("show filter")
+                .on("click", function () {
+                    var modal = new Modal("view-object", {
+                        viewParams: {
+                            message: "Filter settings:",
+                            object: filters
+                        }
+                    });
+                });
+            
+            // reset filters
+            reset = node.createChild("span", "kbs-confirm")
+                .text("reset")
+                .on("click", function () {
+                    var sortLink = new Node(".sortLink");
+                    config.set("interactor/filters", {});
+                    modal.reload();
+                    sortLink.element.click();
+                    bugherd.tasks.setAllSeverityStyles();
+                });
+            
+            prev = node.createChild("span", "kbs-page-prev")
+                .text("prev")
+                .on("click", function () {
+                    modal.reload(1);
+                });
+            
+            return node;
+        }
+            
+        // create a new view
+        view = new View([one, two]);
 
         return view;
     }
