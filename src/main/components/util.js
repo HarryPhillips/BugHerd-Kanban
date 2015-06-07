@@ -578,10 +578,8 @@ define(
         
         // unserialise a data structure
         Util.prototype.unserialise = function (string, json) {
-            var result,
-                parts,
-                index,
-                length,
+            var result, parts,
+                index, length,
                 props;
             
             // default to use json lib (no object parser yet)
@@ -589,18 +587,12 @@ define(
             
             // parse an array from string
             function parseArray(str) {
-                var result = [],
+                var result = [], value = "",
                     nstruct = new RegExp(/(\[)|(\{)/g),
                     estruct = new RegExp(/(\])|(\})/g),
                     instr = false,
-                    strch,
-                    value = "",
-                    eov,
-                    len,
-                    ch,
-                    pch,
-                    depth = 0,
-                    i = 0;
+                    strch, eov, len, ch, pch,
+                    depth = 0, i = 0;
                 
                 // clean up the string
                 str = str.replace(/\s,*/g, "");
@@ -617,11 +609,15 @@ define(
                     
                     // check if string
                     if (ch === "'" || ch === '"') {
+                        // string char found
                         if (pch !== "\\" && ch === strch) {
+                            // not escaped
                             if (instr && ch === strch) {
+                                // ended a string
                                 instr = false;
                                 strch = "";
                             } else if (!instr) {
+                                // entering a new string
                                 instr = true;
                                 strch = ch;
                             }
@@ -638,10 +634,10 @@ define(
                         depth -= 1;
                     }
                     
-                    // end of value flag
+                    // end of value flagged
                     eov = ((ch === "," || estruct.test(ch))
-                           && !depth
-                           && !instr);
+                           && !depth // not in a structure
+                           && !instr); // not in a string
                     
                     // end of current value - unserialise it and continue
                     if (eov || i === len) {
