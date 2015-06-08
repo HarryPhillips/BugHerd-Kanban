@@ -156,6 +156,8 @@ define(
             // modal title
             node.title = "Task Filters";
             
+            //
+            
             // apply filters with above options
             apply = node.createChild("span", "kbs-confirm")
                 .text("apply")

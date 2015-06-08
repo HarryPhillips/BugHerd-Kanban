@@ -166,17 +166,10 @@ define(
                 
                 // mousemove/dragging handler
                 ondrag = function (e) {
-                    var curr, top, bottom, left, right,
-                        deltaX, deltaY;
+                    var curr, deltaX, deltaY;
                     
                     // current transformation matrix
                     curr = util.matrix(img.css("transform"));
-                    
-                    // img bounds
-                    top = img.getBounds("top");
-                    bottom = img.getBounds("bottom");
-                    left = img.getBounds("left");
-                    right = img.getBounds("right");
 
                     // distance travelled in x & y
                     deltaX = (clickX - e.clientX);

@@ -329,6 +329,30 @@ define(
             this.css("transform", matrix);
         };
         
+        // scales the element to val
+        Node.prototype.scale = function (val) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+            
+            if (currMatrix === "none") {
+                // no matrix found so create new
+                matrix = [val, 0, 0, val, 0, 0];
+            } else {
+                // get array of current matrix
+                
+                // set scale (a & d / 0 & 3)
+                matrix[0] = val;
+                matrix[3] = val;
+            }
+            
+            // reserialise the matrix to a string
+            matrix = util.matrix(matrix);
+            
+            // apply the transformation
+            this.css("transform", matrix);
+        };
+        
         // get node x
         Node.prototype.getBounds = function (pos) {
             var bounds = this.element.getBoundingClientRect();
