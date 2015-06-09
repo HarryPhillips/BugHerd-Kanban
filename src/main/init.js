@@ -22,15 +22,22 @@
 *
 *   + Is it possible to add a setting to scale the entire KBS gui?
 *
-*   + Might want to add max length parameters for the console. *Might*.
+*   + Might want to add max length parameters for the console.
+*     Maybe as a config option?
 */
 
 /*
 *   PROJECTS & PRACTICE
-*   + Re-write the report an error widget and possibly move away from BugHerd
-*     exclusivity
+*   + Re-write the issue reporter and possibly move away from BugHerd
+*     exclusivity, allowing interfaces between other parties
 *
 *   + Write a game in JavaScript
+*
+*   + Template loading system - parse shorthand templates to full HTML
+*     page.
+*
+*   + Separate the gui logging console from Kanban and make it a separate
+*     project. Expand upon it there.
 */
 
 define(

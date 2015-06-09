@@ -430,8 +430,9 @@ define(
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
-                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
-                        "local" : "remote",
+                connection =
+                (window.KBS_BASE_URL.indexOf("localhost") !== -1)
+                ? "local" : "remote",
             
                 // console nodes
                 wrapper,

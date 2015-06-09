@@ -277,6 +277,7 @@ define(
         TaskController.prototype.rSetSeverityStyle = function (task) {
             var severity;
             
+            // create or retrieve a new Node instance for task
             task = new Node(document.querySelector("#task_" + task));
             severity = task.find(".task-severity");
             
