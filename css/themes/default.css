@@ -364,6 +364,10 @@ span.assignee-avatar {
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
+#kanbanBoard .task {
+    transition: background-color 0.6s;
+}
+
 .taskContent.p1 *,
 .taskContent.p2 *,
 .taskContent.p3 *,
