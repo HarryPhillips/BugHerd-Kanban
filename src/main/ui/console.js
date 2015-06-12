@@ -6,6 +6,13 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Possibly find a way to optimise the gui logs to use text appending
+*     instead of using new nodes for each log. Big performance hit when
+*     using the GUI console.
+*/
+
 define(
     [
         'config',

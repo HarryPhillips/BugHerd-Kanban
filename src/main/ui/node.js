@@ -404,6 +404,7 @@ define(
         };
         
         // find occurences of an element by selector within this node
+        // always returns as an array
         Node.prototype.find = function (selector) {
             var nodeList = this.element.querySelectorAll(":scope " + selector),
                 len = nodeList.length,
