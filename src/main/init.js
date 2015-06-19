@@ -47,6 +47,7 @@ define(
         'main/components/events',
         'main/components/status',
         'main/components/cache',
+        'main/components/exception',
         'main/components/repository',
         'main/components/http',
         'main/components/configurator',
@@ -63,6 +64,7 @@ define(
         events,
         status,
         cache,
+        Exception,
         Repository,
         Http,
         Configurator,
@@ -76,8 +78,8 @@ define(
         'use strict';
 
         // components
-        var kanban, end, gui,
-            interactor, settings, bugherd,
+        var kanban, end, gui, interactor,
+            ehandle, settings, bugherd,
             repo = new Repository();
             
         /* end of init call
@@ -90,7 +92,6 @@ define(
             // log
             util.log(
                 "okay",
-                kanban,
                 "Kanban initialised in " +
                     window.KBS_DELTA_TIME +
                     ". Approx. size: " + util.bytesFormat(util.sizeof(kanban))
@@ -135,13 +136,9 @@ define(
             settings.loadExisting();
             repo.add("settings", settings);
         } catch (configuratorException) {
-            util.log(
-                "error",
-                "Configurator failed to initialise " +
-                    "cleanly. Exception thrown in " +
-                    configuratorException.fileName + " at line " +
-                    configuratorException.lineNumber + ". Error: " +
-                    configuratorException.message
+            ehandle = new Exception(
+                configuratorException,
+                "Configurator failed to initialise cleanly."
             );
         }
 
@@ -157,13 +154,9 @@ define(
                 repo.add("gui", gui);
             }
         } catch (guiException) {
-            util.log(
-                "error",
-                "GUI failed to initialise " +
-                    "cleanly. Exception thrown in " +
-                    guiException.fileName + " at line " +
-                    guiException.lineNumber + ". Error: " +
-                    guiException.message
+            ehandle = new Exception(
+                guiException,
+                "GUI failed to initialise cleanly."
             );
         }
 
@@ -174,13 +167,9 @@ define(
                 repo.add("interactor", interactor);
             }
         } catch (interactorException) {
-            util.log(
-                "error",
-                "Interactor failed to initialise " +
-                    "cleanly. Exception thrown in " +
-                    interactorException.fileName + " at line " +
-                    interactorException.lineNumber + ". Error: " +
-                    interactorException.message
+            ehandle = new Exception(
+                interactorException,
+                "Interactor failed to initialise cleanly."
             );
         }
             
@@ -189,13 +178,9 @@ define(
             bugherd = new BugHerd();
             repo.add("bugherd", bugherd);
         } catch (bugherdException) {
-            util.log(
-                "error",
-                "BugHerd API failed to initialise " +
-                    "cleanly. Exception thrown in " +
-                    bugherdException.fileName + " at line " +
-                    bugherdException.lineNumber + ". Error: " +
-                    bugherdException.message
+            ehandle = new Exception(
+                bugherdException,
+                "BugHerd API failed to initialise cleanly."
             );
         }
 
@@ -210,14 +195,15 @@ define(
             util: util,
             gui: gui,
             configurator: settings,
-            Api: {
+            Constructor: {
                 "Configurator": Configurator,
                 "Interactor": Interactor,
                 "GUI": GUI,
                 "BugHerd": BugHerd,
                 "Http": Http,
                 "Node": Node,
-                "Modal": Modal
+                "Modal": Modal,
+                "Exception": Exception
             }
         };
     }

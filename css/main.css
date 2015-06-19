@@ -583,17 +583,22 @@
 .kbs-page-next,
 .kbs-page-prev {
     position: absolute;
-    bottom: 10px;
-    text-decoration: underline;
+    bottom: 0px;
     cursor: pointer;
 }
 
 .kbs-page-next {
-    right: 10px;
+    background-color: #57758E;
+    color: #fff;
+    right: 0px;
+    padding: 10px;
 }
 
 .kbs-page-prev {
-    left: 10px;
+    background-color: #57758E;
+    color: #fff;
+    left: 0px;
+    padding: 10px;
 }
 
 /* kbs bugherd classes

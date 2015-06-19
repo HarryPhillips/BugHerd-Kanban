@@ -36,7 +36,6 @@ define(
             this.baseApi = instance;
             this.setSeverityStyle = this.rSetSeverityStyle.bind(this);
             this.setAllSeverityStyles = this.rSetAllSeverityStyles.bind(this);
-            this.periodicallySetSeverityStyles = this.rPeriodicallySetSeverityStyles.bind(this);
         }
         
         // bugherd api wrapper
@@ -60,6 +59,8 @@ define(
         ------------------------------------------*/
         TaskController.prototype.init = function () {
             var self = this;
+            
+            
             
             // setup task event listeners
             this.applyHandlers();
@@ -142,26 +143,46 @@ define(
             return task.attributes.data.userMetaData;
         };
         
+        // gets an array of tasks with specified meta data
+        TaskController.prototype.findAllWithMeta = function (attr, value) {
+            return this.match(function (task) {
+                var meta = task.getData().userMetaData || {};
+                return (meta[attr] === value) ? true : false;
+            });
+        };
+        
+        // gets an array of tasks with specified browser data
+        TaskController.prototype.findAllWithClientData = function (attr, value) {
+            return this.match(function (task) {
+                var data = task.getBrowserData();
+                return (data[attr] === value) ? true : false;
+            });
+        };
+        
         // retrieves tasks that have a certain tag
         TaskController.prototype.findAllWithTag = function (tag) {
+            return this.match(function (task) {
+                var tags = task.attributes.tag_names;
+                return (util.contains(tags, tag)) ? true : false;
+            });
+        };
+        
+        TaskController.prototype.match = function (matched) {
             var tasks = this.api.models,
                 len = tasks.length,
-                matches = [],
+                results = [],
                 i = 0,
-                task,
-                tags;
-
-            // check all tasks
+                task;
+            
+            // check meta of tasks
             for (i; i < len; i += 1) {
                 task = tasks[i];
-                tags = task.attributes.tag_names;
-
-                if (util.contains(tags, tag)) {
-                    matches.push(task.id);
+                if (matched(task)) {
+                    results.push(task);
                 }
             }
             
-            return matches;
+            return results;
         };
         
         // apply event handlers
@@ -306,28 +327,6 @@ define(
                     this.setSeverityStyle(id);
                 }
             }
-        };
-        
-        // periodically apply severity styles to all tasks
-        TaskController.prototype.rPeriodicallySetSeverityStyles = function () {
-            var first = true,
-                count = $(".task").length,
-                sortId = bh.application.attributes.sortAttribute,
-                self = this,
-                loop = function () {
-                    var newCount = $(".task").length,
-                        newSortId = bh.application.attributes.sortAttribute;
-                    
-                    // if new or old tasks
-                    if (newCount !== count || newSortId !== sortId || first) {
-                        self.setAllSeverityStyles();
-                        first = false;
-                    }
-                    
-                    setTimeout(loop, 1000);
-                };
-            
-            loop();
         };
         
         /* BugHerd Prototype
