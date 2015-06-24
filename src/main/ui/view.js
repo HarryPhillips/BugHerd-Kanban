@@ -22,6 +22,9 @@ define(['main/components/util'], function (util) {
 
     // draw the view using the constructor
     View.prototype.draw = function (params, page) {
+        // default page to 1
+        page = (util.isDefined(page)) ? page : 1;
+        
         // assume literal page number
         // rather than an index number (page 1 === 0)
         page -= 1;

@@ -482,6 +482,11 @@ define(
         // set value of a node
         Node.prototype.val = function (value) {
             if (typeof value === "undefined") {
+                // select element case
+                if (this.element.nodeName === "SELECT") {
+                    return this.element.selectedOptions[0].value;
+                }
+                
                 return this.element.value;
             }
             

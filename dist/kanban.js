@@ -99,7 +99,7 @@ define('config',[],function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0",
+        version: "1.4.0-pre",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -107,7 +107,7 @@ define('config',[],function () {
         theme: "default",
         test: false,
         logs: {
-            enabled: true,
+            enabled: false,
             gui: true,
             contexts: true,
             contextFlag: "context:",
@@ -118,6 +118,7 @@ define('config',[],function () {
             enabled: true,
             autorefresh: true,
             wallpaper: "",
+            severityStyles: true,
             parallax: {
                 enabled: false,
                 factor: 100
@@ -125,10 +126,14 @@ define('config',[],function () {
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
+                allowDestruction: false,
+                destroyed: false,
+                displayed: true,
                 icons: {
+                    menu: "bars",
+                    toggle: "terminal",
                     save: "file-text",
                     clear: "trash",
-                    toggle: "terminal",
                     close: "times",
                     destroy: "unlink",
                     example: "plus-circle",
@@ -143,13 +148,19 @@ define('config',[],function () {
             },
             modals: {
                 behaviour: {
-                    modalHopping: true
+                    stack: true,
+                    shift: true
                 }
             }
         },
         interactor: {
             enabled: true,
-            observe: false
+            observe: false,
+            expandOnclick: true,
+            filters: {
+                metadata: {},
+                clientdata: {}
+            }
         },
         events: {
             silent: false
@@ -164,14 +175,15 @@ define('config',[],function () {
             }
         },
         tooltips: {
-            save: "Save the output buffer to text file",
-            clear: "Clear all logs",
-            toggle: "GUI Console State",
-            close: "Close the console",
-            destroy: "Destroy this console instance",
-            benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings",
-            toggleObjs: "Toggle object logs display"
+            save: "Save log buffer",
+            clear: "Clear console",
+            menu: "Kanban Menu",
+            toggle: "Toggle the console",
+            close: "Close",
+            destroy: "Destroy console",
+            benchmark: "Benchmark",
+            settings: "Settings",
+            toggleObjs: "Toggle object logs"
         }
     }).obj;
     
@@ -204,21 +216,38 @@ define('main/components/events',['config'], function (config) {
     
     // subscribe/create event topic
     Events.prototype.subscribe = function (event, handler) {
-        if (!this.topics[event]) {
-            // create a event topic
-            this.topics[event] = [];
-        }
+        var len, i,
+            attach = function (topic, handler) {
+                if (!this.topics[topic]) {
+                    // create an event topic
+                    this.topics[topic] = [];
+                }
+
+                // apply handler to event
+                this.topics[topic].push(handler);
+            }.bind(this);
         
-        // apply handler to event
-        this.topics[event].push(handler);
+        // if event is an array of topics
+        if (event instanceof Array) {
+            len = event.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                attach(event[i], handler);
+            }
+        } else {
+            attach(event, handler);
+        }
     };
     
     // unsubscribe a handler from a topic
     Events.prototype.unsubscribe = function (event, handler) {
-        var list = this.topics[event],
+        var list,
             object = false,
-            len = list.length,
-            i = 0;
+            xlen,
+            ylen,
+            x = 0,
+            y = 0;
         
         // not a name - we need to do object comparison
         // we shouldn't need to do deep comparison,
@@ -228,18 +257,30 @@ define('main/components/events',['config'], function (config) {
             object = true;
         }
         
-        // check names of all handlers
-        for (i; i < len; i += 1) {
-            // remove handler from array and return
-            if (object) {
-                if (handler === list[i]) {
-                    list.splice(list.indexOf(i), 1);
-                    return;
-                }
-            } else {
-                if (list[i].name === handler) {
-                    list[i].splice(list.indexOf(i), 1);
-                    return;
+        // convert event to array
+        if (!event instanceof Array) {
+            event = [event];
+        }
+        
+        // remove all matched handlers from event
+        for (x, xlen = event.length; x < xlen; x += 1) {
+            // get event
+            list = this.topics[event[x]];
+                               
+            // check names of all handlers
+            for (y, ylen = list.length; y < ylen; y += 1) {
+                // remove handler from array and return
+                if (object) {
+                    if (handler === list[y] ||
+                            handler.toSource() === list[y].toSource()) {
+                        list.splice(list.indexOf(y), 1);
+                        return;
+                    }
+                } else {
+                    if (list[y].name === handler) {
+                        list[y].splice(list.indexOf(y), 1);
+                        return;
+                    }
                 }
             }
         }
@@ -258,14 +299,6 @@ define('main/components/events',['config'], function (config) {
         var i;
         for (i = 0; i < this.topics[event].length; i += 1) {
             this.topics[event][i](data, event);
-        }
-        
-        // make data an object if it isn't already so
-        // so we can log it nicely
-        if (typeof data !== "object") {
-            data = {
-                "data": data
-            };
         }
     };
     
@@ -384,7 +417,8 @@ define('main/components/cache',['main/components/buffer'], function (Buffer) {
     // cache object
     var cache = {
         app: new Buffer(),
-        console: new Buffer()
+        console: new Buffer(),
+        logCount: 0
     };
     
     return cache;
@@ -410,9 +444,11 @@ define('main/components/cookies',['config'], function (config) {
             cookie,
             i;
 
+        // iterate through cookies
         for (i = 0; i < cookies.length; i += 1) {
             cookie = cookies[i];
 
+            // eliminate whitespace
             while (cookie.charAt(0) === ' ') {
                 cookie = cookie.substring(1);
             }
@@ -430,6 +466,7 @@ define('main/components/cookies',['config'], function (config) {
     Cookies.prototype.set = function (name, value, days) {
         var expires, date;
 
+        // set expiry
         if (days) {
             date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -465,6 +502,8 @@ define('main/components/cookies',['config'], function (config) {
 
 /*global define: true */
 
+/*jslint regexp: true */
+
 define(
     'main/components/util',[
         'config',
@@ -487,11 +526,10 @@ define(
         // util class
         function Util() {}
         
-        // set instance for internal references
-        var util = new Util(),
-            instance;
+        // create new instance of Util
+        var util = new Util();
             
-        // refresh/reload the page
+        // refresh/reload the page with optional delay
         Util.prototype.refresh = function (delay) {
             if (typeof delay !== "undefined") {
                 setTimeout(function () {
@@ -546,6 +584,11 @@ define(
 
             return year + "-" + month + "-" + date;
         };
+            
+        // get diff between two numbers
+        Util.prototype.diff = function (num1, num2) {
+            return (num1 > num2) ? num1 - num2 : num2 - num1;
+        };
 
         // escapes regex meta characters from a string
         Util.prototype.escapeRegEx = function (str) {
@@ -591,6 +634,11 @@ define(
                             obj.nodeType === 1 &&
                             typeof obj.nodeName === "string"
             );
+        };
+            
+        // checks if input is a text node
+        Util.prototype.isTextNode = function (obj) {
+            return obj.nodeType === 3;
         };
         
         // parse a html string into DOM element
@@ -657,15 +705,89 @@ define(
             return typeof obj === "boolean";
         };
             
-        // capitilise the first letter of every word in string
+        // checks if a number is even
+        Util.prototype.isEven = function (num) {
+            return (num % 2) ? true : false;
+        };
+            
+        // checks if a number is odd
+        Util.prototype.isOdd = function (num) {
+            return (num % 2) ? false : true;
+        };
+            
+        // checks if a value is defined
+        Util.prototype.isDefined = function (obj) {
+            return typeof obj !== "undefined";
+        };
+            
+        // matrix function
+        Util.prototype.matrix = function (matrix) {
+            var result,
+                len = 6,
+                i = 0,
+                err = function (msg) {
+                    util.log("warn", msg + " arguments supplied to kbs.util.matrix, " +
+                            "unexpected results may occur");
+                };
+            
+            // convert string matrices to arrays
+            if (util.isString(matrix)) {
+                // expecting: "matrix(a, b, c, d, tx, ty)"
+                
+                // check if matrix is in the string
+                if (matrix.indexOf("matrix") !== -1) {
+                    result = matrix.match(/\(([^)]+)\)/);
+                    result = result[0].replace("(", "[").replace(")", "]");
+                    result = util.unserialise(result);
+                } else {
+                    // try an unserialise as a fallback
+                    result = util.unserialise(matrix);
+                }
+                
+                return result;
+            }
+            
+            // convert array to string matrices
+            if (util.isArray(matrix)) {
+                // expecting: [a, b, c, d, tx, ty]
+                result = "";
+                
+                if (matrix.length < 6) {
+                    err("Insufficient");
+                }
+                
+                if (matrix.length > 6) {
+                    err("Redundant");
+                }
+                
+                // remove excess values
+                matrix = matrix.slice(0, 6);
+                
+                // add missing values
+                for (i = 0, len = 6; i < len; i += 1) {
+                    if (!util.isDefined(matrix[i])) {
+                        matrix[i] = 0;
+                    }
+                }
+                
+                // serialise array
+                result = "matrix(" +
+                    util.serialise(matrix).replace("[", "").replace("]", "") +
+                    ")";
+                
+                return result;
+            }
+        };
+            
+        // capitalise the first letter of every word in string
         // doesn't support multiple whitespaces currently
-        Util.prototype.capitilise = function (string) {
+        Util.prototype.capitalise = function (string) {
             var words = string.split(" "),
                 len = words.length,
                 i = 0,
                 ch;
             
-            // make every word capitilised
+            // make every word capitalised
             for (i; i < len; i += 1) {
                 ch = words[i].charAt(0).toUpperCase();
                 words[i] = ch + words[i].slice(1);
@@ -686,8 +808,9 @@ define(
             // make sure target and host are defined
             if (typeof host === "undefined" || host === "") {
                 // throw an error if host is undefined
-                throw new Error("Could not determine a contained value, " +
+                util.log("error", "Could not determine a contained value, " +
                                "haystack object is undefined!");
+                return false;
             }
             
             if (typeof target === "undefined" || target === "") {
@@ -823,21 +946,40 @@ define(
         
         // merge two objects
         Util.prototype.merge = function (one, two, overwrite) {
-            var i,
-                exists;
+            var duplicate,
+                exists,
+                len,
+                i;
             
-            // loop through all two's props
-            // and push into one
-            for (i in two) {
-                if (two.hasOwnProperty(i)) {
-                    exists = typeof one[i] !== "undefined";
-                    
-                    if (!exists || (exists && overwrite)) {
-                        if (util.isObject(two[i])) {
-                            util.merge(one[i], two[i], overwrite);
-                        } else {
-                            one[i] = two[i];
+            // object merge
+            if (util.isObject(one)) {
+                // loop through all two's props
+                // and push into one
+                for (i in two) {
+                    if (two.hasOwnProperty(i)) {
+                        exists = typeof one[i] !== "undefined";
+
+                        if (!exists || (exists && overwrite)) {
+                            if (util.isObject(two[i])) {
+                                util.merge(one[i], two[i], overwrite);
+                            } else {
+                                one[i] = two[i];
+                            }
                         }
+                    }
+                }
+            }
+            
+            // array merge
+            if (util.isArray(one)) {
+                // loop through all two's items
+                // and push into one
+                duplicate = overwrite;
+                len = two.length;
+                i = 0;
+                for (i; i < len; i += 1) {
+                    if (!util.contains(one, two[i]) || duplicate) {
+                        one.push(two[i]);
                     }
                 }
             }
@@ -854,8 +996,8 @@ define(
                 value,
                 separate = false;
             
-            // default to json usage
-            json = json || true;
+            // default to not using json lib
+            json = (typeof json !== "undefined") ? json : false;
             
             // this should capture simple types
             // e.g. strings and numbers
@@ -874,7 +1016,7 @@ define(
                     for (index in object) {
                         if (object.hasOwnProperty(index)) {
                             // add object value?
-                            result += index + ":" +
+                            result += "\"" + index + "\":" +
                                 util.serialise(object[index], json);
 
                             // if is last element
@@ -912,7 +1054,7 @@ define(
                     
                     // push to result
                     if (util.isString(value)) {
-                        result += "'" + value + "'";
+                        result += "\"" + value + "\"";
                     } else if (util.isNumber(value)) {
                         result += value;
                     } else {
@@ -923,9 +1065,9 @@ define(
                 result += "]";
             }
             
-            // wrap string with '
+            // wrap string with "'s
             if (util.isString(object)) {
-                return "'" + result + "'";
+                return "\"" + result + "\"";
             }
             
             return result;
@@ -933,29 +1075,21 @@ define(
         
         // unserialise a data structure
         Util.prototype.unserialise = function (string, json) {
-            var result,
-                parts,
-                index,
-                length,
+            var result, parts,
+                index, length,
                 props;
             
-            // default to json usage
-            json = json || true;
+            // default to use json lib (no object parser yet)
+            json = (typeof json !== "undefined") ? json : true;
             
             // parse an array from string
             function parseArray(str) {
-                var result = [],
+                var result = [], value = "",
                     nstruct = new RegExp(/(\[)|(\{)/g),
                     estruct = new RegExp(/(\])|(\})/g),
                     instr = false,
-                    strch,
-                    value = "",
-                    eov,
-                    len,
-                    ch,
-                    pch,
-                    depth = 0,
-                    i = 0;
+                    strch, eov, len, ch, pch,
+                    depth = 0, i = 0;
                 
                 // clean up the string
                 str = str.replace(/\s,*/g, "");
@@ -972,11 +1106,15 @@ define(
                     
                     // check if string
                     if (ch === "'" || ch === '"') {
+                        // string char found
                         if (pch !== "\\" && ch === strch) {
+                            // not escaped
                             if (instr && ch === strch) {
+                                // ended a string
                                 instr = false;
                                 strch = "";
                             } else if (!instr) {
+                                // entering a new string
                                 instr = true;
                                 strch = ch;
                             }
@@ -993,11 +1131,12 @@ define(
                         depth -= 1;
                     }
                     
-                    // end of value flag
+                    // end of value flagged
                     eov = ((ch === "," || estruct.test(ch))
-                           && !depth
-                           && !instr);
+                           && !depth // not in a structure
+                           && !instr); // not in a string
                     
+                    // end of current value - unserialise it and continue
                     if (eov || i === len) {
                         result.push(util.unserialise(value, json));
                         value = "";
@@ -1042,8 +1181,12 @@ define(
                         str.charAt(str.length - 1).match(quote)) {
                     str = str.substring(1, str.length - 1);
                 } else {
-                    // assume number if no quotes
-                    str = Number(str);
+                    // check if number - return string if not
+                    if (isNaN(parseFloat(str, 10))) {
+                        return str;
+                    } else {
+                        str = parseFloat(str, 10);
+                    }
                 }
                 
                 return str;
@@ -1098,6 +1241,71 @@ define(
             
             return list;
         };
+            
+        // returns *approximated* object size in bytes
+        Util.prototype.sizeof = function (object) {
+            var bytes = 0,
+                len,
+                i;
+            
+            if (object !== null && object !== undefined) {
+                switch (typeof object) {
+                case "string":
+                    bytes += object.length * 2;
+                    break;
+                case "number":
+                    bytes += 8;
+                    break;
+                case "boolean":
+                    bytes += 4;
+                    break;
+                case "object":
+                    // object
+                    if (util.isObject(object)) {
+                        for (i in object) {
+                            if (object.hasOwnProperty(i)) {
+                                bytes += util.sizeof(object[i]);
+                            }
+                        }
+                    }
+                        
+                    // array
+                    if (util.isArray(object)) {
+                        len = object.length;
+                        i = 0;
+                        
+                        for (i; i < len; i += 1) {
+                            bytes += util.sizeof(object[i]);
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            return bytes;
+        };
+            
+        // format number to bytes
+        Util.prototype.bytesFormat = function (x) {
+            // bytes
+            if (x < 1014) {
+                return x + "bytes";
+            }
+            
+            // kilobytes
+            if (x < 1048576) {
+                return (x / 1024).toFixed(3) + "KB";
+            }
+            
+            // megabytes
+            if (x < 1073741824) {
+                return (x / 1048576).toFixed(3) + "MB";
+            }
+            
+            // gigabytes
+            return (x / 1073741824).toFixed(3) + "GB";
+        };
         
         // log wrapper
         Util.prototype.log = function (context, type, msg, opt) {
@@ -1106,6 +1314,9 @@ define(
                 return;
             }
 
+            // increment log count
+            cache.logCount += 1;
+            
             // declarations
             var i = 0, param, args = [],
                 filter = config.logs.filter,
@@ -1310,18 +1521,51 @@ define(
         };
             
         // logging aliases
-        Util.prototype.debug = function () {};
-        Util.prototype.warn = function () {};
-        Util.prototype.error = function () {};
+        Util.prototype.debug = function () {
+            util.log("debug");
+        };
+        Util.prototype.warn = function () {
+            util.log("warn");
+        };
+        Util.prototype.error = function () {
+            util.log("error");
+        };
         
-        // create instance
-        instance = new Util();
+        // log
         util.log("+ util.js loaded");
 
-        return instance;
+        // return instance
+        return util;
     }
 );
 
+/*
+*   @type javascript
+*   @name exception.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('main/components/exception',["main/components/util"], function (util) {
+    
+    
+    function Exception(err, msg) {
+        this.fileName = err.fileName;
+        this.lineNumber = err.lineNumber;
+        this.message = err.message;
+        
+        util.log(
+            "error",
+            msg + " | Exception thrown in " +
+                err.fileName + " at line " +
+                err.lineNumber + ". Error: " +
+                err.message
+        );
+    }
+    
+    return Exception;
+});
 /*
 *   @type javascript
 *   @name repository.js
@@ -1332,12 +1576,43 @@ define(
 
 define('main/components/repository',[],function () {
     
-    
-    var repo = {
-        
+
+    // shared
+    var box = {},
+        instance;
+
+    // repository class
+    function Repository() {}
+
+    // add an object to the repo under key
+    Repository.prototype.add = function (key, object) {
+        // already exists
+        if (box[key]) {
+            throw new Error(
+                "Couldn't add '" + key + "' to the repository, " +
+                    " key already exists. Delete the key first."
+            );
+        }
+
+        box[key] = object;
+    };
+
+    // get an object from the repo
+    Repository.prototype.get = function (key) {
+        return box[key];
+    };
+
+    // delete an object from the repo
+    Repository.prototype.del = function (key) {
+        delete box[key];
     };
     
-    return repo;
+    // list all repo objects
+    Repository.prototype.all = function () {
+        return box;
+    };
+
+    return Repository;
 });
 /*
 *   @type javascript
@@ -1473,6 +1748,29 @@ define(
 );
 /*
 *   @type javascript
+*   @name viewloader.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('main/components/viewloader',['require'],function (require) {
+    
+    
+    // view loader class
+    function ViewLoader() {}
+    
+    // load and return a view
+    ViewLoader.prototype.load = function (view, callback) {
+        require(["main/views/" + view], function (mod) {
+            callback(mod);
+        });
+    };
+    
+    return ViewLoader;
+});
+/*
+*   @type javascript
 *   @name node.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -1480,12 +1778,41 @@ define(
 /*global define: true */
 
 define(
-    'main/components/node',['config', 'main/components/util'],
+    'main/ui/node',['config', 'main/components/util'],
     function (config, util) {
         
         
+        // instance monitoring
+        var ALL_NODES = [];
+        
         // node constructor
         function Node(type, classes, id) {
+            // is a selector passed
+            if (util.isString(type)) {
+                if (type.charAt(0) === "#" || type.charAt(0) === ".") {
+                    return new Node(document.querySelector(type), classes, id);
+                }
+            }
+            
+            // check if a node with this exact element
+            // already exists - if it does, return it
+            var len = ALL_NODES.length,
+                assoc = this.findAssociatedNode(type),
+                i = 0;
+            
+            
+            // return associated Node instance if found
+            if (assoc) {
+                return assoc;
+            }
+            
+            // update instance monitor
+            ALL_NODES.push(this);
+            
+            // props
+            this.children = [];
+            this.textNodes = [];
+            
             // check if passed an HTML node
             if (util.isDomElement(type)) {
                 this.element = type;
@@ -1510,32 +1837,46 @@ define(
         // show node
         Node.prototype.show = function () {
             this.element.style.display = "block";
+            return this;
         };
         
         // hide node
         Node.prototype.hide = function () {
             this.element.style.display = "none";
+            return this;
+        };
+        
+        // toggle node
+        Node.prototype.toggle = function () {
+            var method = (this.element.style.display === "none") ? "block" : "none";
+            this.element.style.display = method;
+            return this;
         };
         
         // fade in node
         Node.prototype.fadeIn = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.show();
+                return this;
             }
             
             // jquery fade in
             window.jQuery(this.element).fadeIn(args);
+            
+            return this;
         };
         
         // fade out node
         Node.prototype.fadeOut = function (args) {
             if (typeof window.jQuery === "undefined") {
                 this.hide();
-                return;
+                return this;
             }
             
             // jquery fade out
             window.jQuery(this.element).fadeOut(args);
+            
+            return this;
         };
         
         // return current element id
@@ -1572,6 +1913,10 @@ define(
         
         // add class(es) to node
         Node.prototype.addClass = function (classes) {
+            if (this.element.className.indexOf(classes) !== -1) {
+                return;
+            }
+            
             if (this.element.className === "") {
                 // no previous classes
                 this.element.className = classes;
@@ -1587,7 +1932,6 @@ define(
             var curr = this.element.className,
                 newclass,
                 i,
-                
                 remove = function (name) {
                     if (curr.indexOf(" " + name) !== -1) {
                         newclass = curr.replace(" " + name, "");
@@ -1605,7 +1949,7 @@ define(
                 
                 // remove all classes
                 for (i = 0; i < classes.length; i += 1) {
-                    remove(classes[i]);
+                    this.removeClass(classes[i]);
                 }
             } else {
                 remove(classes);
@@ -1621,53 +1965,97 @@ define(
             this.element.className = classes;
         };
         
+        // toggles a class on a node
+        Node.prototype.toggleClass = function (name) {
+            if (this.hasClass(name)) {
+                this.removeClass(name);
+            } else {
+                this.addClass(name);
+            }
+        };
+        
         // css rule changes
-        Node.prototype.css = function (rule, property) {
+        Node.prototype.css = function (rule, property, after) {
             var rules = rule.split("-"),
                 i;
             
             // if more than one piece to rule name
             if (rules.length > 1) {
-                // capitilise names after first name
+                // capitalise names after first name
                 for (i = 1; i < rules.length; i += 1) {
-                    rules[i] = util.capitilise(rules[i]);
+                    rules[i] = util.capitalise(rules[i]);
                 }
             }
             
             // join to form new rule
             rule = rules.join("");
             
-            // set 
-            this.element.style[rule] = property;
+            // get or set?
+            if (typeof property === "undefined" || property === "") {
+                // return computed style
+                return window.getComputedStyle(this.element, null).getPropertyValue(rule);
+            } else {
+                this.element.style[rule] = property;
+            }
+            
+            return this;
+        };
+        
+        // return computed style
+        Node.prototype.getComputedStyle = function (rule) {
+            return window.getComputedStyle(this.element, null).getPropertyValue(rule);
         };
         
         // get parent node
         Node.prototype.parent = function () {
+            if (!this.element) {
+                return null;
+            }
+            
             return this.element.parentNode;
         };
         
         // add a child to node
         Node.prototype.addChild = function (child) {
-            // check if node is an instance of class Node
+            // check if child is an instance of class Node
             if (child.constructor === Node || child instanceof Node) {
                 this.element.appendChild(child.element);
-                return;
+                this.children.push(child);
+                return child;
             }
             
-            // just a HTML node, append
-            this.element.appendChild(child);
+            // if is a dom element, then call add again
+            if (util.isDomElement(child)) {
+                child = new Node(child);
+                return this.addChild(child);
+            }
+            
+            // if is a text node just append
+            if (util.isTextNode(child)) {
+                this.textNodes.push(child);
+                this.element.appendChild(child);
+                return child;
+            }
+            
+            // failed
+            util.log(
+                "error",
+                this,
+                "Attempt to add a child element to Node failed, " +
+                    "child is not of type Node or HTMLElement."
+            );
         };
 
         // create and add child to node
         Node.prototype.createChild = function (type, classes, id) {
             var child = new Node(type, classes, id);
-            this.addChild(child.element);
+            this.addChild(child);
             return child;
         };
         
         // detach from parent
         Node.prototype.detach = function () {
-            this.element.parentNode.removeChild(this.element);
+            return this.element.parentNode.removeChild(this.element);
         };
         
         // (re)attach to parent
@@ -1675,25 +2063,143 @@ define(
             this.element.parentNode.appendChild(this.element);
         };
         
-        // delete and reset node and it's children
-        Node.prototype.destroy = function () {
-            this.parent().removeChild(this.element);
-            this.element = null;
+        // move to another element
+        Node.prototype.move = function (destination) {
+            var el = this.detach();
+            
+            // attach to destination
+            if (util.isNode(destination)) {
+                destination.addChild(el);
+            } else if (util.isDomElement(destination)) {
+                destination.appendChild(el);
+            }
         };
         
-        // find a child element within our element tree
+        // translate the element by (x, y)
+        Node.prototype.translate = function (x, y) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+        
+            if (currMatrix === "none") {
+                // if no matrix found just create one
+                matrix = [0, 0, 0, 0, x, y];
+            } else {
+                // get array of matrix
+                matrix = util.matrix(currMatrix);
+                
+                // add x & y values to matrix
+                matrix[4] = x;
+                matrix[5] = y;
+            }
+            
+            // reserialise matrix to string
+            matrix = util.matrix(matrix);
+            
+            // apply new transformation matrix
+            this.css("transform", matrix);
+        };
+        
+        // scales the element to val
+        Node.prototype.scale = function (val) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+            
+            if (currMatrix === "none") {
+                // no matrix found so create new
+                matrix = [val, 0, 0, val, 0, 0];
+            } else {
+                // get array of current matrix
+                
+                // set scale (a & d / 0 & 3)
+                matrix[0] = val;
+                matrix[3] = val;
+            }
+            
+            // reserialise the matrix to a string
+            matrix = util.matrix(matrix);
+            
+            // apply the transformation
+            this.css("transform", matrix);
+        };
+        
+        // get node x
+        Node.prototype.getBounds = function (pos) {
+            var bounds = this.element.getBoundingClientRect();
+            
+            // center of element
+            if (pos === "center") {
+                return util.diff(bounds.left, bounds.right) / 2;
+            }
+            
+            return bounds[pos];
+        };
+        
+        // delete and reset node and it's children
+        Node.prototype.destroy = function () {
+            var xlen = this.children.length,
+                ylen = ALL_NODES.length,
+                x = 0,
+                y = 0;
+            
+            // call destroy on children
+            if (xlen) {
+                for (x; x < xlen; x += 1) {
+                    if (this.children[x]) {
+                        this.children[x].destroy();
+                        this.children[x] = null;
+                    }
+                }
+            }
+            
+            // remove from global node list
+            if (ylen) {
+                for (y; y < ylen; y += 1) {
+                    if (ALL_NODES[y]) {
+                        if (ALL_NODES[y].element === this.element) {
+                            ALL_NODES.splice(y, 1);
+                        }
+                    }
+                }
+            }
+            
+            // nullify if no parent node
+            if (!this.parent()) {
+                this.element = null;
+                return;
+            }
+            
+            // remove from DOM by detaching from parent
+            this.parent().removeChild(this.element);
+        };
+        
+        // find occurences of an element by selector within this node
+        // always returns as an array
         Node.prototype.find = function (selector) {
-            var nodeList = this.element.querySelectorAll(":scope > " + selector),
+            var nodeList = this.element.querySelectorAll(":scope " + selector),
                 len = nodeList.length,
                 results = [],
                 i = 0;
             
-            // convert to node
+            // iterate over results
+            // convert to Node - will get existing
+            // node if element is already a node
             for (i; i < len; i += 1) {
                 results.push(new Node(nodeList[i]));
             }
             
             return results;
+        };
+        
+        // clear a node of its children
+        Node.prototype.clear = function () {
+            var i = 0,
+                len = this.children.length;
+            
+            for (i; i < len; i += 1) {
+                this.children[i].destroy();
+            }
         };
         
         // clone node instance and return
@@ -1747,6 +2253,11 @@ define(
         // set value of a node
         Node.prototype.val = function (value) {
             if (typeof value === "undefined") {
+                // select element case
+                if (this.element.nodeName === "SELECT") {
+                    return this.element.selectedOptions[0].value;
+                }
+                
                 return this.element.value;
             }
             
@@ -1754,9 +2265,15 @@ define(
             return this;
         };
         
-        // Node event listeners
+        // add node event handler
         Node.prototype.on = function (event, listener) {
             this.element.addEventListener(event, listener);
+            return this;
+        };
+        
+        // remove node event handler
+        Node.prototype.off = function (event, listener) {
+            this.element.removeEventListener(event, listener);
             return this;
         };
         
@@ -1770,32 +2287,40 @@ define(
             element.appendChild(this.element);
         };
         
+        // checks if node has child nodes
+        Node.prototype.hasChildren = function () {
+            return this.children.length;
+        };
+        
+        // checks if the node's element matches this element
+        Node.prototype.is = function (element) {
+            return this.element === element;
+        };
+        
+        // find the node which belongs to passed element
+        Node.prototype.findAssociatedNode = function (element) {
+            var len = ALL_NODES.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (ALL_NODES[i].element === element) {
+                    return ALL_NODES[i];
+                }
+            }
+            
+            return false;
+        };
+        
+        // monitoring
+        Node.prototype.count = function () {
+            return ALL_NODES.length;
+        };
+        
+        Node.prototype.ALL_NODES = ALL_NODES;
+        
         return Node;
     }
 );
-/*
-*   @type javascript
-*   @name viewloader.js
-*   @copy Copyright 2015 Harry Phillips
-*/
-
-/*global define: true */
-
-define('main/components/viewloader',['require'],function (require) {
-    
-    
-    // view loader class
-    function ViewLoader() {}
-    
-    // load and return a view
-    ViewLoader.prototype.load = function (view, callback) {
-        require(["main/views/" + view], function (mod) {
-            callback(mod);
-        });
-    };
-    
-    return ViewLoader;
-});
 /*
 *   @type javascript
 *   @name modal.js
@@ -1813,8 +2338,23 @@ define('main/components/viewloader',['require'],function (require) {
 *     one at a time perhaps?)
 *
 *   + Dynamic modal event handler attachment
+*   + Rewrite the modal queueing system (again!) as currently it doesn't
+*     scale too well.
 *
-*   + Modal event fires should be done in one function call
+*
+*   NOTES
+*   + Open and closing of a single modal should behave as normal.
+*
+*   + If a modal is opened and another modal is already open, the
+*     active modal needs to be pushed into the stack or hidden
+*     (depending on configured behaviour) and the requested modal
+*     opens as normal.
+*
+*   + If a stacked modal is clicked, it should be made the active modal
+*     and the previously active modal needs to be pushed to stack
+*
+*   + If a stacked modal's close button is clicked it should be removed
+*     from the stack without affecting other modals
 */
 
 define(
@@ -1823,21 +2363,22 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
+        'main/components/repository',
         'main/components/http',
-        'main/components/node',
-        'main/components/viewloader'
+        'main/components/viewloader',
+        'main/ui/node'
     ],
     function (config,
         util, events,
-        status, Http,
-        Node, ViewLoader) {
+        status, repo, Http,
+        ViewLoader, Node) {
         
         
         // event logger
-        function event_log(modal, event) {
+        function evtlog(modal, event) {
             util.log(
-                "context:gui/modals",
-                "log",
+                "context:gui",
+                "debug",
                 "Modal '" + modal.viewName + "' " +
                     "event '" + event + "' fired"
             );
@@ -1851,45 +2392,230 @@ define(
         /* ModalController Class
         ---------------------------------------------*/
         function ModalController() {
-            // modal objects/arrays
+            // list of all modal objects/arrays
             this.list = {};
-            this.openModals = [];
-            this.queuedModals = [];
             
-            // create logging context
-            this.applyContext();
-            
-            // create events and process queue
-            // on close and destruction
-            events.subscribe("gui/modal/init", event_log);
-            events.subscribe("gui/modal/load", event_log);
-            events.subscribe("gui/modal/open", event_log);
-            events.subscribe("gui/modal/close", event_log);
-            events.subscribe("gui/modal/destruct", event_log);
-            events.subscribe("gui/modal/confirm", event_log);
-            events.subscribe("gui/modal/proceed", event_log);
-            events.subscribe("gui/modal/cancel", event_log);
+            // modal states
+            this.active = null;
+            this.stacked = [];
+            this.opened = [];
             
             // queue processing
             events.subscribe(
-                "gui/modal/close",
-                this.processQueue.bind(this)
+                [
+                    "gui/modal/open",
+                    "gui/modal/close",
+                    "gui/modal/destruct"
+                ],
+                this.processStack.bind(this)
             );
-            events.subscribe(
-                "gui/modal/destruct",
-                this.processQueue.bind(this)
-            );
+            
+            // events list
+            this.events = [
+                "init", "load", "reload", "open", "close",
+                "destruct", "confirm", "proceed", "cancel"
+            ];
+            
+            var len = this.events.length,
+                i = 0;
+            
+            // event logging
+            for (i; i < len; i += 1) {
+                events.subscribe(
+                    "gui/modal/" + this.events[i],
+                    evtlog
+                );
+            }
         }
         
-        // apply gui/modals logging context
-        ModalController.prototype.applyContext = function () {
-            events.subscribe("gui/loaded", function () {
-                util.log(
-                    "context:gui/modals",
-                    "buffer",
-                    "log-buffer: GUI-MODALS"
-                );
-            });
+        // begin processing the modal queue
+        ModalController.prototype.processStack = function processStack(data, event) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                
+                modal = data;
+            
+            util.log("context:gui", "debug", "processing modal stack");
+            
+            // new modal opened
+            if (event === "gui/modal/open") {
+                // push current modal into stack
+                if (active && !active.dueRemoval) {
+                    this.addToStack(active);
+                }
+                
+                this.addToOpened(modal);
+            }
+            
+            // modal closed - re-open first in stack
+            if (event === "gui/modal/close") {
+                // if in stack, remove it
+                if (this.isStacked(modal)) {
+                    this.removeFromStack(modal);
+                }
+                
+                if (stacked.length) {
+                    // take out new modal from stack and open it
+                    modal = stacked[stacked.length - 1];
+                    modal.open();
+                    this.removeFromStack(modal);
+                } else if (!opened.length) {
+                    // reset
+                    this.active = null;
+                    gui.preserveOverlay = false;
+                    
+                    if (!status.interactor.taskDetailsExpanded) {
+                        gui.hideOverlay();
+                    }
+                }
+                
+                this.removeFromOpened(modal);
+            }
+            
+            // should preserve overlay?
+            if (stacked.length || opened.length) {
+                gui.preserveOverlay = true;
+            }
+        };
+        
+        // adds a modal to the stack
+        ModalController.prototype.addToStack = function (modal, index) {
+            util.log(
+                "context:gui",
+                "debug",
+                "Adding modal '" + modal.viewName + "' to stack"
+            );
+            
+            // add stacked class
+            modal.node.addClass("kbs-stacked");
+            
+            // push to stack
+            if (!index) {
+                this.stacked.push(modal);
+            } else {
+                this.stacked[index] = modal;
+            }
+            
+            // shift stack
+            this.shiftStack();
+        };
+        
+        // removes a modal from the stack
+        ModalController.prototype.removeFromStack = function (modal) {
+            var array = this.stacked,
+                index = array.indexOf(modal);
+            
+            // remove from stack
+            this.stacked.splice(index, 1);
+            
+            // remove stacked class
+            modal.node.removeClass("kbs-stacked");
+            
+            // shift stack
+            this.shiftStack();
+            
+            util.log(
+                "context:gui",
+                "debug",
+                "Removed modal '" + modal.viewName + "' from stack"
+            );
+        };
+        
+        // shifts elements in the stack
+        ModalController.prototype.shiftStack = function () {
+            var stack = this.stacked,
+                len = stack.length,
+                i = 0,
+                modal,
+                offset;
+            
+            if (!this.getBehaviour("shift")) {
+                return;
+            }
+            
+            util.log(
+                "context:gui",
+                "debug",
+                "shifting stack"
+            );
+            
+            for (i; i < len; i += 1) {
+                modal = stack[i];
+                
+                // remove initial shift classes
+                modal.node.removeClass("kbs-shift-left");
+                modal.node.removeClass("kbs-shift-right");
+                
+                // get an offset
+                if (i !== 0) {
+                    if (util.isEven(i)) {
+                        offset = "kbs-shift-left";
+                    }
+
+                    if (util.isOdd(i)) {
+                        offset = "kbs-shift-right";
+                    }
+
+                    modal.node.addClass(offset);
+
+                    util.log(
+                        "context:gui",
+                        "debug",
+                        "set offset of " + offset + " to '" +
+                            modal.viewName + "'"
+                    );
+                }
+            }
+        };
+        
+        // swap active modal with one in stack
+        ModalController.prototype.swapStack = function (index) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                modal;
+            
+            // passed an index
+            if (util.isNumber(index)) {
+                modal = stacked[index];
+                return;
+            }
+            
+            // passed a modal view name
+            if (util.isString(index)) {
+                modal = this.getModalByName(index);
+            }
+            
+            // passed a modal object
+            if (util.isObject(index)) {
+                modal = index;
+            }
+            
+            // remove clicked from stack
+            this.removeFromStack(modal);
+            
+            // update stack positions
+            this.shiftStack();
+            
+            // add active modal to stack
+            this.addToStack(active);
+            
+            // set active modal
+            this.active = modal;
+        };
+        
+        // returns index for modal in stack
+        ModalController.prototype.getStackIndex = function (modal) {
+            var stacked = this.stacked,
+                len = stacked.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (stacked[i] === modal) {
+                    return i;
+                }
+            }
         };
         
         // add a new modal instance
@@ -1902,92 +2628,50 @@ define(
             delete this.list[modal.viewName || modal];
         };
         
-        // adds a modal to the queue
+        // adds a modals to the queue
         ModalController.prototype.addToQueue = function (modal) {
-            // make sure not already in queue and not open
-            if (this.isQueued(modal) || this.isOpen(modal)) {
-                return;
-            }
-            
-            // close current and open recent request
-            // reopen the current modal when the new one
-            // is closed
-            if (this.getBehaviour("modalHopping")) {
-                var prevModal = this.getModalByName(this.openModals[0]),
-                    handler = function () {
-                        // open the previously active modal
-                        prevModal.open();
-                        
-                        // unsubscribe from the event
-                        // to prevent more than on call
-                        modal.off("close", handler);
-                    };
-                
-                // close the active modal
-                prevModal.close();
-                
-                // open the new modal and attach
-                // a close handler to reopen the prev modal
-                modal.open();
-                modal.on("close", handler);
-                         
-                return;
-            }
-            
-            // default behaviour - queded until current modal
-            // has been closed
-            this.queuedModals.push(modal.viewName || modal);
+            this.queued.push(modal);
         };
         
         // removes a modal from the queue
         ModalController.prototype.removeFromQueue = function (modal) {
-            var array = this.queuedModals,
+            var array = this.queued,
                 index = array.indexOf(modal.viewName || modal);
             
-            this.queuedModals.splice(index, 1);
+            this.queued.splice(index, 1);
         };
         
         // adds a modal to the opened modals array
         ModalController.prototype.addToOpened = function (modal) {
-            this.openModals.push(modal.viewName || modal);
+            this.opened.push(modal);
         };
         
         // removes a modal from the opened modals array
         ModalController.prototype.removeFromOpened = function (modal) {
-            var array = this.openModals,
+            var array = this.opened,
                 index = array.indexOf(modal.viewName || modal);
             
-            this.openModals.splice(index, 1);
+            this.opened.splice(index, 1);
         };
         
-        // begin processing the modal queue
-        ModalController.prototype.processQueue = function () {
-            var opened = this.openModals,
-                queued = this.queuedModals,
-                modal = queued[0];
-            
-            // check if there are no open modals
-            // and there is at least one in queue
-            if (!opened.length && queued.length) {
-                // get modal and init
-                modal = this.getModalByName(queued[0]);
-                modal.init();
-                
-                // remove from queue
-                this.removeFromQueue(modal);
-            }
+        // checks if a modal is active
+        ModalController.prototype.isActive = function (modal) {
+            return this.active === modal;
         };
         
         // checks if a modal is open
         ModalController.prototype.isOpen = function (modal) {
-            modal = modal.viewName || modal;
-            return this.openModals.indexOf(modal) !== -1;
+            return this.opened.indexOf(modal) !== -1;
         };
         
         // checks if a modal is queued
         ModalController.prototype.isQueued = function (modal) {
-            modal = modal.viewName || modal;
-            return this.queuedModals.indexOf(modal) !== -1;
+            return this.queued.indexOf(modal) !== -1;
+        };
+        
+        // checks if a modal is stacked
+        ModalController.prototype.isStacked = function (modal) {
+            return this.stacked.indexOf(modal) !== -1;
         };
         
         // returns a modal by view name
@@ -2022,10 +2706,20 @@ define(
             // default params
             params = params || {init: true};
             
+            if (typeof params.init === "undefined") {
+                params.init = true;
+            }
+            
             // return current instance
             // if already exists
             if (ctrl.exists(view)) {
                 var modal = ctrl.getModalByName(view);
+                
+                // if stacked
+                if (ctrl.isStacked(modal)) {
+                    ctrl.swapStack(modal);
+                    return modal;
+                }
                 
                 // check if call to init
                 if (params.init) {
@@ -2037,7 +2731,9 @@ define(
             
             // store props
             this.viewName = view;
+            this.viewParams = params.viewParams || {};
             this.params = params;
+            this.classes = params.classes || "";
             this.inited = false;
             this.loaded = false;
             
@@ -2046,7 +2742,11 @@ define(
             
             // create and hide node
             this.node = new Node("div", "kbs-modal kbs-" + view);
+            this.node.addClass(this.classes);
             this.node.hide();
+            
+            // shield node
+            this.shieldNode = this.node.createChild("div", "kbs-modal-shield");
             
             // view element
             this.view = null;
@@ -2063,7 +2763,6 @@ define(
             this.applyHandlers(params);
             
             // load view and init
-            params.init = params.init || true;
             this.load((params.init) ? this.init : function () {});
             
             // add modal to controller
@@ -2072,25 +2771,21 @@ define(
         
         // setup and create modal events
         Modal.prototype.createEvents = function () {
-            var i,
-                emptyfn = function () {};
+            var x = 0, y,
+                len = ctrl.events.length,
+                evtcreate = function () {};
             
-            // modal event names
-            this.eventName = {
-                init: "gui/modal/" + this.viewName + "/init",
-                open: "gui/modal/" + this.viewName + "/open",
-                close: "gui/modal/" + this.viewName + "/close",
-                destruct: "gui/modal/" + this.viewName + "/destruct",
-                load: "gui/modal/" + this.viewName + "/load",
-                confirm: "gui/modal/" + this.viewName + "/confirm",
-                proceed: "gui/modal/" + this.viewName + "/proceed",
-                cancel: "gui/modal/" + this.viewName + "/cancel"
-            };
+            // setup modal specific events
+            this.eventName = {};
+            for (x; x < len; x += 1) {
+                this.eventName[ctrl.events[x]] = "gui/modal/" +
+                    this.viewName + x;
+            }
             
             // loop through events and create them
-            for (i in this.eventName) {
-                if (this.eventName.hasOwnProperty(i)) {
-                    events.subscribe(this.eventName[i], emptyfn);
+            for (y in this.eventName) {
+                if (this.eventName.hasOwnProperty(y)) {
+                    events.subscribe(this.eventName[y], evtcreate);
                 }
             }
         };
@@ -2098,24 +2793,29 @@ define(
         // load view into modal
         Modal.prototype.load = function (callback) {
             var self = this,
+                params = this.viewParams,
                 view;
             
-            // make sure can't load twice!
+            // return if already loaded
+            if (this.loaded) {
+                return;
+            }
+            
             this.loaded = true;
             
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
                     // get new view
-                    view = mod.createView([gui, self]);
+                    view = mod.draw([gui, self, params]);
                     
                     // set view to modal
                     self.view = view;
+                    self.viewModule = mod;
                     self.title = view.title;
                     
                     // publish
-                    events.publish("gui/modal/load", self);
-                    events.publish(self.eventName.load, self);
+                    self.trigger("load", self);
                     
                     // run callback
                     if (util.isFunction(callback)) {
@@ -2123,6 +2823,18 @@ define(
                     }
                 }
             );
+        };
+        
+        // reload modal a modals content
+        Modal.prototype.reload = function (page) {
+            var self = this,
+                view = this.viewModule,
+                render = view.draw([gui, self, self.viewParams], page),
+                content = this.node.find(".kbs-modal-content")[0];
+            
+            content.clear();
+            content.addChild(render);
+            this.trigger("reload", this);
         };
         
         // attach an event handler to modal
@@ -2159,47 +2871,18 @@ define(
         
         // trigger a modal event with data
         Modal.prototype.trigger = function (event, data) {
+            events.publish("gui/modal/" + event, data);
             events.publish(this.eventName[event], data);
         };
         
-        // init modal
-        Modal.prototype.rInit = function () {
-            if (this.inited) {
-                // skip build and open
-                this.open();
-                return;
-            }
-            
-            // declarations
-            var modal = this.node,
-                title = modal.createChild(
-                    "h2",
-                    "kbs-modal-title"
-                ),
-                close = modal.createChild(
-                    "i",
-                    "fa fa-times kbs-modal-closed"
-                ),
-                content = modal.createChild(
-                    "p",
-                    "kbs-modal-content"
-                );
-            
-            // set content and append to gui
-            title.text(this.title);
-            close.on("click", this.close);
-            content.addChild(this.view);
-            gui.addChild(modal);
-            
-            // flag inited
-            this.inited = true;
-            
-            // publish
-            events.publish("gui/modal/init", this);
-            events.publish(this.eventName.init, this);
-            
-            // open
-            this.open();
+        // hide modal
+        Modal.prototype.hide = function () {
+            this.node.hide();
+        };
+        
+        // show modal
+        Modal.prototype.show = function () {
+            this.node.show();
         };
         
         // handler/listener application for modal
@@ -2221,6 +2904,11 @@ define(
                 
                 // modal params
                 params = this.params;
+            
+            // when shield is clicked - swap stack
+            this.shieldNode.on("click", function () {
+                ctrl.swapStack(self.viewName);
+            });
 
             // attach modal event handlers
             this.on("confirm", params.confirm || function () {
@@ -2236,62 +2924,108 @@ define(
             });
         };
         
+        // init modal
+        Modal.prototype.rInit = function () {
+            if (this.inited) {
+                // skip build and open
+                this.open();
+                return this;
+            }
+            
+            // declarations
+            var modal = this.node,
+                self = this,
+                title = modal.createChild(
+                    "h2",
+                    "kbs-modal-title"
+                ),
+                close = modal.createChild(
+                    "i",
+                    "fa fa-times kbs-modal-closed"
+                ),
+                content = modal.createChild(
+                    "p",
+                    "kbs-modal-content"
+                );
+            
+            // set content and append to gui
+            title.text(this.title);
+            close.on("click", function () {
+                // signal the stack processor that we
+                // shouldn't be captured
+                self.dueRemoval = true;
+                self.close();
+            });
+            content.addChild(this.view);
+            gui.addChild(modal);
+            
+            // flag inited
+            this.inited = true;
+            
+            // publish
+            this.trigger("init", this);
+            
+            // open
+            this.open();
+        };
+        
         // opens the modal
         Modal.prototype.rOpen = function () {
-            // if a modal is already open
-            if (ctrl.openModals.length) {
-                ctrl.addToQueue(this);
+            // if we are already open - return
+            if (ctrl.isActive(this)) {
                 return;
             }
             
             // make sure we have inited
             if (!this.inited) {
-                this.init();
-                return;
+                return this.init();
             }
             
-            // add this modal to the open modals array
-            ctrl.addToOpened(this);
+            // reset due removal flag
+            this.dueRemoval = false;
             
             // show overlay and node
-            gui.tree.main.overlay.fadeIn();
+            gui.showOverlay();
             this.node.fadeIn();
             
             // publish
-            events.publish("gui/modal/open", this);
-            events.publish(this.eventName.open, this);
+            this.trigger("open", this);
+            
+            ctrl.active = this;
+            
+            return this;
         };
         
         // closes the modal
         Modal.prototype.rClose = function () {
-            // hide overlay and node
-            gui.tree.main.overlay.hide();
             this.node.hide();
             
             // remove from controller opened modals
             ctrl.removeFromOpened(this);
             
             // publish
-            events.publish("gui/modal/close", this);
-            events.publish(this.eventName.close, this);
+            this.trigger("close", this);
         };
         
         // destroys a modal instance
         Modal.prototype.rDestroy = function () {
-            // check if open
+            // close if open
             if (ctrl.isOpen(this)) {
                 this.rClose();
             }
             
-            // reset inited flag
+            // reset flags
             this.inited = false;
+            this.loaded = false;
             
             // remove from ctrl modal array
             ctrl.removeModal(this);
             
             // publish
-            events.publish("gui/modal/destruct", this);
-            events.publish(this.eventName.destruct, this);
+            this.trigger("destruct", this);
+            
+            // destroy node
+            this.node.destroy();
         };
         
         // set gui instance
@@ -2329,9 +3063,15 @@ define(
         
         // configurator class
         function Configurator() {
+            // don't need multiple instances
+            if (self) {
+                return self;
+            }
+            
             self = this;
             this.modal = null;
             this.launchModal = this.rLaunchModal.bind(this);
+            this.reloadModal = this.rReloadModal.bind(this);
         }
         
         // get user config object from cookie
@@ -2362,6 +3102,8 @@ define(
                 modded = data;
                 util.merge(config, data, true);
                 return;
+            } else {
+                util.log("error", "no user data found!");
             }
         };
         
@@ -2386,7 +3128,14 @@ define(
             if (this.modal) {
                 this.modal.init();
             } else {
-                this.modal = new Modal("userConfig", {init: true});
+                this.modal = new Modal("user-config", {init: true});
+            }
+        };
+        
+        // reload the configurator ui
+        Configurator.prototype.rReloadModal = function () {
+            if (this.modal) {
+                this.modal.reload();
             }
         };
 
@@ -2408,7 +3157,7 @@ define(
         };
 
         // set/create a config value
-        Configurator.prototype.set = function (selector, value) {
+        Configurator.prototype.set = function (selector, value, reload) {
             var segments = selector.split("/"),
                 len = segments.length,
                 got = config,
@@ -2416,6 +3165,8 @@ define(
                 tree = modded,
                 parent,
                 parentName;
+            
+            reload = reload || false;
 
             // if a simple selector
             if (len === 1) {
@@ -2430,6 +3181,11 @@ define(
                     "settings",
                     util.serialise(modded)
                 );
+                
+                // reload the modal
+                if (reload) {
+                    this.modal.reload(true);
+                }
                 
                 return config[selector];
             }
@@ -2468,6 +3224,11 @@ define(
                 util.serialise(modded)
             );
             
+            // reload the modal
+            if (reload) {
+                this.modal.reload(true);
+            }
+            
             return parent[segments[len - 1]];
         };
 
@@ -2480,6 +3241,7 @@ define(
             util.cookie.del("settings");
             
             // refresh page
+            location.hash = "settings";
             location.reload();
         };
 
@@ -2503,46 +3265,186 @@ define(
         'main/components/util',
         'main/components/cache',
         'main/components/status',
-        'main/components/node'
+        'main/components/repository',
+        'main/ui/node'
     ],
-    function (config, util, cache, status, Node) {
+    function (config, util, cache, status, Repository, Node) {
         
         
         // bugherd's global api
-        var bh = window.bugherd,
+        var repo = new Repository(),
+            bh = window.bugherd,
             $ = window.jQuery,
             interactor,
+            instance,
             gui;
         
         /* Class Definitions
         ------------------------------------------*/
         // task api controller
-        function TaskController(base) {
+        function TaskController() {
             this.api = bh.application.tasksCollection;
-            this.baseApi = base;
+            this.baseApi = instance;
             this.setSeverityStyle = this.rSetSeverityStyle.bind(this);
             this.setAllSeverityStyles = this.rSetAllSeverityStyles.bind(this);
-            this.periodicallySetSeverityStyles = this.rPeriodicallySetSeverityStyles.bind(this);
         }
         
         // bugherd api wrapper
-        function BugHerd(interInstance, guiInstance) {
+        function BugHerd() {
+            // return the instance if already exists
+            if (instance) {
+                return instance;
+            }
+            
             // set instances
-            interactor = interInstance;
-            gui = guiInstance;
+            instance = this;
+            interactor = interactor || repo.get("interactor");
+            gui = gui || repo.get("gui");
             
             this.api = bh;
-            this.tasks = new TaskController(this);
+            this.tasks = new TaskController();
+            this.init();
         }
         
         /* TaskController Prototype
         ------------------------------------------*/
         TaskController.prototype.init = function () {
+            var self = this;
+            
+            
+            
             // setup task event listeners
             this.applyHandlers();
-            this.periodicallySetSeverityStyles();
+            
+            // severity styling handling
+            if (config.gui.severityStyles) {
+                setTimeout(function () {
+                    self.setAllSeverityStyles();
+                }, 100);
+                bh.application.on("change", function () {
+                    setTimeout(self.setAllSeverityStyles, 100);
+                });
+            }
         };
         
+        // get task data by local id
+        TaskController.prototype.findModelByLocalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the local_task_id attribute
+            for (i; i < len; i += 1) {
+                if (tasks[i].attributes.local_task_id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // get task data by global id
+        TaskController.prototype.findModelByGlobalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the global id
+            for (i; i < len; i += 1) {
+                if (tasks[i].id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // gets the browser info from a task
+        TaskController.prototype.getBrowserInfo = function (task, key) {
+            // catch invalid task types
+            if (!util.isObject(task) && !util.isNumber(task)) {
+                util.log("error", "Unable to get task from parameter of type " +
+                        typeof task);
+            }
+            
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findModelByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findModelByLocalId(task);
+                }
+            }
+            
+            return task.attributes.browser_info[key] ||
+                task.attributes.browser_info;
+        };
+        
+        // gets the user meta data from a task
+        TaskController.prototype.getMeta = function (task) {
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findModelByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findModelByLocalId(task);
+                }
+            }
+            
+            return task.attributes.data.userMetaData;
+        };
+        
+        // gets an array of tasks with specified meta data
+        TaskController.prototype.findAllWithMeta = function (attr, value) {
+            return this.match(function (task) {
+                var meta = task.getData().userMetaData || {};
+                
+                return (
+                    meta[attr] === value ||
+                    util.contains(meta[attr], value)
+                ) ? true : false;
+            });
+        };
+        
+        // gets an array of tasks with specified browser data
+        TaskController.prototype.findAllWithClientData = function (attr, value) {
+            return this.match(function (task) {
+                var data = task.getBrowserData();
+                
+                return (
+                    data[attr] === value ||
+                    util.contains(data[attr], value)
+                ) ? true : false;
+            });
+        };
+        
+        // retrieves tasks that have a certain tag
+        TaskController.prototype.findAllWithTag = function (tag) {
+            return this.match(function (task) {
+                var tags = task.attributes.tag_names;
+                return (util.contains(tags, tag)) ? true : false;
+            });
+        };
+        
+        TaskController.prototype.match = function (matched) {
+            var tasks = this.api.models,
+                len = tasks.length,
+                results = [],
+                i = 0,
+                task;
+            
+            // check meta of tasks
+            for (i; i < len; i += 1) {
+                task = tasks[i];
+                if (matched(task)) {
+                    results.push(task);
+                }
+            }
+            
+            return results;
+        };
+        
+        // apply event handlers
         TaskController.prototype.applyHandlers = function () {
             // event logger
             var
@@ -2655,6 +3557,7 @@ define(
         TaskController.prototype.rSetSeverityStyle = function (task) {
             var severity;
             
+            // create or retrieve a new Node instance for task
             task = new Node(document.querySelector("#task_" + task));
             severity = task.find(".task-severity");
             
@@ -2685,28 +3588,6 @@ define(
             }
         };
         
-        // periodically apply severity styles to all tasks
-        TaskController.prototype.rPeriodicallySetSeverityStyles = function () {
-            var first = true,
-                count = $(".task").length,
-                sortId = bh.application.attributes.sortAttribute,
-                self = this,
-                loop = function () {
-                    var newCount = $(".task").length,
-                        newSortId = bh.application.attributes.sortAttribute;
-                    
-                    // if new or old tasks
-                    if (newCount !== count || newSortId !== sortId || first) {
-                        self.setAllSeverityStyles();
-                        first = false;
-                    }
-                    
-                    setTimeout(loop, 1000);
-                };
-            
-            loop();
-        };
-        
         /* BugHerd Prototype
         ------------------------------------------*/
         // init the bugherd api wrapper
@@ -2717,9 +3598,7 @@ define(
         };
         
         // apply handlers/listeners
-        BugHerd.prototype.applyHandlers = function () {
-            
-        };
+        BugHerd.prototype.applyHandlers = function () {};
         
         // apply bugherd api logging context
         BugHerd.prototype.applyContext = function () {
@@ -2733,6 +3612,11 @@ define(
         // apply a handler to bugherd taskCollection event
         BugHerd.prototype.on = function (event, handler) {
             bh.application.on(event, handler);
+        };
+        
+        // trigger a bugherd application event
+        BugHerd.prototype.trigger = function (event) {
+            bh.application.trigger(event);
         };
         
         // returns status name from id
@@ -2766,7 +3650,7 @@ define(
         };
         
         // returns all tasks for the current project
-        BugHerd.prototype.tasks = function () {
+        BugHerd.prototype.getTasks = function () {
             return bh.application.tasksCollection.models;
         };
         
@@ -2784,10 +3668,21 @@ define(
 define('main/components/router',['config'], function (config) {
     
     
+    // configured routes
+    var
+        routes = {
+            "console/save": config.routes.console.save
+        },
+        url = window.KBS_BASE_URL;
+    
     return {
         // return a route to a component controller
         getRoute: function (component, fn) {
-            return window.KBS_BASE_URL + config.routes[component][fn];
+            if (typeof fn === "undefined") {
+                return url + routes[component];
+            }
+            
+            return url + config.routes[component][fn];
         }
     };
 });
@@ -2799,6 +3694,13 @@ define('main/components/router',['config'], function (config) {
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Possibly find a way to optimise the gui logs to use text appending
+*     instead of using new nodes for each log. Big performance hit when
+*     using the GUI console.
+*/
+
 define(
     'main/ui/console',[
         'config',
@@ -2808,8 +3710,8 @@ define(
         'main/components/status',
         'main/components/router',
         'main/components/cache',
-        'main/components/node',
         'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -2820,15 +3722,15 @@ define(
         status,
         router,
         cache,
-        Node,
         Configurator,
+        Node,
         Modal
     ) {
         
             
         // instance pointers
         var self, gui,
-            configurator;
+            configurator = new Configurator();
         
         // console constructor
         function Console(instance) {
@@ -2845,12 +3747,18 @@ define(
                 throw new Error("No GUI instance passed to Console");
             }
             
+            // tool nodes
+            this.tools = {};
+            
             // set gui and build the tree
             gui = instance;
             this.buildNodeTree();
             
             // log contexts
             this.setContexts();
+            
+            // log nodes
+            this.logs = [];
             
             // setup context clearance event
             events.subscribe("gui/contexts/clear", function (context) {
@@ -2873,7 +3781,7 @@ define(
             
             // set log context array
             this.contexts = {
-                def: self.wrapper.cons.out.element
+                def: self.wrapper.cons.out
             };
         };
         
@@ -2894,7 +3802,7 @@ define(
             }
             
             // declarations
-            var logContext;
+            var contextNode;
             
             // make sure not already defined
             if (this.contexts[context]) {
@@ -2903,17 +3811,17 @@ define(
             }
             
             if (util.isNode(element)) {
-                logContext = element.createChild("div", "kbs-log-context", context);
+                contextNode = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
-                element.appendChild(logContext.element);
+                contextNode = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
+                element.appendChild(contextNode.element);
             }
             
             // apply to global contexts
-            this.contexts[context] = logContext.element;
+            this.contexts[context] = contextNode;
             
-            return element;
+            return contextNode;
         };
             
         // clear/remove a logging context
@@ -2925,6 +3833,7 @@ define(
                 return;
             }
             
+            self.contexts[context] = null;
             delete self.contexts[context];
         };
         
@@ -2998,9 +3907,9 @@ define(
                     }
                 };
                 
-                objwrap.addChild(objexp.element);
+                objwrap.addChild(objexp);
                 objwrap.addChild(objtxt);
-                log.addChild(objwrap.element);
+                log.addChild(objwrap);
             }
             
             // check if test node within exec node
@@ -3013,12 +3922,14 @@ define(
             }
                 
             // write to context
-            context.appendChild(log.element);
+            context.addChild(log);
+            
+            // add to list of log nodes
+            self.logs.push(log);
             
             // create context with new log node
-            // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(doCreateContext, log);
             }
 
             // scroll to log
@@ -3041,7 +3952,15 @@ define(
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
+            // add to tools
+            this.tools[tool] = toolbar[tool];
+            
             return toolbar[tool];
+        };
+            
+        // remove a toolbar widget
+        Console.prototype.removeTool = function (tool) {
+            this.tools[tool].destroy();
         };
         
         // get toolbar widget icon from config
@@ -3087,16 +4006,19 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
+                logs = self.logs,
+                len = logs.length,
                 deltaTime,
-                count = 0;
+                count = 0,
+                i = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
-            while (out.firstChild) {
+            for (i; i < len; i += 1) {
+                logs[i].destroy();
                 count += 1;
-                out.removeChild(out.firstChild);
             }
 
             // reattach
@@ -3108,6 +4030,9 @@ define(
             
             // clear buffer
             cache.console.clearBuffer();
+            
+            // reset log count
+            cache.logCount = 0;
         };
         
         // save the output buffer to a text file on the local system
@@ -3123,7 +4048,7 @@ define(
             
             // setup request
             req = new Http({
-                url: router.getRoute("console", "save"),
+                url: router.getRoute("console/save"),
                 method: "POST",
                 send: true,
                 data: {
@@ -3144,39 +4069,65 @@ define(
             var
                 modalTitle = "Destroy the Console instance?",
                 modalMsg = "Confirm destruction of the GUI Console? ",
-                modal = new Modal("destructConsole", {
+                modal = new Modal("console-destruct", {
                     init: true,
                     confirm: function () {
-                        var parent = self.wrapper.cons.parent(),
-                            child = self.wrapper.cons.element;
-                        
-                        // destroy console node
-                        parent.removeChild(child);
-                        
-                        // set console status
-                        status.console = false;
-                        
-                        // clear the log buffer
-                        cache.console.clearBuffer();
-                        
-                        // add disabled class to cons-box
-                        self.wrapper.addClass("kbs-disabled");
-                        
-                        // destroy the modal
-                        modal.destroy();
+                        self.commitDestroy(modal, "hard");
                     },
                     cancel: function () {
-                        modal.destroy();
+                        modal.close();
                     }
                 });
+        };
+            
+        // committed destroy
+        Console.prototype.commitDestroy = function (modal, method) {
+            if (method === "hard") {
+                var parent = self.wrapper.cons.parent(),
+                    child = self.wrapper.cons.element;
+
+                // store in cache to allow same session
+                // restoration
+                cache.console.parent = parent;
+                cache.console.child = child;
+
+                // destroy console node
+                parent.removeChild(child);
+            }
+            
+            // set console status
+            status.console = false;
+
+            // clear the log buffer
+            cache.console.clearBuffer();
+            
+            // add disabled class to cons-box
+            self.wrapper.addClass("kbs-disabled");
+
+            // remove tool
+            self.removeTool("destroy");
+
+            // close the modal
+            if (modal) {
+                modal.close();
+            }
+            
+            // update configurator
+            configurator.set("gui/console/destroyed", true);
+        };
+            
+        // restore console after being destroyed
+        Console.prototype.restore = function () {
+            this.wrapper.removeClass("kbs-disabled");
         };
         
         // build the console
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
-                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
-                        "local" : "remote",
+                connection =
+                (window.KBS_BASE_URL.indexOf("localhost") !== -1)
+                ? "local" : "remote",
             
                 // console nodes
                 wrapper,
@@ -3213,8 +4164,9 @@ define(
             // tools for console
             if (config.logs.enabled) {
                 // console toggle state tool
-                this.createTool("toggle")
-                    .element.onclick = function () {
+                this.createTool("menu").on(
+                    "click",
+                    function () {
                         var closed = wrapper.hasClass("kbs-closed"),
                             full = wrapper.hasClass("kbs-full");
 
@@ -3235,7 +4187,24 @@ define(
                             // open
                             self.open();
                         }
-                    };
+                    }
+                );
+                
+                // console toggle tool
+                this.createTool("toggle").on(
+                    "click",
+                    function () {
+                        var displayed = configurator.get(
+                            "gui/console/displayed"
+                        );
+                        
+                        wrapper.toggleClass("kbs-disabled");
+                        configurator.set(
+                            "gui/console/displayed",
+                            (!displayed) ? true : false
+                        );
+                    }
+                );
                 
                 // save tool - only on localhost base url's
                 if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
@@ -3258,10 +4227,12 @@ define(
                 );
                 
                 // console destructor tool
-                this.createTool("destroy").on(
-                    "click",
-                    self.destroy
-                );
+                if (config.gui.console.allowDestruction) {
+                    this.createTool("destroy").on(
+                        "click",
+                        self.destroy
+                    );
+                }
                 
                 // clear tool
                 this.createTool("clear").on(
@@ -3271,7 +4242,6 @@ define(
             }
             
             // configurator tool
-            configurator = new Configurator();
             this.createTool("settings").on(
                 "click",
                 configurator.launchModal
@@ -3298,7 +4268,15 @@ define(
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
-
+            
+            if (config.gui.console.destroyed) {
+                this.commitDestroy(false, "hard");
+            }
+            
+            if (!config.gui.console.displayed) {
+                this.wrapper.addClass("kbs-disabled");
+            }
+                
             // return wrapper element
             return wrapper;
         };
@@ -3323,8 +4301,8 @@ define(
             
             // log specified amount
             util.log("context:benchmark/output", "buffer", "benchmark output...");
-            while (i <= amount) {
-                util.log("context:benchmark/output", "debug", "log #" + i);
+            while (i < amount) {
+                util.log("context:benchmark/output", "debug", "log #" + (i + 1));
                 i += 1;
             }
 
@@ -3352,6 +4330,7 @@ define(
             // clear the benchmark context
             util.log.endContext();
             self.clearContext("benchmark");
+            self.clearContext("benchmark/output");
         };
         
         return Console;
@@ -3372,9 +4351,10 @@ define(
         'config',
         'main/components/util',
         'main/components/events',
+        'main/components/status',
         'main/components/counter',
         'main/components/configurator',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/console',
         'main/ui/modal'
     ],
@@ -3382,6 +4362,7 @@ define(
         config,
         util,
         events,
+        status,
         Counter,
         Configurator,
         Node,
@@ -3404,12 +4385,18 @@ define(
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
             
+            // setup logging context
+            this.applyContext();
+            
             // modals api
             this.setModalApi();
             
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
+            
+            // overlay preservation flag
+            this.preserveOverlay = false;
 
             // init
             this.init();
@@ -3426,7 +4413,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("gui/loaded");
+                    events.publish("kbs/gui/loaded");
                 }),
 
                 // create link elements
@@ -3469,7 +4456,7 @@ define(
                 }
 
                 // gui load event listener
-                events.subscribe("gui/loaded", publish);
+                events.subscribe("kbs/gui/loaded", publish);
             }
 
             // props
@@ -3531,6 +4518,18 @@ define(
             document.head.appendChild(themelink);
         };
             
+        // apply gui logging context
+        GUI.prototype.applyContext = function () {
+            // have to wait for gui loaded
+            events.subscribe("kbs/gui/loaded", function () {
+                util.log(
+                    "context:gui",
+                    "buffer",
+                    "log-buffer: GUI"
+                );
+            });
+        };
+            
         // return current theme name or theme name from url
         GUI.prototype.getThemeName = function (url) {
             var themelink = document.getElementById("kbs-theme-link"),
@@ -3587,6 +4586,22 @@ define(
             url = "url('" + url + "')";
             
             el.css("background-image", url);
+        };
+            
+        // show overlay
+        GUI.prototype.showOverlay = function () {
+            if (!status.gui.overlay) {
+                self.tree.main.overlay.fadeIn();
+                status.gui.overlay = true;
+            }
+        };
+            
+        // hide overlay
+        GUI.prototype.hideOverlay = function () {
+            if (!status.interactor.taskDetailsExpanded && !self.preserveOverlay) {
+                self.tree.main.overlay.fadeOut();
+                status.gui.overlay = false;
+            }
         };
 
         // build gui node tree
@@ -3676,7 +4691,9 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
-        'main/components/node',
+        'main/components/repository',
+        'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -3684,6 +4701,8 @@ define(
         util,
         events,
         status,
+        Repository,
+        Configurator,
         Node,
         Modal
     ) {
@@ -3693,10 +4712,13 @@ define(
         var $,
             self,
             inited = false,
+            configurator = new Configurator(),
+            repo = new Repository(),
+            bugherd,
             gui;
 
         // interactor constructor
-        function Interactor(instance) {
+        function Interactor() {
             util.log(
                 "context:inter/init",
                 "info",
@@ -3705,7 +4727,7 @@ define(
             
             // set references
             self = this;
-            gui = instance;
+            gui = repo.get("gui");
             
             this.activeTask = null;
             
@@ -3756,11 +4778,6 @@ define(
             
             return (element.length) ? element : false;
         };
-        
-        // get the wrapper task element from a component
-        Interactor.prototype.getTaskFromComponent = function (component) {
-            return component.closest("[id^=task_]");
-        };
 
         // expand the currently active task or a specified task id
         Interactor.prototype.openTask = function (localId) {
@@ -3779,7 +4796,9 @@ define(
             // get global id
             this.findGlobalId(localId, function (task) {
                 // once found - click the task
-                task.trigger("click");
+                setTimeout(function () {
+                    task.trigger("click");
+                }, 500);
             });
         };
 
@@ -3824,7 +4843,6 @@ define(
         // shrinks the task details panel
         Interactor.prototype.shrinkTaskDetails = function () {
             var task = $(".taskDetails"),
-                overlay = $(".kbs-overlay"),
                 btn = $(".kbs-details-closed");
             
             if (!status.interactor.taskDetailsExpanded) {
@@ -3833,13 +4851,13 @@ define(
             
             this.activeTask = null;
             
+            // set status
+            status.interactor.taskDetailsExpanded = false;
+            
             // hide elements
             task.removeClass("kbs-details-expand");
             btn.fadeOut();
-            overlay.fadeOut();
-            
-            // set status
-            status.interactor.taskDetailsExpanded = false;
+            gui.hideOverlay();
         };
             
         // perform a task search
@@ -3873,8 +4891,7 @@ define(
             
             // enter localId into input
             facet = $(".search_facet_input");
-            facet
-                .val(localId)
+            facet.val(localId)
                 .trigger("keydown");
 
             setTimeout(function () {
@@ -3946,7 +4963,7 @@ define(
                             errMsg
                         );
                         
-                        errModal = new Modal("taskNotFound", {
+                        errModal = new Modal("task-not-found", {
                             init: true,
                             id: localId,
                             confirm: function () {
@@ -3956,7 +4973,7 @@ define(
                                 // re-open search task
                                 errModal
                                     .getController()
-                                    .getModalByName("searchTask")
+                                    .getModalByName("task-search")
                                     .open();
                             },
                             cancel: function () {
@@ -4010,6 +5027,19 @@ define(
             
             return localId.text() || localId.val();
         };
+        
+        // get the task element from an inner component
+        // note: only applies to board tasks
+        Interactor.prototype.findTaskFromComponent = function (component) {
+            var task = component.closest("[id^=task_]");
+            
+            // if not found - return false
+            if (!task.length) {
+                return false;
+            }
+            
+            return this.findLocalIdFromTask(task);
+        };
             
         // navigate the ui to a specified task board
         Interactor.prototype.navigateTo = function (board) {
@@ -4027,6 +5057,102 @@ define(
             }
         };
             
+        // view a screenshot in a modal
+        Interactor.prototype.viewScreenshot = function (link) {
+            var bugherd = repo.get("bugherd"),
+                size = {},
+                winsize,
+                modal,
+                id;
+            
+            // get the task id from detail panel
+            id = parseInt(self.findLocalIdFromDetails(), 10);
+            
+            util.log(
+                "context:interactor",
+                "debug",
+                "Viewing screenshot for task #" + id
+            );
+            
+            modal = new Modal("view-screenshot", {
+                viewParams: {
+                    id: id,
+                    title: (link[0]
+                            .textContent
+                            .indexOf("screenshot") !== -1
+                           ) ? "Screenshot" : "Fix Result",
+                    url: link[0].href,
+                    width: size.x,
+                    height: size.y
+                }
+            });
+        };
+            
+        // hide all tasks with the following tag(s)
+        Interactor.prototype.hideTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithTag(tag),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following client data
+        Interactor.prototype.hideTasksWithClientData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithClientData(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following meta data
+        Interactor.prototype.hideTasksWithMetaData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithMeta(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // show all tasks with the followings tag(s)
+        Interactor.prototype.showTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                task,
+                id;
+            
+            // hide all tasks
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i].id)
+                    .style.display = "none";
+            }
+            
+            // show all tasks with the given tag
+            tasks = bugherd.tasks.findAllWithTag(tag);
+            len = tasks.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i])
+                    .style.display = "block";
+            }
+        };
+        
         // return current hash
         Interactor.prototype.getHash = function () {
             return window.location.hash;
@@ -4036,55 +5162,57 @@ define(
         Interactor.prototype.parseHash = function () {
             var hash = this.getHash(),
                 href = window.location.href,
-                hashId;
+                taskId;
             
             util.log(
                 "context:hash",
                 "parsing new hash: " + hash
             );
 
-            // prefixed
+            // open task
             if (hash === "#open") {
-                // check if prefixed
+                // get task id
                 if (href.indexOf("tasks/") !== -1) {
-                    hashId = parseInt(href.split("tasks/")[1], 10);
-
-                    // open
-                    if (hashId) {
-                        this.openTask(hashId);
-                    }
+                    taskId = parseInt(href.split("tasks/")[1], 10);
+                } else {
+                    taskId = parseInt(hash.replace("#open", ""), 10);
                 }
             }
+            
+            // settings
+            if (hash === "#settings") {
+                configurator.launchModal();
+                location.hash = "";
+            }
 
-            // suffixed
-            hashId = parseInt(hash.replace("#open", ""), 10);
-
-            if (hashId) {
-                this.openTask(hashId);
+            if (taskId) {
+                this.openTask(taskId);
             }
         };
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
             // declarations
-            var taskExpander,
-                taskContractor,
-                taskSearch;
+            var search,
+                filter,
+                detailClose,
+                taskSearch,
+                taskFilter,
+                nav;
             
             util.log(
                 "context:inter/init",
                 "+ appending elements to bugherd"
             );
 
-            // task expander list element
-            taskExpander = new Node("li");
+            // task search list element
+            search = new Node("li");
             
-            // task expander anchor element
-            taskExpander.createChild("a")
+            // task search anchor element
+            search.createChild("a")
                 .text("Search Task")
                 .on("click", function (event) {
-                    taskSearch = new Modal("searchTask", {
-                        init: true,
+                    taskSearch = new Modal("task-search", {
                         proceed: function (localId) {
                             if (!localId) {
                                 // return if no id passed
@@ -4097,52 +5225,81 @@ define(
                     });
                 });
             
-            // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-closed");
-            taskContractor.createChild("i", "fa fa-times");
-            taskContractor.on("click", function (event) {
+           // task filter list element
+            filter = new Node("li");
+            
+            // task filter anchor element
+            filter.createChild("a")
+                .text("Filter")
+                .on("click", function (event) {
+                    taskFilter = new Modal("task-filter");
+                });
+            
+            // task details close button
+            detailClose = new Node("div", "kbs-details-closed");
+            detailClose.createChild("i", "fa fa-times");
+            detailClose.on("click", function (event) {
                 self.closeTask();
             });
             
             // write
-            taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($("body")[0]);
+            nav = $(".nav.main-nav")[0];
+            search.writeTo(nav);
+            filter.writeTo(nav);
+            detailClose.writeTo($("body")[0]);
         };
             
         // apply event handlers
         Interactor.prototype.applyHandlers = function () {
+            var appwrap = new Node(".app-wrap"),
+                body = new Node(document.body),
+                kanban = new Node("#kanbanBoard"),
+                move,
+                frame,
+                fc;
+            
             util.log(
                 "context:inter/init",
                 "+ applying handlers to bugherd"
             );
             
             // delegate clicks on app wrapper
-            $(".app-wrap").on("click", function (event) {
+            appwrap.on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
                 
-                if (task) {
+                // capture task clicks
+                if (task && config.interactor.expandOnclick) {
                     self.expandTaskDetails();
+                    return;
+                }
+                
+                // capture screenshot clicks
+                if (target.hasClass("attachLink")) {
+                    // view screenshots only
+                    if (target.text().match(/(fix-result)|(view_screenshot)|(\.png)|(\.jpg)/)) {
+                        event.preventDefault();
+                        self.viewScreenshot(target);
+                    }
                 }
             });
             
             // on document mouse move - apply parallax to wallpaper
-            // if there is one
+            // if there is one (experimental)
             if (config.gui.wallpaper && config.gui.parallax.enabled) {
-                var move = false,
-                    frame = setInterval(function () {
-                        move = (move) ? false : true;
-                    }, 32),
-                    fc;
+                move = false;
+                frame = setInterval(function () {
+                    move = (move) ? false : true;
+                }, 32);
                 
-                $("body").on("mousemove", function (event) {
+                body.on("mousemove", function (event) {
                     fc = config.gui.parallax.factor;
                     
                     if (move) {
                         var deltaX = -(event.pageX / fc),
                             deltaY = -(event.pageY / fc);
 
-                        $("#kanbanBoard").css(
+                        kanban.css(
                             "background-position",
                             deltaX + "px " + deltaY + "px"
                         );
@@ -4296,27 +5453,34 @@ define(
 *   TODO
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + A place for Kanban tools? Not attached to the console toolbar?
-*
-*   + Add a repository/deposit component for storing instances of Kanban objects,
-*     making them globally accessible within Kanban. Should remove the
-*     need to pass instances between function calls.
-*
-*   + Add a modal to view screenshots instead of opening in a new tab
-*
 *   + Monitor status of all components and defer kbs/loaded event until
 *     all components have finished initialising, more reliable than hard coding
-*     the event fire (maybe combine with the repository/deposit component?)
+*     the event fire (maybe combine with the repository component?)
 *
 *   + Allow searching of tasks by meta data such as references, browser and
-*     version etc. Maybe allowing pulling into a local file?? Would require
-*     local sourcing... possibly.
-*
-*   + Just discovered a very in-depth and exposed API under window.bugherd
-*     this opens up a LOT of possibilities...
+*     version etc.
 *
 *   + Possibly add more info about the task to expanded details? Such as
 *     the last updated at and update by etc?
+*
+*   + Is it possible to add a setting to scale the entire KBS gui?
+*
+*   + Might want to add max length parameters for the console.
+*     Maybe as a config option?
+*/
+
+/*
+*   PROJECTS & PRACTICE
+*   + Re-write the issue reporter and possibly move away from BugHerd
+*     exclusivity, allowing interfaces between other parties
+*
+*   + Write a game in JavaScript
+*
+*   + Template loading system - parse shorthand templates to full HTML
+*     page.
+*
+*   + Separate the gui logging console from Kanban and make it a separate
+*     project. Expand upon it there.
 */
 
 define(
@@ -4326,11 +5490,14 @@ define(
         'main/components/events',
         'main/components/status',
         'main/components/cache',
+        'main/components/exception',
         'main/components/repository',
         'main/components/http',
         'main/components/configurator',
         'main/components/bugherd',
+        'main/ui/node',
         'main/ui/gui',
+        'main/ui/modal',
         'main/ui/interactor',
         'test/main.test'
     ],
@@ -4340,19 +5507,24 @@ define(
         events,
         status,
         cache,
-        repo,
+        Exception,
+        Repository,
         Http,
         Configurator,
         BugHerd,
+        Node,
         GUI,
+        Modal,
         Interactor,
         tests
     ) {
         
 
         // components
-        var kanban, end, gui, interactor, settings, bugherd;
-
+        var kanban, end, gui, interactor,
+            ehandle, settings, bugherd,
+            repo = new Repository();
+            
         /* end of init call
         ------------------------------------------------------*/
         end = function () {
@@ -4363,14 +5535,15 @@ define(
             // log
             util.log(
                 "okay",
-                kanban,
                 "Kanban initialised in " +
-                    window.KBS_DELTA_TIME
+                    window.KBS_DELTA_TIME +
+                    ". Approx. size: " + util.bytesFormat(util.sizeof(kanban))
             );
 
             // expose the api if in dev mode
             if (config.mode === "dev") {
                 window[config.appName] = kanban;
+                window[config.appName + "_REPO"] = repo;
             }
 
             // expose logging api to window.log
@@ -4394,19 +5567,21 @@ define(
         ------------------------------------------------------*/
         // wait for kbs loaded event
         events.subscribe("kbs/loaded", end);
+
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
+        });
             
         // get a new configurator and load data
         try {
             settings = new Configurator();
             settings.loadExisting();
+            repo.add("settings", settings);
         } catch (configuratorException) {
-            util.log(
-                "error",
-                "Configurator failed to initialise " +
-                    " cleanly. Exception thrown in " +
-                    configuratorException.fileName + " at line " +
-                    configuratorException.lineNumber + ". Error: " +
-                    configuratorException.message
+            ehandle = new Exception(
+                configuratorException,
+                "Configurator failed to initialise cleanly."
             );
         }
 
@@ -4415,55 +5590,40 @@ define(
             return;
         }
 
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
-        });
-
         // initialise gui first so log buffer is constructed
         try {
             if (config.gui.enabled) {
                 gui = new GUI();
+                repo.add("gui", gui);
             }
         } catch (guiException) {
-            util.log(
-                "error",
-                "GUI failed to initialise " +
-                    " cleanly. Exception thrown in " +
-                    guiException.fileName + " at line " +
-                    guiException.lineNumber + ". Error: " +
-                    guiException.message
+            ehandle = new Exception(
+                guiException,
+                "GUI failed to initialise cleanly."
             );
         }
 
         // initialise interactor
         try {
             if (config.interactor.enabled) {
-                interactor = new Interactor(gui);
+                interactor = new Interactor();
+                repo.add("interactor", interactor);
             }
         } catch (interactorException) {
-            util.log(
-                "error",
-                "Interactor failed to initialise " +
-                    " cleanly. Exception thrown in " +
-                    interactorException.fileName + " at line " +
-                    interactorException.lineNumber + ". Error: " +
-                    interactorException.message
+            ehandle = new Exception(
+                interactorException,
+                "Interactor failed to initialise cleanly."
             );
         }
             
         // initialise the bugherd api wrapper
         try {
-            bugherd = new BugHerd(interactor, gui);
-            bugherd.init();
+            bugherd = new BugHerd();
+            repo.add("bugherd", bugherd);
         } catch (bugherdException) {
-            util.log(
-                "error",
-                "BugHerd API failed to initialise " +
-                    " cleanly. Exception thrown in " +
-                    bugherdException.fileName + " at line " +
-                    bugherdException.lineNumber + ". Error: " +
-                    bugherdException.message
+            ehandle = new Exception(
+                bugherdException,
+                "BugHerd API failed to initialise cleanly."
             );
         }
 
@@ -4478,13 +5638,15 @@ define(
             util: util,
             gui: gui,
             configurator: settings,
-            repo: repo,
-            Api: {
+            Constructor: {
                 "Configurator": Configurator,
                 "Interactor": Interactor,
                 "GUI": GUI,
                 "BugHerd": BugHerd,
-                "Http": Http
+                "Http": Http,
+                "Node": Node,
+                "Modal": Modal,
+                "Exception": Exception
             }
         };
     }

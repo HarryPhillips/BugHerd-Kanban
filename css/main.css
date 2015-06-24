@@ -192,6 +192,13 @@
     overflow-y: scroll;
 }
 
+.kbs-modal.kbs-task-filter {
+    width: 600px;
+    height: 700px;
+    margin-left: -300px;
+    margin-top: -350px;
+}
+
 .kbs-confirm,
 .kbs-cancel {
     width: 100px; height: 30px;
@@ -469,6 +476,10 @@
     visibility: hidden;
 }
 
+.kbs-submit-field {
+    margin-top: 20px;
+}
+
 /* title */
 .kbs-field .kbs-title {
     width: 200px;
@@ -486,11 +497,17 @@
     padding: 5px 8px;
 }
 
-/* input */
+/* input field */
 .kbs-field .kbs-input-field {}
 
+/* checkbox */
 .kbs-field .kbs-input-checkbox {
     margin: 7px 5px 15px 5px !important;
+}
+
+/* select */
+.kbs-field .kbs-input-select {
+    width: 206px;
 }
 
 /* submit/confirm */

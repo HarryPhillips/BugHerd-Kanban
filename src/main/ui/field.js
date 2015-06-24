@@ -29,7 +29,9 @@ define(
                     setTimeout(function () {
                         verify.fadeOut("slow");
                     }, 1200);
-                };
+                },
+                i = 0,
+                len;
 
             // title
             if (type === "title") {
@@ -44,10 +46,31 @@ define(
                 .text(text);
 
             // input
-            input = field.createChild("input",
-                    "kbs-input-field kbs-input-" + type)
-                .attr("type", type)
-                .val(placeholder || "");
+            if (type !== "select") {
+                // new input field
+                input = field.createChild("input",
+                        "kbs-input-field kbs-input-" + type)
+                    .attr("type", type)
+                    .val(placeholder || "");
+            } else {
+                len = placeholder.length;
+                
+                // new select field
+                input = field.createChild("select",
+                        "kbs-input-field kbs-input-" + type);
+                
+                // add default option
+                input.createChild("option")
+                    .text("Please select...")
+                    .attr("default");
+                
+                // add select options
+                for (i; i < len; i += 1) {
+                    input.createChild("option")
+                        .text(placeholder[i].text)
+                        .attr("value", placeholder[i].value);
+                }
+            }
             
             // check or uncheck checkbox input
             if (type === "checkbox") {

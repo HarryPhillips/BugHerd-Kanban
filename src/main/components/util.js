@@ -312,8 +312,9 @@ define(
             // make sure target and host are defined
             if (typeof host === "undefined" || host === "") {
                 // throw an error if host is undefined
-                throw new Error("Could not determine a contained value, " +
+                util.log("error", "Could not determine a contained value, " +
                                "haystack object is undefined!");
+                return false;
             }
             
             if (typeof target === "undefined" || target === "") {

@@ -147,7 +147,11 @@ define(
         TaskController.prototype.findAllWithMeta = function (attr, value) {
             return this.match(function (task) {
                 var meta = task.getData().userMetaData || {};
-                return (meta[attr] === value) ? true : false;
+                
+                return (
+                    meta[attr] === value ||
+                    util.contains(meta[attr], value)
+                ) ? true : false;
             });
         };
         
@@ -155,7 +159,11 @@ define(
         TaskController.prototype.findAllWithClientData = function (attr, value) {
             return this.match(function (task) {
                 var data = task.getBrowserData();
-                return (data[attr] === value) ? true : false;
+                
+                return (
+                    data[attr] === value ||
+                    util.contains(data[attr], value)
+                ) ? true : false;
             });
         };
         

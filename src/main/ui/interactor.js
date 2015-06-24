@@ -212,8 +212,7 @@ define(
             
             // enter localId into input
             facet = $(".search_facet_input");
-            facet
-                .val(localId)
+            facet.val(localId)
                 .trigger("keydown");
 
             setTimeout(function () {
@@ -418,7 +417,33 @@ define(
                 i = 0;
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i])
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following client data
+        Interactor.prototype.hideTasksWithClientData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithClientData(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following meta data
+        Interactor.prototype.hideTasksWithMetaData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithMeta(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
                     .style.display = "none";
             }
         };

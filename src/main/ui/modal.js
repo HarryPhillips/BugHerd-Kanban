@@ -87,8 +87,7 @@ define(
                 this.processStack.bind(this)
             );
             
-            // create events and process queue
-            // on close and destruction
+            // events list
             this.events = [
                 "init", "load", "reload", "open", "close",
                 "destruct", "confirm", "proceed", "cancel"
