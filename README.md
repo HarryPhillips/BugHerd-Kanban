@@ -19,13 +19,6 @@ The Kanban Board is now somewhat responsive, you can now use BugHerd with a smal
 window.
 ![Responsive Kanban](/img/readme/responsive-dashboard.png?raw=true "Responsive")
 
-##### Debug Console & Status Logs
-In the upper right-hand corner is a small menu with a console attached, here you
-will find Kanban Settings and the debug console. The console will output miscellaneous
-events which occur as you use BugHerd. The console will even log when tasks are
-moved, updated and deleted.
-![GUI Console](/img/readme/gui-console.png?raw=true "GUI Console")
-
 ##### Quick & Simple Task Search
 You can quickly and easily search the entire project for a task by ID.
 ![Task Search](/img/readme/task-search.png?raw=true "Task Search")
@@ -35,11 +28,24 @@ Using this menu you can filter tasks by data such as the user who raised the bug
 the operating system used, the resolution and other meta data.
 ![Task Filters](/img/readme/task-filters.png?raw=true "Task Filters")
 
+##### Screenshot/Image Viewer
+Instead of showing screenshots and images in another tab, they are now loaded
+into an interactive screenshot viewer where you can drag and zoom/resize for
+easier viewing.
+![GUI Console](/img/readme/screenshot-viewer.png?raw=true "GUI Console")
+
 ##### Styling Changes
 The extension loads in some additional CSS files which (subjectively) make BugHerd
 look a little better. Most notably the tasks are coloured depending on their
 severity, making them stand out.
 ![Styling](/img/readme/severity-styles.png?raw=true "Styling")
+
+##### Debug Console & Status Logs
+In the upper right-hand corner is a small menu with a console attached, here you
+will find Kanban Settings and the debug console. The console will output miscellaneous
+events which occur as you use BugHerd. The console will even log when tasks are
+moved, updated and deleted.
+![GUI Console](/img/readme/gui-console.png?raw=true "GUI Console")
 
 ## Installation
 For quick installation, head to releases and download the kanban.xpi from the latest release.
