@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name destructConsole.js
+*   @name task-not-found.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -9,8 +9,8 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view'
+        'main/ui/node',
+        'main/ui/view'
     ],
     function (util, Node, View) {
         'use strict';
@@ -19,30 +19,28 @@ define(
         var view = new View(function (args) {
             var node = new Node("div", "kbs-view"),
                 gui = args[0],
-                modal = args[1];
+                modal = args[1],
+                id = modal.params.id || "null";
             
             // modal text
-            node.title = "Destruct GUI Console/Toolbar";
+            node.title = "Task Not Found";
             
             // message
-            node
-                .createChild("p")
-                .text("Confirm destruction of GUI console and toolbar?");
+            node.createChild("p")
+                .text("Couldn't find task #" + id + "!");
             
             // confirm
-            node
-                .createChild("span", "kbs-confirm")
-                .text("confirm")
+            node.createChild("span", "kbs-confirm")
+                .text("search again")
                 .on("click", function () {
-                    modal.onConfirm();
+                    modal.trigger("confirm", modal);
                 });
             
             // cancel
-            node
-                .createChild("span", "kbs-cancel")
-                .text("cancel")
+            node.createChild("span", "kbs-cancel")
+                .text("close")
                 .on("click", function () {
-                    modal.onCancel();
+                    modal.trigger("cancel", modal);
                 });
             
             return node;

@@ -12,7 +12,9 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
-        'main/components/node',
+        'main/components/repository',
+        'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -20,6 +22,8 @@ define(
         util,
         events,
         status,
+        Repository,
+        Configurator,
         Node,
         Modal
     ) {
@@ -29,10 +33,13 @@ define(
         var $,
             self,
             inited = false,
+            configurator = new Configurator(),
+            repo = new Repository(),
+            bugherd,
             gui;
 
         // interactor constructor
-        function Interactor(instance) {
+        function Interactor() {
             util.log(
                 "context:inter/init",
                 "info",
@@ -41,7 +48,9 @@ define(
             
             // set references
             self = this;
-            gui = instance;
+            gui = repo.get("gui");
+            
+            this.activeTask = null;
             
             // initialise
             this.init();
@@ -76,9 +85,6 @@ define(
             this.applyContext();
             this.applyHash();
             
-            // begin observing
-            this.observe();
-            
             inited = true;
         };
             
@@ -93,11 +99,6 @@ define(
             
             return (element.length) ? element : false;
         };
-        
-        // get the wrapper task element from a component
-        Interactor.prototype.getTaskFromComponent = function (component) {
-            return component.closest("[id^=task_]");
-        };
 
         // expand the currently active task or a specified task id
         Interactor.prototype.openTask = function (localId) {
@@ -105,6 +106,8 @@ define(
                 "context:interactor",
                 "Opening task #" + localId + "..."
             );
+            
+            this.activeTask = localId;
             
             if (typeof localId === "undefined") {
                 this.expandTaskDetails();
@@ -114,7 +117,9 @@ define(
             // get global id
             this.findGlobalId(localId, function (task) {
                 // once found - click the task
-                task.trigger("click");
+                setTimeout(function () {
+                    task.trigger("click");
+                }, 500);
             });
         };
 
@@ -133,6 +138,9 @@ define(
             if (status.interactor.taskDetailsExpanded) {
                 return;
             }
+            
+            this.activeTask = this.findLocalIdFromDetails();
+            util.log("context:interactor", "active task: #" + this.activeTask);
             
             // show overlay
             $(".kbs-overlay").show();
@@ -156,20 +164,21 @@ define(
         // shrinks the task details panel
         Interactor.prototype.shrinkTaskDetails = function () {
             var task = $(".taskDetails"),
-                overlay = $(".kbs-overlay"),
                 btn = $(".kbs-details-closed");
             
             if (!status.interactor.taskDetailsExpanded) {
                 return;
             }
             
-            // hide elements
-            task.removeClass("kbs-details-expand");
-            btn.fadeOut();
-            overlay.fadeOut();
+            this.activeTask = null;
             
             // set status
             status.interactor.taskDetailsExpanded = false;
+            
+            // hide elements
+            task.removeClass("kbs-details-expand");
+            btn.fadeOut();
+            gui.hideOverlay();
         };
             
         // perform a task search
@@ -203,8 +212,7 @@ define(
             
             // enter localId into input
             facet = $(".search_facet_input");
-            facet
-                .val(localId)
+            facet.val(localId)
                 .trigger("keydown");
 
             setTimeout(function () {
@@ -276,7 +284,7 @@ define(
                             errMsg
                         );
                         
-                        errModal = new Modal("taskNotFound", {
+                        errModal = new Modal("task-not-found", {
                             init: true,
                             id: localId,
                             confirm: function () {
@@ -286,7 +294,7 @@ define(
                                 // re-open search task
                                 errModal
                                     .getController()
-                                    .getModalByName("searchTask")
+                                    .getModalByName("task-search")
                                     .open();
                             },
                             cancel: function () {
@@ -313,7 +321,7 @@ define(
             
         // find a local task id from a global task id
         Interactor.prototype.findLocalId = function (globalId) {
-            $("#task_" + globalId).find(".task-id, .taskID").text();
+            return $("#task_" + globalId).find(".task-id, .taskID").text();
         };
             
             
@@ -333,18 +341,25 @@ define(
             return localId;
         };
             
-        // find/filter tasks by meta data
-        Interactor.prototype.findTaskFromMetadata = function (title, content) {
+        // find a local task id from task details
+        Interactor.prototype.findLocalIdFromDetails = function () {
+            var parent = $(".taskDetails"),
+                localId = parent.find(".local_task_id");
             
+            return localId.text() || localId.val();
         };
+        
+        // get the task element from an inner component
+        // note: only applies to board tasks
+        Interactor.prototype.findTaskFromComponent = function (component) {
+            var task = component.closest("[id^=task_]");
             
-        // return all tasks for the current project in all boards
-        Interactor.prototype.getAllTasks = function () {
-            var tasks = [];
+            // if not found - return false
+            if (!task.length) {
+                return false;
+            }
             
-            // navigate to the triage
-            
-            return tasks;
+            return this.findLocalIdFromTask(task);
         };
             
         // navigate the ui to a specified task board
@@ -363,6 +378,184 @@ define(
             }
         };
             
+        // view a screenshot in a modal
+        Interactor.prototype.viewScreenshot = function (link) {
+            var bugherd = repo.get("bugherd"),
+                size = {},
+                winsize,
+                modal,
+                id;
+            
+            // get the task id from detail panel
+            id = parseInt(self.findLocalIdFromDetails(), 10);
+            
+            util.log(
+                "context:interactor",
+                "debug",
+                "Viewing screenshot for task #" + id
+            );
+            
+            modal = new Modal("view-screenshot", {
+                viewParams: {
+                    id: id,
+                    title: (link[0]
+                            .textContent
+                            .indexOf("screenshot") !== -1
+                           ) ? "Screenshot" : "Fix Result",
+                    url: link[0].href,
+                    width: size.x,
+                    height: size.y
+                }
+            });
+        };
+            
+        // hide all tasks with the following tag(s)
+        Interactor.prototype.onTasksWithTag = function (method, tag) {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                list = bugherd.tasks.findAllWithTag(tag),
+                len = list.length,
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with tag
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
+            
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
+            }
+        };
+            
+        // hide all tasks with the following client data
+        Interactor.prototype.onTasksWithClientData = function (method, key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithClientData(key, value),
+                len = list.length,
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = disp;
+            }
+        };
+            
+        // hide all tasks with the following meta data
+        Interactor.prototype.onTasksWithMetaData = function (method, key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithMeta(key, value),
+                len = list.length,
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < list.length; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
+            
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
+            }
+        };
+            
+        // hides all tasks
+        Interactor.prototype.hideAllTasks = function () {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                e;
+            
+            // hide all tasks
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "none";
+                }
+            }
+        };
+        
+        // shows all tasks
+        Interactor.prototype.showAllTasks = function () {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                e;
+            
+            // hide all tasks
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "block";
+                }
+            }
+        };
+            
+        // reset any task filters
+        Interactor.prototype.resetAllFilters = function () {
+            this.showAllTasks();
+            $("div.head-actions:nth-child(1) > " +
+                "ul:nth-child(1) > li:nth-child(1) > " +
+                "ul:nth-child(3) > li:nth-child(1) > " +
+                "a:nth-child(1)").trigger("click");
+            
+            this.showAllTasks();
+        };
+        
         // return current hash
         Interactor.prototype.getHash = function () {
             return window.location.hash;
@@ -372,86 +565,57 @@ define(
         Interactor.prototype.parseHash = function () {
             var hash = this.getHash(),
                 href = window.location.href,
-                hashId;
+                taskId;
             
             util.log(
                 "context:hash",
                 "parsing new hash: " + hash
             );
 
-            // prefixed
+            // open task
             if (hash === "#open") {
-                // check if prefixed
+                // get task id
                 if (href.indexOf("tasks/") !== -1) {
-                    hashId = parseInt(href.split("tasks/")[1], 10);
-
-                    // open
-                    if (hashId) {
-                        this.openTask(hashId);
-                    }
+                    taskId = parseInt(href.split("tasks/")[1], 10);
+                } else {
+                    taskId = parseInt(hash.replace("#open", ""), 10);
                 }
             }
-
-            // suffixed
-            hashId = parseInt(hash.replace("#open", ""), 10);
-
-            if (hashId) {
-                this.openTask(hashId);
+            
+            // settings
+            if (hash === "#settings") {
+                configurator.launchModal();
+                location.hash = "";
             }
-        };
-            
-        // mutation observer, listen for creation of tasks
-        Interactor.prototype.observe = function () {
-            util.log("context:inter/init", "+ observing...");
-            
-            var
-                // observer instance
-                observer = new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                        util.log(
-                            "context:interactor",
-                            mutation
-                        );
-                    });
-                }),
-                
-                // observer config
-                observerSettings = {
-                    attributes: true,
-                    childList: true,
-                    characterData: true
-                },
-                
-                // target element
-                target = document.querySelector(".task");
-            
-            // begin observing
-            if (config.interactor.observe) {
-                observer.observe(target, observerSettings);
+
+            if (taskId) {
+                this.openTask(taskId);
             }
         };
 
         // append elements to bugherd ui
         Interactor.prototype.applyElements = function () {
             // declarations
-            var taskExpander,
-                taskContractor,
-                taskSearch;
+            var search,
+                filter,
+                detailClose,
+                taskSearch,
+                taskFilter,
+                nav;
             
             util.log(
                 "context:inter/init",
                 "+ appending elements to bugherd"
             );
 
-            // task expander list element
-            taskExpander = new Node("li");
+            // task search list element
+            search = new Node("li");
             
-            // task expander anchor element
-            taskExpander.createChild("a")
+            // task search anchor element
+            search.createChild("a")
                 .text("Search Task")
                 .on("click", function (event) {
-                    taskSearch = new Modal("searchTask", {
-                        init: true,
+                    taskSearch = new Modal("task-search", {
                         proceed: function (localId) {
                             if (!localId) {
                                 // return if no id passed
@@ -464,49 +628,81 @@ define(
                     });
                 });
             
-            // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-closed");
-            taskContractor.createChild("i", "fa fa-times");
-            taskContractor.on("click", function (event) {
+           // task filter list element
+            filter = new Node("li");
+            
+            // task filter anchor element
+            filter.createChild("a")
+                .text("Filter")
+                .on("click", function (event) {
+                    taskFilter = new Modal("task-filter");
+                });
+            
+            // task details close button
+            detailClose = new Node("div", "kbs-details-closed");
+            detailClose.createChild("i", "fa fa-times");
+            detailClose.on("click", function (event) {
                 self.closeTask();
             });
             
             // write
-            taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($("body")[0]);
+            nav = $(".nav.main-nav")[0];
+            search.writeTo(nav);
+            filter.writeTo(nav);
+            detailClose.writeTo($("body")[0]);
         };
             
         // apply event handlers
         Interactor.prototype.applyHandlers = function () {
+            var appwrap = new Node(".app-wrap"),
+                body = new Node(document.body),
+                kanban = new Node("#kanbanBoard"),
+                move,
+                frame,
+                fc;
+            
             util.log(
                 "context:inter/init",
                 "+ applying handlers to bugherd"
             );
             
             // delegate clicks on app wrapper
-            $(".app-wrap").on("click", function (event) {
+            appwrap.on("click", function (event) {
                 var target = $(event.target),
                     task = self.isTask(target);
                 
-                if (task) {
+                // capture task clicks
+                if (task && config.interactor.expandOnclick) {
                     self.expandTaskDetails();
+                    return;
+                }
+                
+                // capture screenshot clicks
+                if (target.hasClass("attachLink")) {
+                    // view screenshots only
+                    if (target.text().match(/(fix-result)|(view_screenshot)|(\.png)|(\.jpg)/)) {
+                        event.preventDefault();
+                        self.viewScreenshot(target);
+                    }
                 }
             });
             
             // on document mouse move - apply parallax to wallpaper
-            // if there is one
-            if (config.gui.wallpaper && config.gui.parallax) {
-                var move = false,
-                    frame = setInterval(function () {
-                        move = (move) ? false : true;
-                    }, 32);
+            // if there is one (experimental)
+            if (config.gui.wallpaper && config.gui.parallax.enabled) {
+                move = false;
+                frame = setInterval(function () {
+                    move = (move) ? false : true;
+                }, 32);
                 
-                $("body").on("mousemove", function (event) {
+                body.on("mousemove", function (event) {
+                    fc = config.gui.parallax.factor;
+                    
                     if (move) {
-                        var deltaX = -(event.pageX / 10),
-                            deltaY = -(event.pageY / 10);
+                        var deltaX = -(event.pageX / fc),
+                            deltaY = -(event.pageY / fc);
 
-                        $("#kanbanBoard").css(
+                        kanban.css(
                             "background-position",
                             deltaX + "px " + deltaY + "px"
                         );
@@ -548,8 +744,8 @@ define(
             );
             util.log(
                 "context:interactor",
-                "info",
-                "Interactor log output..."
+                "buffer",
+                "log-buffer: INTERACTOR"
             );
         };
             
@@ -564,7 +760,7 @@ define(
                 href = window.location.href,
                 hashId;
             
-            util.log("context:hash", "info", "Hash events...");
+            util.log("context:hash", "buffer", "log-buffer: HASH");
             
             // open task if hash is prefixed
             // or suffixed with a task

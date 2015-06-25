@@ -23,16 +23,21 @@ body {
 .kbs-modal {
     background-color: #fff;
     color: #1a1a1a;
+    border: solid #57758E 3px;
+    border-top: 0;
 }
 
+.kbs-modal-content {}
+
 .kbs-modal-title {
-    background-color: #363D47;
+    background-color: #57758e;
     color: #fff;
 }
 
 .kbs-modal-closed {
     background-color: #7e1a1a;
     color: #fff;
+    max-width: 50px;
 }
 
 .kbs-modal-closed:hover {
@@ -93,6 +98,15 @@ body {
     color: #fff;
 }
 
+/* modals
+--------------------------------------------------------------------*/
+.kbs-modal.kbs-view-screenshot {}
+
+.kbs-screenshot {
+    box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+
 /* tools
 --------------------------------------------------------------------*/
 .kbs-tool {
@@ -114,6 +128,17 @@ body {
 .kbs-save:hover {
     background-color: #000;
     color: #429e7e;
+}
+
+.kbs-menu {
+    background-color: #fafafa;
+    color: #6E8694;
+}
+
+.kbs-menu:hover {
+    background-color: #fff;
+    border-bottom-color: #6E8694;
+    color: #fff;
 }
 
 .kbs-toggle {
@@ -174,6 +199,16 @@ body {
 .kbs-destroy:hover {
     background-color: #000;
     color: #b82c2c;
+}
+
+.kbs-toggleObjs {
+    background-color: #d77f27;
+    color: #fff;
+}
+
+.kbs-toggleObjs:hover {
+    background-color: #000;
+    color: #d77f27;
 }
 
 .kbs-example {
@@ -324,9 +359,84 @@ body {
     padding-left: 0px !important;
 }
 
+span.assignee-avatar {
+    border: solid #000 2px !important;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+#kanbanBoard .task {
+    transition: background-color 0.6s;
+}
+
+.taskContent.p1 *,
+.taskContent.p2 *,
+.taskContent.p3 *,
+.taskContent.p4 * {
+    color: #fff;
+}
+
+#kanbanBoard .task.p0,
+#kanbanBoard .task.p1,
+#kanbanBoard .task.p2,
+#kanbanBoard .task.p3,
+#kanbanBoard .task.p4 {
+    border: solid #1a1a1a 1px !important;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+#kanbanBoard .task.p0 .task-severity,
+#kanbanBoard .task.p1 .task-severity,
+#kanbanBoard .task.p2 .task-severity,
+#kanbanBoard .task.p3 .task-severity,
+#kanbanBoard .task.p4 .task-severity {
+    display: none !important;
+}
+
+#kanbanBoard .task.p1 *,
+#kanbanBoard .task.p2 *,
+#kanbanBoard .task.p3 *,
+#kanbanBoard .task.p4 * {
+    color: #fff !important;
+}
+
+.task.p0, .taskContent.p0 {
+    background-color: #CCCCCC !important;
+}
+
+.task.p1, .taskContent.p1 {
+    background-color: #D46060 !important;
+}
+
+.task.p2, .taskContent.p2 {
+    background-color: #E8B019 !important;
+}
+
+.task.p3, .taskContent.p3 {
+    background-color: #60C5D4 !important;
+}
+
+.task.p4, .taskContent.p4 {
+    background-color: #8BB863 !important;
+}
+
+#kanbanBoard .task.p0,
+#kanbanBoard .task.p0 .task-id {
+    color: #1a1a1a !important;
+}
+
+#kanbanBoard .task .task-info {
+    border-radius: 0px !important;
+    z-index: 99;
+}
+
 /* lhs tag list */
 .cta-tag {
     border: solid #bbb 1px !important;
+}
+
+#kanbanBoard .task .task-info {
+    background-color: #3a3a3a;
+    color: #fff;
 }
 
 /* center pane */
@@ -341,7 +451,8 @@ body {
 /* active/selected task */
 #kanbanBoard li.taskItem.active {
     outline: solid transparent 0 !important;
-    border: solid #1685ed 2px;
+    border: solid #1685ed 2px !important;
+    box-shadow: 2px 2px 8px rgba(17, 134, 160, 0.8) !important;
 }
 
 /* task detail */

@@ -99,15 +99,15 @@ define(function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0",
+        version: "1.4.0-pre",
         enabled: true,
         mode: "dev",
 //        offline: true,
         httpToken: "Fw43Iueh87aw7",
         theme: "default",
-//        test: true,
+        test: false,
         logs: {
-            enabled: true,
+            enabled: false,
             gui: true,
             contexts: true,
             contextFlag: "context:",
@@ -118,32 +118,49 @@ define(function () {
             enabled: true,
             autorefresh: true,
             wallpaper: "",
-            parallax: false,
+            severityStyles: true,
+            parallax: {
+                enabled: false,
+                factor: 100
+            },
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
+                allowDestruction: false,
+                destroyed: false,
+                displayed: true,
                 icons: {
+                    menu: "bars",
+                    toggle: "terminal",
                     save: "file-text",
                     clear: "trash",
-                    toggle: "terminal",
                     close: "times",
                     destroy: "unlink",
                     example: "plus-circle",
                     benchmark: "tachometer",
                     settings: "cogs",
-                    expand: "caret-square-o-right"
+                    expand: "caret-square-o-right",
+                    toggleObjs: "list-alt"
+                },
+                benchmark: {
+                    amount: 10000
                 }
             },
             modals: {
                 behaviour: {
-                    closeOnOpenOfOther: true,
-                    reopenOnCloseOfOther: true
+                    stack: true,
+                    shift: true
                 }
             }
         },
         interactor: {
             enabled: true,
-            observe: false
+            observe: false,
+            expandOnclick: true,
+            filters: {
+                metadata: {},
+                clientdata: {}
+            }
         },
         events: {
             silent: false
@@ -158,13 +175,15 @@ define(function () {
             }
         },
         tooltips: {
-            save: "Save the output buffer to text file",
-            clear: "Clear all logs",
-            toggle: "GUI Console State",
-            close: "Close the console",
-            destroy: "Destroy this console instance",
-            benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings"
+            save: "Save log buffer",
+            clear: "Clear console",
+            menu: "Kanban Menu",
+            toggle: "Toggle the console",
+            close: "Close",
+            destroy: "Destroy console",
+            benchmark: "Benchmark",
+            settings: "Settings",
+            toggleObjs: "Toggle object logs"
         }
     }).obj;
     

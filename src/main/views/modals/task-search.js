@@ -1,6 +1,6 @@
 /*
 *   @type javascript
-*   @name searchTask.js
+*   @name task-search.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
@@ -9,8 +9,8 @@
 define(
     [
         'main/components/util',
-        'main/components/node',
-        'main/components/view'
+        'main/ui/node',
+        'main/ui/view'
     ],
     function (util, Node, View) {
         'use strict';
@@ -34,7 +34,7 @@ define(
             go = node.createChild("div", "kbs-continue")
                 .text("Go")
                 .on("click", function () {
-                    modal.onProceed(input.text());
+                    modal.trigger("proceed", input.text());
                 });
             
             return node;

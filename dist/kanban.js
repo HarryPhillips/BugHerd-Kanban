@@ -99,15 +99,15 @@ define('config',[],function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.3.0",
+        version: "1.4.0-pre",
         enabled: true,
         mode: "dev",
 //        offline: true,
         httpToken: "Fw43Iueh87aw7",
         theme: "default",
-//        test: true,
+        test: false,
         logs: {
-            enabled: true,
+            enabled: false,
             gui: true,
             contexts: true,
             contextFlag: "context:",
@@ -117,24 +117,50 @@ define('config',[],function () {
         gui: {
             enabled: true,
             autorefresh: true,
+            wallpaper: "",
+            severityStyles: true,
+            parallax: {
+                enabled: false,
+                factor: 100
+            },
             console: {
                 state: "kbs-closed",
                 autoscroll: true,
+                allowDestruction: false,
+                destroyed: false,
+                displayed: true,
                 icons: {
+                    menu: "bars",
+                    toggle: "terminal",
                     save: "file-text",
                     clear: "trash",
-                    toggle: "terminal",
                     close: "times",
                     destroy: "unlink",
                     example: "plus-circle",
                     benchmark: "tachometer",
                     settings: "cogs",
-                    expand: "caret-square-o-right"
+                    expand: "caret-square-o-right",
+                    toggleObjs: "list-alt"
+                },
+                benchmark: {
+                    amount: 10000
+                }
+            },
+            modals: {
+                behaviour: {
+                    stack: true,
+                    shift: true
                 }
             }
         },
         interactor: {
-            enabled: true
+            enabled: true,
+            observe: false,
+            expandOnclick: true,
+            filters: {
+                metadata: {},
+                clientdata: {}
+            }
         },
         events: {
             silent: false
@@ -149,13 +175,15 @@ define('config',[],function () {
             }
         },
         tooltips: {
-            save: "Save the output buffer to text file",
-            clear: "Clear all logs",
-            toggle: "GUI Console State",
-            close: "Close the console",
-            destroy: "Destroy this console instance",
-            benchmark: "Run the benchmark",
-            settings: "Edit Kanban settings"
+            save: "Save log buffer",
+            clear: "Clear console",
+            menu: "Kanban Menu",
+            toggle: "Toggle the console",
+            close: "Close",
+            destroy: "Destroy console",
+            benchmark: "Benchmark",
+            settings: "Settings",
+            toggleObjs: "Toggle object logs"
         }
     }).obj;
     
@@ -173,6 +201,12 @@ define('config',[],function () {
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Always pass the event name to the handler,
+*     try to do this without disrupting passed parameters
+*/
+
 define('main/components/events',['config'], function (config) {
     
     
@@ -182,13 +216,74 @@ define('main/components/events',['config'], function (config) {
     
     // subscribe/create event topic
     Events.prototype.subscribe = function (event, handler) {
-        if (!this.topics[event]) {
-            // create a event topic
-            this.topics[event] = [];
+        var len, i,
+            attach = function (topic, handler) {
+                if (!this.topics[topic]) {
+                    // create an event topic
+                    this.topics[topic] = [];
+                }
+
+                // apply handler to event
+                this.topics[topic].push(handler);
+            }.bind(this);
+        
+        // if event is an array of topics
+        if (event instanceof Array) {
+            len = event.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                attach(event[i], handler);
+            }
+        } else {
+            attach(event, handler);
+        }
+    };
+    
+    // unsubscribe a handler from a topic
+    Events.prototype.unsubscribe = function (event, handler) {
+        var list,
+            object = false,
+            xlen,
+            ylen,
+            x = 0,
+            y = 0;
+        
+        // not a name - we need to do object comparison
+        // we shouldn't need to do deep comparison,
+        // the handlers *should* refer to the same object
+        // in memory
+        if (typeof handler !== "string") {
+            object = true;
         }
         
-        // apply handler to event
-        this.topics[event].push(handler);
+        // convert event to array
+        if (!event instanceof Array) {
+            event = [event];
+        }
+        
+        // remove all matched handlers from event
+        for (x, xlen = event.length; x < xlen; x += 1) {
+            // get event
+            list = this.topics[event[x]];
+                               
+            // check names of all handlers
+            for (y, ylen = list.length; y < ylen; y += 1) {
+                // remove handler from array and return
+                if (object) {
+                    if (handler === list[y] ||
+                            handler.toSource() === list[y].toSource()) {
+                        list.splice(list.indexOf(y), 1);
+                        return;
+                    }
+                } else {
+                    if (list[y].name === handler) {
+                        list[y].splice(list.indexOf(y), 1);
+                        return;
+                    }
+                }
+            }
+        }
     };
     
     // publish event with data
@@ -203,15 +298,7 @@ define('main/components/events',['config'], function (config) {
         // publish data to all event handlers
         var i;
         for (i = 0; i < this.topics[event].length; i += 1) {
-            this.topics[event][i](data);
-        }
-        
-        // make data an object if it isn't already so
-        // so we can log it nicely
-        if (typeof data !== "object") {
-            data = {
-                "data": data
-            };
+            this.topics[event][i](data, event);
         }
     };
     
@@ -330,7 +417,8 @@ define('main/components/cache',['main/components/buffer'], function (Buffer) {
     // cache object
     var cache = {
         app: new Buffer(),
-        console: new Buffer()
+        console: new Buffer(),
+        logCount: 0
     };
     
     return cache;
@@ -356,9 +444,11 @@ define('main/components/cookies',['config'], function (config) {
             cookie,
             i;
 
+        // iterate through cookies
         for (i = 0; i < cookies.length; i += 1) {
             cookie = cookies[i];
 
+            // eliminate whitespace
             while (cookie.charAt(0) === ' ') {
                 cookie = cookie.substring(1);
             }
@@ -376,6 +466,7 @@ define('main/components/cookies',['config'], function (config) {
     Cookies.prototype.set = function (name, value, days) {
         var expires, date;
 
+        // set expiry
         if (days) {
             date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -411,6 +502,8 @@ define('main/components/cookies',['config'], function (config) {
 
 /*global define: true */
 
+/*jslint regexp: true */
+
 define(
     'main/components/util',[
         'config',
@@ -433,9 +526,19 @@ define(
         // util class
         function Util() {}
         
-        // set instance for internal references
-        var util = new Util(),
-            instance;
+        // create new instance of Util
+        var util = new Util();
+            
+        // refresh/reload the page with optional delay
+        Util.prototype.refresh = function (delay) {
+            if (typeof delay !== "undefined") {
+                setTimeout(function () {
+                    location.reload();
+                }, delay);
+            } else {
+                location.reload();
+            }
+        };
         
         // amend zeros to a number until a length is met
         Util.prototype.zerofy = function (num, len) {
@@ -481,6 +584,11 @@ define(
 
             return year + "-" + month + "-" + date;
         };
+            
+        // get diff between two numbers
+        Util.prototype.diff = function (num1, num2) {
+            return (num1 > num2) ? num1 - num2 : num2 - num1;
+        };
 
         // escapes regex meta characters from a string
         Util.prototype.escapeRegEx = function (str) {
@@ -492,6 +600,19 @@ define(
                 .replace(/\x08/g, '\\x08');
 
             return result;
+        };
+            
+        // run a series/array of functions
+        Util.prototype.execAll = function (array, data) {
+            var i = 0,
+                len = array.length;
+            
+            // loop and run if a function is found
+            for (i; i < len; i += 1) {
+                if (util.isFunction(array[i])) {
+                    array[i](data);
+                }
+            }
         };
         
         // cookie lib
@@ -513,6 +634,11 @@ define(
                             obj.nodeType === 1 &&
                             typeof obj.nodeName === "string"
             );
+        };
+            
+        // checks if input is a text node
+        Util.prototype.isTextNode = function (obj) {
+            return obj.nodeType === 3;
         };
         
         // parse a html string into DOM element
@@ -549,6 +675,11 @@ define(
             
             return obj instanceof Object;
         };
+            
+        // check if input is a function
+        Util.prototype.isFunction = function (obj) {
+            return typeof obj === "function";
+        };
         
         // checks if input is a string
         Util.prototype.isString = function (obj) {
@@ -573,6 +704,98 @@ define(
             }
             return typeof obj === "boolean";
         };
+            
+        // checks if a number is even
+        Util.prototype.isEven = function (num) {
+            return (num % 2) ? true : false;
+        };
+            
+        // checks if a number is odd
+        Util.prototype.isOdd = function (num) {
+            return (num % 2) ? false : true;
+        };
+            
+        // checks if a value is defined
+        Util.prototype.isDefined = function (obj) {
+            return typeof obj !== "undefined";
+        };
+            
+        // matrix function
+        Util.prototype.matrix = function (matrix) {
+            var result,
+                len = 6,
+                i = 0,
+                err = function (msg) {
+                    util.log("warn", msg + " arguments supplied to kbs.util.matrix, " +
+                            "unexpected results may occur");
+                };
+            
+            // convert string matrices to arrays
+            if (util.isString(matrix)) {
+                // expecting: "matrix(a, b, c, d, tx, ty)"
+                
+                // check if matrix is in the string
+                if (matrix.indexOf("matrix") !== -1) {
+                    result = matrix.match(/\(([^)]+)\)/);
+                    result = result[0].replace("(", "[").replace(")", "]");
+                    result = util.unserialise(result);
+                } else {
+                    // try an unserialise as a fallback
+                    result = util.unserialise(matrix);
+                }
+                
+                return result;
+            }
+            
+            // convert array to string matrices
+            if (util.isArray(matrix)) {
+                // expecting: [a, b, c, d, tx, ty]
+                result = "";
+                
+                if (matrix.length < 6) {
+                    err("Insufficient");
+                }
+                
+                if (matrix.length > 6) {
+                    err("Redundant");
+                }
+                
+                // remove excess values
+                matrix = matrix.slice(0, 6);
+                
+                // add missing values
+                for (i = 0, len = 6; i < len; i += 1) {
+                    if (!util.isDefined(matrix[i])) {
+                        matrix[i] = 0;
+                    }
+                }
+                
+                // serialise array
+                result = "matrix(" +
+                    util.serialise(matrix).replace("[", "").replace("]", "") +
+                    ")";
+                
+                return result;
+            }
+        };
+            
+        // capitalise the first letter of every word in string
+        // doesn't support multiple whitespaces currently
+        Util.prototype.capitalise = function (string) {
+            var words = string.split(" "),
+                len = words.length,
+                i = 0,
+                ch;
+            
+            // make every word capitalised
+            for (i; i < len; i += 1) {
+                ch = words[i].charAt(0).toUpperCase();
+                words[i] = ch + words[i].slice(1);
+            }
+            
+            // return words separated by one space
+            return words.join(" ");
+        };
 
         // returns true or the index
         Util.prototype.contains = function (host, target, strict) {
@@ -585,8 +808,9 @@ define(
             // make sure target and host are defined
             if (typeof host === "undefined" || host === "") {
                 // throw an error if host is undefined
-                throw new Error("Could not determine a contained value, " +
+                util.log("error", "Could not determine a contained value, " +
                                "haystack object is undefined!");
+                return false;
             }
             
             if (typeof target === "undefined" || target === "") {
@@ -722,21 +946,40 @@ define(
         
         // merge two objects
         Util.prototype.merge = function (one, two, overwrite) {
-            var i,
-                exists;
+            var duplicate,
+                exists,
+                len,
+                i;
             
-            // loop through all two's props
-            // and push into one
-            for (i in two) {
-                if (two.hasOwnProperty(i)) {
-                    exists = typeof one[i] !== "undefined";
-                    
-                    if (!exists || (exists && overwrite)) {
-                        if (util.isObject(two[i])) {
-                            util.merge(one[i], two[i], overwrite);
-                        } else {
-                            one[i] = two[i];
+            // object merge
+            if (util.isObject(one)) {
+                // loop through all two's props
+                // and push into one
+                for (i in two) {
+                    if (two.hasOwnProperty(i)) {
+                        exists = typeof one[i] !== "undefined";
+
+                        if (!exists || (exists && overwrite)) {
+                            if (util.isObject(two[i])) {
+                                util.merge(one[i], two[i], overwrite);
+                            } else {
+                                one[i] = two[i];
+                            }
                         }
+                    }
+                }
+            }
+            
+            // array merge
+            if (util.isArray(one)) {
+                // loop through all two's items
+                // and push into one
+                duplicate = overwrite;
+                len = two.length;
+                i = 0;
+                for (i; i < len; i += 1) {
+                    if (!util.contains(one, two[i]) || duplicate) {
+                        one.push(two[i]);
                     }
                 }
             }
@@ -753,8 +996,8 @@ define(
                 value,
                 separate = false;
             
-            // default to json usage
-            json = json || true;
+            // default to not using json lib
+            json = (typeof json !== "undefined") ? json : false;
             
             // this should capture simple types
             // e.g. strings and numbers
@@ -773,7 +1016,7 @@ define(
                     for (index in object) {
                         if (object.hasOwnProperty(index)) {
                             // add object value?
-                            result += index + ":" +
+                            result += "\"" + index + "\":" +
                                 util.serialise(object[index], json);
 
                             // if is last element
@@ -811,7 +1054,7 @@ define(
                     
                     // push to result
                     if (util.isString(value)) {
-                        result += "'" + value + "'";
+                        result += "\"" + value + "\"";
                     } else if (util.isNumber(value)) {
                         result += value;
                     } else {
@@ -822,9 +1065,9 @@ define(
                 result += "]";
             }
             
-            // wrap string with '
+            // wrap string with "'s
             if (util.isString(object)) {
-                return "'" + result + "'";
+                return "\"" + result + "\"";
             }
             
             return result;
@@ -832,29 +1075,21 @@ define(
         
         // unserialise a data structure
         Util.prototype.unserialise = function (string, json) {
-            var result,
-                parts,
-                index,
-                length,
+            var result, parts,
+                index, length,
                 props;
             
-            // default to json usage
-            json = json || true;
+            // default to use json lib (no object parser yet)
+            json = (typeof json !== "undefined") ? json : true;
             
             // parse an array from string
             function parseArray(str) {
-                var result = [],
+                var result = [], value = "",
                     nstruct = new RegExp(/(\[)|(\{)/g),
                     estruct = new RegExp(/(\])|(\})/g),
                     instr = false,
-                    strch,
-                    value = "",
-                    eov,
-                    len,
-                    ch,
-                    pch,
-                    depth = 0,
-                    i = 0;
+                    strch, eov, len, ch, pch,
+                    depth = 0, i = 0;
                 
                 // clean up the string
                 str = str.replace(/\s,*/g, "");
@@ -871,11 +1106,15 @@ define(
                     
                     // check if string
                     if (ch === "'" || ch === '"') {
+                        // string char found
                         if (pch !== "\\" && ch === strch) {
+                            // not escaped
                             if (instr && ch === strch) {
+                                // ended a string
                                 instr = false;
                                 strch = "";
                             } else if (!instr) {
+                                // entering a new string
                                 instr = true;
                                 strch = ch;
                             }
@@ -892,11 +1131,12 @@ define(
                         depth -= 1;
                     }
                     
-                    // end of value flag
+                    // end of value flagged
                     eov = ((ch === "," || estruct.test(ch))
-                           && !depth
-                           && !instr);
+                           && !depth // not in a structure
+                           && !instr); // not in a string
                     
+                    // end of current value - unserialise it and continue
                     if (eov || i === len) {
                         result.push(util.unserialise(value, json));
                         value = "";
@@ -941,8 +1181,12 @@ define(
                         str.charAt(str.length - 1).match(quote)) {
                     str = str.substring(1, str.length - 1);
                 } else {
-                    // assume number if no quotes
-                    str = Number(str);
+                    // check if number - return string if not
+                    if (isNaN(parseFloat(str, 10))) {
+                        return str;
+                    } else {
+                        str = parseFloat(str, 10);
+                    }
                 }
                 
                 return str;
@@ -997,6 +1241,71 @@ define(
             
             return list;
         };
+            
+        // returns *approximated* object size in bytes
+        Util.prototype.sizeof = function (object) {
+            var bytes = 0,
+                len,
+                i;
+            
+            if (object !== null && object !== undefined) {
+                switch (typeof object) {
+                case "string":
+                    bytes += object.length * 2;
+                    break;
+                case "number":
+                    bytes += 8;
+                    break;
+                case "boolean":
+                    bytes += 4;
+                    break;
+                case "object":
+                    // object
+                    if (util.isObject(object)) {
+                        for (i in object) {
+                            if (object.hasOwnProperty(i)) {
+                                bytes += util.sizeof(object[i]);
+                            }
+                        }
+                    }
+                        
+                    // array
+                    if (util.isArray(object)) {
+                        len = object.length;
+                        i = 0;
+                        
+                        for (i; i < len; i += 1) {
+                            bytes += util.sizeof(object[i]);
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            return bytes;
+        };
+            
+        // format number to bytes
+        Util.prototype.bytesFormat = function (x) {
+            // bytes
+            if (x < 1014) {
+                return x + "bytes";
+            }
+            
+            // kilobytes
+            if (x < 1048576) {
+                return (x / 1024).toFixed(3) + "KB";
+            }
+            
+            // megabytes
+            if (x < 1073741824) {
+                return (x / 1048576).toFixed(3) + "MB";
+            }
+            
+            // gigabytes
+            return (x / 1073741824).toFixed(3) + "GB";
+        };
         
         // log wrapper
         Util.prototype.log = function (context, type, msg, opt) {
@@ -1005,6 +1314,9 @@ define(
                 return;
             }
 
+            // increment log count
+            cache.logCount += 1;
+            
             // declarations
             var i = 0, param, args = [],
                 filter = config.logs.filter,
@@ -1207,277 +1519,101 @@ define(
         Util.prototype.log.clearContext = function (context) {
             events.publish("gui/contexts/clear", context);
         };
+            
+        // logging aliases
+        Util.prototype.debug = function () {
+            util.log("debug");
+        };
+        Util.prototype.warn = function () {
+            util.log("warn");
+        };
+        Util.prototype.error = function () {
+            util.log("error");
+        };
         
-        // create instance
-        instance = new Util();
+        // log
         util.log("+ util.js loaded");
 
-        return instance;
+        // return instance
+        return util;
     }
 );
 
 /*
 *   @type javascript
-*   @name node.js
+*   @name exception.js
 *   @copy Copyright 2015 Harry Phillips
 */
 
 /*global define: true */
 
-define(
-    'main/components/node',['config', 'main/components/util'],
-    function (config, util) {
+define('main/components/exception',["main/components/util"], function (util) {
+    
+    
+    function Exception(err, msg) {
+        this.fileName = err.fileName;
+        this.lineNumber = err.lineNumber;
+        this.message = err.message;
         
-        
-        // node constructor
-        function Node(type, classes, id) {
-            // check if passed an HTML node
-            if (typeof type.appendChild !== "undefined") {
-                this.element = type;
-            } else {
-                // set props
-                this.settings = {
-                    type: type,
-                    classes: classes,
-                    id: id
-                };
-
-                // create element
-                this.element = document.createElement(type);
-                this.element.className = classes || "";
-
-                if (id) {
-                    this.element.id = id;
-                }
-            }
-        }
-        
-        // show node
-        Node.prototype.show = function () {
-            this.element.style.display = "block";
-        };
-        
-        // hide node
-        Node.prototype.hide = function () {
-            this.element.style.display = "none";
-        };
-        
-        // fade in node
-        Node.prototype.fadeIn = function (args) {
-            if (typeof window.jQuery === "undefined") {
-                this.show();
-            }
-            
-            // jquery fade in
-            window.jQuery(this.element).fadeIn(args);
-        };
-        
-        // fade out node
-        Node.prototype.fadeOut = function (args) {
-            if (typeof window.jQuery === "undefined") {
-                this.hide();
-                return;
-            }
-            
-            // jquery fade out
-            window.jQuery(this.element).fadeOut(args);
-        };
-        
-        // return current element id
-        Node.prototype.getId = function () {
-            return this.element.id;
-        };
-        
-        // return current element classes
-        Node.prototype.getClasses = function () {
-            return this.element.className;
-        };
-        
-        // return if node has a class
-        Node.prototype.hasClass = function (name) {
-            var i, len,
-                found = false;
-            
-            // is there an array of names to check?
-            if (util.isArray(name)) {
-                len = name.length;
-                for (i = 0; i < len; i += 1) {
-                    if (this.element.className.indexOf(name[i]) !== -1) {
-                        found = true;
-                    }
-                }
-            } else {
-                if (this.element.className.indexOf(name) !== -1) {
-                    found = true;
-                }
-            }
-            
-            return found;
-        };
-        
-        // add class(es) to node
-        Node.prototype.addClass = function (classes) {
-            if (this.element.className === "") {
-                // no previous classes
-                this.element.className = classes;
-            } else {
-                // add whitespace
-                this.element.className += " " + classes;
-            }
-        };
-
-        // remove class(es) from node
-        Node.prototype.removeClass = function (classes) {
-            // declarations
-            var curr = this.element.className,
-                newclass,
-                i,
-                
-                remove = function (name) {
-                    if (curr.indexOf(" " + name) !== -1) {
-                        newclass = curr.replace(" " + name, "");
-                    } else if (curr.indexOf(name + " ") !== -1) {
-                        newclass = curr.replace(name + " ", "");
-                    } else {
-                        newclass = curr.replace(name, "");
-                    }
-                };
-            
-            // check if array or single string
-            if (util.isArray(classes)) {
-                // preserve current classes
-                newclass = curr;
-                
-                // remove all classes
-                for (i = 0; i < classes.length; i += 1) {
-                    remove(classes[i]);
-                }
-            } else {
-                remove(classes);
-            }
-            
-            // set new classes
-            this.element.className = newclass;
-        };
-        
-        // set class(es) to node
-        // removes all other classes
-        Node.prototype.setClass = function (classes) {
-            this.element.className = classes;
-        };
-        
-        // get parent node
-        Node.prototype.parent = function () {
-            return this.element.parentNode;
-        };
-        
-        // add a child to node
-        Node.prototype.addChild = function (child) {
-            // check if node is an instance of class Node
-            if (child.constructor === Node || child instanceof Node) {
-                this.element.appendChild(child.element);
-                return;
-            }
-            
-            // just a HTML node, append
-            this.element.appendChild(child);
-        };
-
-        // create and add child to node
-        Node.prototype.createChild = function (type, classes, id) {
-            var child = new Node(type, classes, id);
-            this.addChild(child.element);
-            return child;
-        };
-        
-        // detach from parent
-        Node.prototype.detach = function () {
-            this.element.parentNode.removeChild(this.element);
-        };
-        
-        // (re)attach to parent
-        Node.prototype.attach = function () {
-            this.element.parentNode.appendChild(this.element);
-        };
-        
-        // delete and reset node and it's children
-        Node.prototype.destroy = function () {
-            this.parent().removeChild(this.element);
-            this.element = null;
-        };
-        
-        // clone node instance and return
-        Node.prototype.clone = function () {
-            var clone = new Node(
-                this.settings.type,
-                this.getClasses(),
-                this.getId()
-            );
-            
-            // nullify the new node element and clone this
-            clone.element = null;
-            clone.element = this.element.cloneNode();
-            
-            return clone;
-        };
-        
-        // focus on node
-        Node.prototype.focus = function () {
-            this.element.focus();
-            return this;
-        };
-        
-        // set attribute to node
-        Node.prototype.attr = function (name, value) {
-            if (typeof value === "undefined") {
-                return this.element.getAttribute(name);
-            }
-            
-            this.element.setAttribute(name, value);
-            return this;
-        };
-        
-        // write or return node text
-        Node.prototype.text = function (text) {
-            if (typeof text === "undefined") {
-                return this.element.textContent
-                    || this.element.value;
-            }
-            
-            text = document.createTextNode(text);
-            this.addChild(text);
-            return this;
-        };
-        
-        // set value of a node
-        Node.prototype.val = function (value) {
-            if (typeof value === "undefined") {
-                return this.element.value;
-            }
-            
-            this.element.value = value;
-            return this;
-        };
-        
-        // Node event listeners
-        Node.prototype.on = function (event, listener) {
-            this.element.addEventListener(event, listener);
-            return this;
-        };
-        
-        // write node to specified element
-        // mostly used when function chaining node fn's
-        Node.prototype.writeTo = function (element) {
-            if (typeof element === "undefined") {
-                return;
-            }
-            
-            element.appendChild(this.element);
-        };
-        
-        return Node;
+        util.log(
+            "error",
+            msg + " | Exception thrown in " +
+                err.fileName + " at line " +
+                err.lineNumber + ". Error: " +
+                err.message
+        );
     }
-);
+    
+    return Exception;
+});
+/*
+*   @type javascript
+*   @name repository.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define('main/components/repository',[],function () {
+    
+
+    // shared
+    var box = {},
+        instance;
+
+    // repository class
+    function Repository() {}
+
+    // add an object to the repo under key
+    Repository.prototype.add = function (key, object) {
+        // already exists
+        if (box[key]) {
+            throw new Error(
+                "Couldn't add '" + key + "' to the repository, " +
+                    " key already exists. Delete the key first."
+            );
+        }
+
+        box[key] = object;
+    };
+
+    // get an object from the repo
+    Repository.prototype.get = function (key) {
+        return box[key];
+    };
+
+    // delete an object from the repo
+    Repository.prototype.del = function (key) {
+        delete box[key];
+    };
+    
+    // list all repo objects
+    Repository.prototype.all = function () {
+        return box;
+    };
+
+    return Repository;
+});
 /*
 *   @type javascript
 *   @name counter.js
@@ -1635,6 +1771,558 @@ define('main/components/viewloader',['require'],function (require) {
 });
 /*
 *   @type javascript
+*   @name node.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+define(
+    'main/ui/node',['config', 'main/components/util'],
+    function (config, util) {
+        
+        
+        // instance monitoring
+        var ALL_NODES = [];
+        
+        // node constructor
+        function Node(type, classes, id) {
+            // is a selector passed
+            if (util.isString(type)) {
+                if (type.charAt(0) === "#" || type.charAt(0) === ".") {
+                    return new Node(document.querySelector(type), classes, id);
+                }
+            }
+            
+            // check if a node with this exact element
+            // already exists - if it does, return it
+            var len = ALL_NODES.length,
+                assoc = this.findAssociatedNode(type),
+                i = 0;
+            
+            
+            // return associated Node instance if found
+            if (assoc) {
+                return assoc;
+            }
+            
+            // update instance monitor
+            ALL_NODES.push(this);
+            
+            // props
+            this.children = [];
+            this.textNodes = [];
+            
+            // check if passed an HTML node
+            if (util.isDomElement(type)) {
+                this.element = type;
+            } else {
+                // set props
+                this.settings = {
+                    type: type,
+                    classes: classes,
+                    id: id
+                };
+
+                // create element
+                this.element = document.createElement(type);
+                this.element.className = classes || "";
+
+                if (id) {
+                    this.element.id = id;
+                }
+            }
+        }
+        
+        // show node
+        Node.prototype.show = function () {
+            this.element.style.display = "block";
+            return this;
+        };
+        
+        // hide node
+        Node.prototype.hide = function () {
+            this.element.style.display = "none";
+            return this;
+        };
+        
+        // toggle node
+        Node.prototype.toggle = function () {
+            var method = (this.element.style.display === "none") ? "block" : "none";
+            this.element.style.display = method;
+            return this;
+        };
+        
+        // fade in node
+        Node.prototype.fadeIn = function (args) {
+            if (typeof window.jQuery === "undefined") {
+                this.show();
+                return this;
+            }
+            
+            // jquery fade in
+            window.jQuery(this.element).fadeIn(args);
+            
+            return this;
+        };
+        
+        // fade out node
+        Node.prototype.fadeOut = function (args) {
+            if (typeof window.jQuery === "undefined") {
+                this.hide();
+                return this;
+            }
+            
+            // jquery fade out
+            window.jQuery(this.element).fadeOut(args);
+            
+            return this;
+        };
+        
+        // return current element id
+        Node.prototype.getId = function () {
+            return this.element.id;
+        };
+        
+        // return current element classes
+        Node.prototype.getClasses = function () {
+            return this.element.className;
+        };
+        
+        // return if node has a class
+        Node.prototype.hasClass = function (name) {
+            var i, len,
+                found = false;
+            
+            // is there an array of names to check?
+            if (util.isArray(name)) {
+                len = name.length;
+                for (i = 0; i < len; i += 1) {
+                    if (this.element.className.indexOf(name[i]) !== -1) {
+                        found = true;
+                    }
+                }
+            } else {
+                if (this.element.className.indexOf(name) !== -1) {
+                    found = true;
+                }
+            }
+            
+            return found;
+        };
+        
+        // add class(es) to node
+        Node.prototype.addClass = function (classes) {
+            if (this.element.className.indexOf(classes) !== -1) {
+                return;
+            }
+            
+            if (this.element.className === "") {
+                // no previous classes
+                this.element.className = classes;
+            } else {
+                // add whitespace
+                this.element.className += " " + classes;
+            }
+        };
+
+        // remove class(es) from node
+        Node.prototype.removeClass = function (classes) {
+            // declarations
+            var curr = this.element.className,
+                newclass,
+                i,
+                remove = function (name) {
+                    if (curr.indexOf(" " + name) !== -1) {
+                        newclass = curr.replace(" " + name, "");
+                    } else if (curr.indexOf(name + " ") !== -1) {
+                        newclass = curr.replace(name + " ", "");
+                    } else {
+                        newclass = curr.replace(name, "");
+                    }
+                };
+            
+            // check if array or single string
+            if (util.isArray(classes)) {
+                // preserve current classes
+                newclass = curr;
+                
+                // remove all classes
+                for (i = 0; i < classes.length; i += 1) {
+                    this.removeClass(classes[i]);
+                }
+            } else {
+                remove(classes);
+            }
+            
+            // set new classes
+            this.element.className = newclass;
+        };
+        
+        // set class(es) to node
+        // removes all other classes
+        Node.prototype.setClass = function (classes) {
+            this.element.className = classes;
+        };
+        
+        // toggles a class on a node
+        Node.prototype.toggleClass = function (name) {
+            if (this.hasClass(name)) {
+                this.removeClass(name);
+            } else {
+                this.addClass(name);
+            }
+        };
+        
+        // css rule changes
+        Node.prototype.css = function (rule, property, after) {
+            var rules = rule.split("-"),
+                i;
+            
+            // if more than one piece to rule name
+            if (rules.length > 1) {
+                // capitalise names after first name
+                for (i = 1; i < rules.length; i += 1) {
+                    rules[i] = util.capitalise(rules[i]);
+                }
+            }
+            
+            // join to form new rule
+            rule = rules.join("");
+            
+            // get or set?
+            if (typeof property === "undefined" || property === "") {
+                // return computed style
+                return window.getComputedStyle(this.element, null).getPropertyValue(rule);
+            } else {
+                this.element.style[rule] = property;
+            }
+            
+            return this;
+        };
+        
+        // return computed style
+        Node.prototype.getComputedStyle = function (rule) {
+            return window.getComputedStyle(this.element, null).getPropertyValue(rule);
+        };
+        
+        // get parent node
+        Node.prototype.parent = function () {
+            if (!this.element) {
+                return null;
+            }
+            
+            return this.element.parentNode;
+        };
+        
+        // add a child to node
+        Node.prototype.addChild = function (child) {
+            // check if child is an instance of class Node
+            if (child.constructor === Node || child instanceof Node) {
+                this.element.appendChild(child.element);
+                this.children.push(child);
+                return child;
+            }
+            
+            // if is a dom element, then call add again
+            if (util.isDomElement(child)) {
+                child = new Node(child);
+                return this.addChild(child);
+            }
+            
+            // if is a text node just append
+            if (util.isTextNode(child)) {
+                this.textNodes.push(child);
+                this.element.appendChild(child);
+                return child;
+            }
+            
+            // failed
+            util.log(
+                "error",
+                this,
+                "Attempt to add a child element to Node failed, " +
+                    "child is not of type Node or HTMLElement."
+            );
+        };
+
+        // create and add child to node
+        Node.prototype.createChild = function (type, classes, id) {
+            var child = new Node(type, classes, id);
+            this.addChild(child);
+            return child;
+        };
+        
+        // detach from parent
+        Node.prototype.detach = function () {
+            return this.element.parentNode.removeChild(this.element);
+        };
+        
+        // (re)attach to parent
+        Node.prototype.attach = function () {
+            this.element.parentNode.appendChild(this.element);
+        };
+        
+        // move to another element
+        Node.prototype.move = function (destination) {
+            var el = this.detach();
+            
+            // attach to destination
+            if (util.isNode(destination)) {
+                destination.addChild(el);
+            } else if (util.isDomElement(destination)) {
+                destination.appendChild(el);
+            }
+        };
+        
+        // translate the element by (x, y)
+        Node.prototype.translate = function (x, y) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+        
+            if (currMatrix === "none") {
+                // if no matrix found just create one
+                matrix = [0, 0, 0, 0, x, y];
+            } else {
+                // get array of matrix
+                matrix = util.matrix(currMatrix);
+                
+                // add x & y values to matrix
+                matrix[4] = x;
+                matrix[5] = y;
+            }
+            
+            // reserialise matrix to string
+            matrix = util.matrix(matrix);
+            
+            // apply new transformation matrix
+            this.css("transform", matrix);
+        };
+        
+        // scales the element to val
+        Node.prototype.scale = function (val) {
+            // get current matrix settings in string form
+            var currMatrix = this.css("transform"),
+                matrix;
+            
+            if (currMatrix === "none") {
+                // no matrix found so create new
+                matrix = [val, 0, 0, val, 0, 0];
+            } else {
+                // get array of current matrix
+                
+                // set scale (a & d / 0 & 3)
+                matrix[0] = val;
+                matrix[3] = val;
+            }
+            
+            // reserialise the matrix to a string
+            matrix = util.matrix(matrix);
+            
+            // apply the transformation
+            this.css("transform", matrix);
+        };
+        
+        // get node x
+        Node.prototype.getBounds = function (pos) {
+            var bounds = this.element.getBoundingClientRect();
+            
+            // center of element
+            if (pos === "center") {
+                return util.diff(bounds.left, bounds.right) / 2;
+            }
+            
+            return bounds[pos];
+        };
+        
+        // delete and reset node and it's children
+        Node.prototype.destroy = function () {
+            var xlen = this.children.length,
+                ylen = ALL_NODES.length,
+                x = 0,
+                y = 0;
+            
+            // call destroy on children
+            if (xlen) {
+                for (x; x < xlen; x += 1) {
+                    if (this.children[x]) {
+                        this.children[x].destroy();
+                        this.children[x] = null;
+                    }
+                }
+            }
+            
+            // remove from global node list
+            if (ylen) {
+                for (y; y < ylen; y += 1) {
+                    if (ALL_NODES[y]) {
+                        if (ALL_NODES[y].element === this.element) {
+                            ALL_NODES.splice(y, 1);
+                        }
+                    }
+                }
+            }
+            
+            // nullify if no parent node
+            if (!this.parent()) {
+                this.element = null;
+                return;
+            }
+            
+            // remove from DOM by detaching from parent
+            this.parent().removeChild(this.element);
+        };
+        
+        // find occurences of an element by selector within this node
+        // always returns as an array
+        Node.prototype.find = function (selector) {
+            var nodeList = this.element.querySelectorAll(":scope " + selector),
+                len = nodeList.length,
+                results = [],
+                i = 0;
+            
+            // iterate over results
+            // convert to Node - will get existing
+            // node if element is already a node
+            for (i; i < len; i += 1) {
+                results.push(new Node(nodeList[i]));
+            }
+            
+            return results;
+        };
+        
+        // clear a node of its children
+        Node.prototype.clear = function () {
+            var i = 0,
+                len = this.children.length;
+            
+            for (i; i < len; i += 1) {
+                this.children[i].destroy();
+            }
+        };
+        
+        // clone node instance and return
+        Node.prototype.clone = function () {
+            var clone = new Node(
+                this.settings.type,
+                this.getClasses(),
+                this.getId()
+            );
+            
+            // nullify the new node element and clone this
+            clone.element = null;
+            clone.element = this.element.cloneNode();
+            
+            return clone;
+        };
+        
+        // focus on node
+        Node.prototype.focus = function () {
+            this.element.focus();
+            return this;
+        };
+        
+        // set attribute to node
+        Node.prototype.attr = function (name, value) {
+            if (typeof value === "undefined") {
+                return this.element.getAttribute(name);
+            }
+            
+            this.element.setAttribute(name, value);
+            return this;
+        };
+        
+        // write or return node text
+        Node.prototype.text = function (text, clear) {
+            if (typeof text === "undefined") {
+                return this.element.textContent
+                    || this.element.value;
+            }
+            
+            if (clear) {
+                this.element.textContent = "";
+                this.element.value = "";
+            }
+            
+            text = document.createTextNode(text);
+            this.addChild(text);
+            return this;
+        };
+        
+        // set value of a node
+        Node.prototype.val = function (value) {
+            if (typeof value === "undefined") {
+                // select element case
+                if (this.element.nodeName === "SELECT") {
+                    return this.element.selectedOptions[0].value;
+                }
+                
+                return this.element.value;
+            }
+            
+            this.element.value = value;
+            return this;
+        };
+        
+        // add node event handler
+        Node.prototype.on = function (event, listener) {
+            this.element.addEventListener(event, listener);
+            return this;
+        };
+        
+        // remove node event handler
+        Node.prototype.off = function (event, listener) {
+            this.element.removeEventListener(event, listener);
+            return this;
+        };
+        
+        // write node to specified element
+        // mostly used when function chaining node fn's
+        Node.prototype.writeTo = function (element) {
+            if (typeof element === "undefined") {
+                return;
+            }
+            
+            element.appendChild(this.element);
+        };
+        
+        // checks if node has child nodes
+        Node.prototype.hasChildren = function () {
+            return this.children.length;
+        };
+        
+        // checks if the node's element matches this element
+        Node.prototype.is = function (element) {
+            return this.element === element;
+        };
+        
+        // find the node which belongs to passed element
+        Node.prototype.findAssociatedNode = function (element) {
+            var len = ALL_NODES.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (ALL_NODES[i].element === element) {
+                    return ALL_NODES[i];
+                }
+            }
+            
+            return false;
+        };
+        
+        // monitoring
+        Node.prototype.count = function () {
+            return ALL_NODES.length;
+        };
+        
+        Node.prototype.ALL_NODES = ALL_NODES;
+        
+        return Node;
+    }
+);
+/*
+*   @type javascript
 *   @name modal.js
 *   @copy Copyright 2015 Harry Phillips
 */
@@ -1643,7 +2331,30 @@ define('main/components/viewloader',['require'],function (require) {
 
 /*
 *   TODO
-*   + Handle element events
+*   + Incorporate a config object to modify how modals react to
+*     multiple modals at once.
+*     (e.g. Auto-closing a modal on opening
+*     of another, moving modals around the screen to show more than
+*     one at a time perhaps?)
+*
+*   + Dynamic modal event handler attachment
+*   + Rewrite the modal queueing system (again!) as currently it doesn't
+*     scale too well.
+*
+*
+*   NOTES
+*   + Open and closing of a single modal should behave as normal.
+*
+*   + If a modal is opened and another modal is already open, the
+*     active modal needs to be pushed into the stack or hidden
+*     (depending on configured behaviour) and the requested modal
+*     opens as normal.
+*
+*   + If a stacked modal is clicked, it should be made the active modal
+*     and the previously active modal needs to be pushed to stack
+*
+*   + If a stacked modal's close button is clicked it should be removed
+*     from the stack without affecting other modals
 */
 
 define(
@@ -1652,660 +2363,685 @@ define(
         'main/components/util',
         'main/components/events',
         'main/components/status',
+        'main/components/repository',
         'main/components/http',
-        'main/components/node',
-        'main/components/viewloader'
+        'main/components/viewloader',
+        'main/ui/node'
     ],
-    function (
-        config,
-        util,
-        events,
-        status,
-        Http,
-        Node,
-        ViewLoader
-    ) {
+    function (config,
+        util, events,
+        status, repo, Http,
+        ViewLoader, Node) {
         
         
-        // shared vars between instances
+        // event logger
+        function evtlog(modal, event) {
+            util.log(
+                "context:gui",
+                "debug",
+                "Modal '" + modal.viewName + "' " +
+                    "event '" + event + "' fired"
+            );
+        }
+        
+        // global/shared variables
         var gui,
-            self,
             vloader = new ViewLoader(),
-            activeModals = [];
+            ctrl;
         
-        // modal class
-        function Modal(view, params) {
-            self = this;
+        /* ModalController Class
+        ---------------------------------------------*/
+        function ModalController() {
+            // list of all modal objects/arrays
+            this.list = {};
             
-            // if already instantiated return
-            if (util.contains(activeModals, view)) {
+            // modal states
+            this.active = null;
+            this.stacked = [];
+            this.opened = [];
+            
+            // queue processing
+            events.subscribe(
+                [
+                    "gui/modal/open",
+                    "gui/modal/close",
+                    "gui/modal/destruct"
+                ],
+                this.processStack.bind(this)
+            );
+            
+            // events list
+            this.events = [
+                "init", "load", "reload", "open", "close",
+                "destruct", "confirm", "proceed", "cancel"
+            ];
+            
+            var len = this.events.length,
+                i = 0;
+            
+            // event logging
+            for (i; i < len; i += 1) {
+                events.subscribe(
+                    "gui/modal/" + this.events[i],
+                    evtlog
+                );
+            }
+        }
+        
+        // begin processing the modal queue
+        ModalController.prototype.processStack = function processStack(data, event) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                
+                modal = data;
+            
+            util.log("context:gui", "debug", "processing modal stack");
+            
+            // new modal opened
+            if (event === "gui/modal/open") {
+                // push current modal into stack
+                if (active && !active.dueRemoval) {
+                    this.addToStack(active);
+                }
+                
+                this.addToOpened(modal);
+            }
+            
+            // modal closed - re-open first in stack
+            if (event === "gui/modal/close") {
+                // if in stack, remove it
+                if (this.isStacked(modal)) {
+                    this.removeFromStack(modal);
+                }
+                
+                if (stacked.length) {
+                    // take out new modal from stack and open it
+                    modal = stacked[stacked.length - 1];
+                    modal.open();
+                    this.removeFromStack(modal);
+                } else if (!opened.length) {
+                    // reset
+                    this.active = null;
+                    gui.preserveOverlay = false;
+                    
+                    if (!status.interactor.taskDetailsExpanded) {
+                        gui.hideOverlay();
+                    }
+                }
+                
+                this.removeFromOpened(modal);
+            }
+            
+            // should preserve overlay?
+            if (stacked.length || opened.length) {
+                gui.preserveOverlay = true;
+            }
+        };
+        
+        // adds a modal to the stack
+        ModalController.prototype.addToStack = function (modal, index) {
+            util.log(
+                "context:gui",
+                "debug",
+                "Adding modal '" + modal.viewName + "' to stack"
+            );
+            
+            // add stacked class
+            modal.node.addClass("kbs-stacked");
+            
+            // push to stack
+            if (!index) {
+                this.stacked.push(modal);
+            } else {
+                this.stacked[index] = modal;
+            }
+            
+            // shift stack
+            this.shiftStack();
+        };
+        
+        // removes a modal from the stack
+        ModalController.prototype.removeFromStack = function (modal) {
+            var array = this.stacked,
+                index = array.indexOf(modal);
+            
+            // remove from stack
+            this.stacked.splice(index, 1);
+            
+            // remove stacked class
+            modal.node.removeClass("kbs-stacked");
+            
+            // shift stack
+            this.shiftStack();
+            
+            util.log(
+                "context:gui",
+                "debug",
+                "Removed modal '" + modal.viewName + "' from stack"
+            );
+        };
+        
+        // shifts elements in the stack
+        ModalController.prototype.shiftStack = function () {
+            var stack = this.stacked,
+                len = stack.length,
+                i = 0,
+                modal,
+                offset;
+            
+            if (!this.getBehaviour("shift")) {
                 return;
             }
             
-            // add to the active modals array
-            activeModals.push(view);
+            util.log(
+                "context:gui",
+                "debug",
+                "shifting stack"
+            );
+            
+            for (i; i < len; i += 1) {
+                modal = stack[i];
+                
+                // remove initial shift classes
+                modal.node.removeClass("kbs-shift-left");
+                modal.node.removeClass("kbs-shift-right");
+                
+                // get an offset
+                if (i !== 0) {
+                    if (util.isEven(i)) {
+                        offset = "kbs-shift-left";
+                    }
+
+                    if (util.isOdd(i)) {
+                        offset = "kbs-shift-right";
+                    }
+
+                    modal.node.addClass(offset);
+
+                    util.log(
+                        "context:gui",
+                        "debug",
+                        "set offset of " + offset + " to '" +
+                            modal.viewName + "'"
+                    );
+                }
+            }
+        };
+        
+        // swap active modal with one in stack
+        ModalController.prototype.swapStack = function (index) {
+            var active = this.active,
+                opened = this.opened,
+                stacked = this.stacked,
+                modal;
+            
+            // passed an index
+            if (util.isNumber(index)) {
+                modal = stacked[index];
+                return;
+            }
+            
+            // passed a modal view name
+            if (util.isString(index)) {
+                modal = this.getModalByName(index);
+            }
+            
+            // passed a modal object
+            if (util.isObject(index)) {
+                modal = index;
+            }
+            
+            // remove clicked from stack
+            this.removeFromStack(modal);
+            
+            // update stack positions
+            this.shiftStack();
+            
+            // add active modal to stack
+            this.addToStack(active);
+            
+            // set active modal
+            this.active = modal;
+        };
+        
+        // returns index for modal in stack
+        ModalController.prototype.getStackIndex = function (modal) {
+            var stacked = this.stacked,
+                len = stacked.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                if (stacked[i] === modal) {
+                    return i;
+                }
+            }
+        };
+        
+        // add a new modal instance
+        ModalController.prototype.addModal = function (modal) {
+            this.list[modal.viewName] = modal;
+        };
+        
+        // remove a modal instance
+        ModalController.prototype.removeModal = function (modal) {
+            delete this.list[modal.viewName || modal];
+        };
+        
+        // adds a modals to the queue
+        ModalController.prototype.addToQueue = function (modal) {
+            this.queued.push(modal);
+        };
+        
+        // removes a modal from the queue
+        ModalController.prototype.removeFromQueue = function (modal) {
+            var array = this.queued,
+                index = array.indexOf(modal.viewName || modal);
+            
+            this.queued.splice(index, 1);
+        };
+        
+        // adds a modal to the opened modals array
+        ModalController.prototype.addToOpened = function (modal) {
+            this.opened.push(modal);
+        };
+        
+        // removes a modal from the opened modals array
+        ModalController.prototype.removeFromOpened = function (modal) {
+            var array = this.opened,
+                index = array.indexOf(modal.viewName || modal);
+            
+            this.opened.splice(index, 1);
+        };
+        
+        // checks if a modal is active
+        ModalController.prototype.isActive = function (modal) {
+            return this.active === modal;
+        };
+        
+        // checks if a modal is open
+        ModalController.prototype.isOpen = function (modal) {
+            return this.opened.indexOf(modal) !== -1;
+        };
+        
+        // checks if a modal is queued
+        ModalController.prototype.isQueued = function (modal) {
+            return this.queued.indexOf(modal) !== -1;
+        };
+        
+        // checks if a modal is stacked
+        ModalController.prototype.isStacked = function (modal) {
+            return this.stacked.indexOf(modal) !== -1;
+        };
+        
+        // returns a modal by view name
+        ModalController.prototype.getModalByName = function (name) {
+            return this.list[name];
+        };
+        
+        // checks if a modal exists
+        ModalController.prototype.exists = function (name) {
+            var exists = false,
+                modal = this.getModalByName(name);
+            
+            // check definition
+            if (typeof modal !== "undefined" && modal !== null) {
+                exists = true;
+            }
+            
+            return exists;
+        };
+        
+        // checks a behaviour setting
+        ModalController.prototype.getBehaviour = function (name) {
+            return config.gui.modals.behaviour[name];
+        };
+        
+        // modal controller instance
+        ctrl = new ModalController();
+        
+        /* Modal Class
+        ---------------------------------------------*/
+        function Modal(view, params) {
+            // default params
+            params = params || {init: true};
+            
+            if (typeof params.init === "undefined") {
+                params.init = true;
+            }
+            
+            // return current instance
+            // if already exists
+            if (ctrl.exists(view)) {
+                var modal = ctrl.getModalByName(view);
+                
+                // if stacked
+                if (ctrl.isStacked(modal)) {
+                    ctrl.swapStack(modal);
+                    return modal;
+                }
+                
+                // check if call to init
+                if (params.init) {
+                    modal.init();
+                }
+                
+                return modal;
+            }
             
             // store props
             this.viewName = view;
+            this.viewParams = params.viewParams || {};
             this.params = params;
+            this.classes = params.classes || "";
+            this.inited = false;
+            this.loaded = false;
+            
+            // setup event
+            this.createEvents();
             
             // create and hide node
             this.node = new Node("div", "kbs-modal kbs-" + view);
+            this.node.addClass(this.classes);
             this.node.hide();
+            
+            // shield node
+            this.shieldNode = this.node.createChild("div", "kbs-modal-shield");
             
             // view element
             this.view = null;
             
+            // this should fix the 'this' refs
+            // for when our methods are called
+            // by external modules
+            this.init = this.rInit.bind(this);
+            this.open = this.rOpen.bind(this);
+            this.close = this.rClose.bind(this);
+            this.destroy = this.rDestroy.bind(this);
+            
             // set modal event handlers
             this.applyHandlers(params);
             
-            // load view and initialise
+            // load view and init
             this.load((params.init) ? this.init : function () {});
+            
+            // add modal to controller
+            ctrl.addModal(this);
         }
         
-        // load modal view
-        Modal.prototype.load = function (onload) {
-            self = this;
+        // setup and create modal events
+        Modal.prototype.createEvents = function () {
+            var x = 0, y,
+                len = ctrl.events.length,
+                evtcreate = function () {};
             
-            var view;
+            // setup modal specific events
+            this.eventName = {};
+            for (x; x < len; x += 1) {
+                this.eventName[ctrl.events[x]] = "gui/modal/" +
+                    this.viewName + x;
+            }
             
-            // load view from modals dir
+            // loop through events and create them
+            for (y in this.eventName) {
+                if (this.eventName.hasOwnProperty(y)) {
+                    events.subscribe(this.eventName[y], evtcreate);
+                }
+            }
+        };
+        
+        // load view into modal
+        Modal.prototype.load = function (callback) {
+            var self = this,
+                params = this.viewParams,
+                view;
+            
+            // return if already loaded
+            if (this.loaded) {
+                return;
+            }
+            
+            this.loaded = true;
+            
             vloader.load(
                 "modals/" + this.viewName,
                 function (mod) {
-                    view = mod.createView([gui, self]);
+                    // get new view
+                    view = mod.draw([gui, self, params]);
                     
+                    // set view to modal
                     self.view = view;
+                    self.viewModule = mod;
                     self.title = view.title;
                     
-                    onload();
+                    // publish
+                    self.trigger("load", self);
+                    
+                    // run callback
+                    if (util.isFunction(callback)) {
+                        callback();
+                    }
                 }
             );
         };
         
-        // init modal with content
-        Modal.prototype.init = function () {
-            // declarations
-            var
-                modal = self.node,
+        // reload modal a modals content
+        Modal.prototype.reload = function (page) {
+            var self = this,
+                view = this.viewModule,
+                render = view.draw([gui, self, self.viewParams], page),
+                content = this.node.find(".kbs-modal-content")[0];
             
-                title =
-                modal.createChild("h2", "kbs-modal-title"),
-                
-                close =
-                modal.createChild("i", "fa fa-times kbs-modal-closed"),
-                
-                content =
-                modal.createChild("p", "kbs-modal-content");
-            
-            // set title
-            title.text(self.title);
-            
-            // close handler
-            close.on("click", self.destroy);
-            
-            // append content from view
-            content.addChild(self.view);
-            
-            // add modal to gui
-            gui.addChild(modal);
-            
-            // open
-            self.open();
-        };
-            
-        // apply custom modal event handlers
-        Modal.prototype.applyHandlers = function (params) {
-            self = this;
-            
-            var err = function (event) {
-                // warning
-                util.log(
-                    "warn",
-                    "Modal '" +
-                        self.viewName +
-                        "' event '" +
-                        event +
-                        "' ran but didn't have a handler!"
-                );
-                
-                // destroy modal
-                self.destroy();
-            };
-            
-            // confirmation
-            this.onConfirm = params.confirm || function () {
-                err("confirm");
-            };
-            
-            // cancellation
-            this.onCancel = params.cancel || function () {
-                err("cancel");
-            };
-            
-            // continuation
-            this.onProceed = params.proceed || function () {
-                err("proceed");
-            };
+            content.clear();
+            content.addChild(render);
+            this.trigger("reload", this);
         };
         
-        // reveal modal and overlay
-        Modal.prototype.open = function () {
-            if (status.modal) {
+        // attach an event handler to modal
+        Modal.prototype.on = function (event, handler) {
+            try {
+                events.subscribe(
+                    this.eventName[event],
+                    handler
+                );
+            } catch (e) {
+                util.log(
+                    "error",
+                    "Modal handler attachment failed with: " +
+                        e.message
+                );
+            }
+        };
+        
+        // remove an event handler from modal
+        Modal.prototype.off = function (event, handler) {
+            try {
+                events.unsubscribe(
+                    this.eventName[event],
+                    handler
+                );
+            } catch (e) {
+                util.log(
+                    "error",
+                    "Modal handler removal failed with: " +
+                        e.message
+                );
+            }
+        };
+        
+        // trigger a modal event with data
+        Modal.prototype.trigger = function (event, data) {
+            events.publish("gui/modal/" + event, data);
+            events.publish(this.eventName[event], data);
+        };
+        
+        // hide modal
+        Modal.prototype.hide = function () {
+            this.node.hide();
+        };
+        
+        // show modal
+        Modal.prototype.show = function () {
+            this.node.show();
+        };
+        
+        // handler/listener application for modal
+        Modal.prototype.applyHandlers = function () {
+            var
+                // instance ref
+                self = this,
+            
+                // error handler
+                err = function (event) {
+                    // warning
+                    util.log(
+                        "warn",
+                        "Modal '" + self.viewName + "' " +
+                            "event '" + event + "' " +
+                            "ran but didn't have a handler!"
+                    );
+                },
+                
+                // modal params
+                params = this.params;
+            
+            // when shield is clicked - swap stack
+            this.shieldNode.on("click", function () {
+                ctrl.swapStack(self.viewName);
+            });
+
+            // attach modal event handlers
+            this.on("confirm", params.confirm || function () {
+                err("confirm");
+            });
+            
+            this.on("cancel", params.cancel || function () {
+                err("cancel");
+            });
+
+            this.on("proceed", params.proceed || function () {
+                err("proceed");
+            });
+        };
+        
+        // init modal
+        Modal.prototype.rInit = function () {
+            if (this.inited) {
+                // skip build and open
+                this.open();
+                return this;
+            }
+            
+            // declarations
+            var modal = this.node,
+                self = this,
+                title = modal.createChild(
+                    "h2",
+                    "kbs-modal-title"
+                ),
+                close = modal.createChild(
+                    "i",
+                    "fa fa-times kbs-modal-closed"
+                ),
+                content = modal.createChild(
+                    "p",
+                    "kbs-modal-content"
+                );
+            
+            // set content and append to gui
+            title.text(this.title);
+            close.on("click", function () {
+                // signal the stack processor that we
+                // shouldn't be captured
+                self.dueRemoval = true;
+                self.close();
+            });
+            content.addChild(this.view);
+            gui.addChild(modal);
+            
+            // flag inited
+            this.inited = true;
+            
+            // publish
+            this.trigger("init", this);
+            
+            // open
+            this.open();
+        };
+        
+        // opens the modal
+        Modal.prototype.rOpen = function () {
+            // if we are already open - return
+            if (ctrl.isActive(this)) {
                 return;
             }
             
-            status.modal = true;
-            gui.tree.main.overlay.fadeIn();
-            self.node.fadeIn();
+            // make sure we have inited
+            if (!this.inited) {
+                return this.init();
+            }
+            
+            // reset due removal flag
+            this.dueRemoval = false;
+            
+            // show overlay and node
+            gui.showOverlay();
+            this.node.fadeIn();
+            
+            // publish
+            this.trigger("open", this);
+            
+            ctrl.active = this;
+            
+            return this;
         };
         
-        // close modal and overlay
-        Modal.prototype.close = function () {
-            status.modal = false;
-            gui.tree.main.overlay.hide();
-            self.node.hide();
+        // closes the modal
+        Modal.prototype.rClose = function () {
+            this.node.hide();
+            
+            // remove from controller opened modals
+            ctrl.removeFromOpened(this);
+            
+            // publish
+            this.trigger("close", this);
         };
         
-        // destroy the modal
-        Modal.prototype.destroy = function () {
-            status.modal = false;
-            gui.tree.main.overlay.hide();
-            self.node.destroy();
-            activeModals.splice(
-                activeModals.indexOf(self.viewName),
-                1
-            );
+        // destroys a modal instance
+        Modal.prototype.rDestroy = function () {
+            // close if open
+            if (ctrl.isOpen(this)) {
+                this.rClose();
+            }
+            
+            // reset flags
+            this.inited = false;
+            this.loaded = false;
+            
+            // remove from ctrl modal array
+            ctrl.removeModal(this);
+            
+            // publish
+            this.trigger("destruct", this);
+            
+            // destroy node
+            this.node.destroy();
         };
         
         // set gui instance
         Modal.prototype.setInstance = function (instance) {
             gui = instance;
         };
-
+        
+        // get controller instance
+        Modal.prototype.getController = function () {
+            return ctrl;
+        };
+        
         return Modal;
     }
 );
-/*
-*   @type javascript
-*   @name interactor.js
-*   @copy Copyright 2015 Harry Phillips
-*/
 
-/*global define: true */
-
-define(
-    'main/ui/interactor',[
-        'config',
-        'main/components/util',
-        'main/components/events',
-        'main/components/status',
-        'main/components/node',
-        'main/ui/modal'
-    ],
-    function (
-        config,
-        util,
-        events,
-        status,
-        Node,
-        Modal
-    ) {
-        
-
-        // declarations
-        var $,
-            self,
-            inited = false;
-
-        // interactor constructor
-        function Interactor() {
-            util.log(
-                "context:inter/init",
-                "info",
-                "Initialising Interactor..."
-            );
-            
-            // set pointer
-            self = this;
-            
-            // initialise
-            this.init();
-        }
-
-        // initialise the interactor
-        Interactor.prototype.init = function () {
-            if (inited) {
-                return;
-            }
-            
-            // check jquery
-            if (typeof window.jQuery !== "undefined") {
-                // get
-                $ = window.jQuery;
-            } else {
-                // no jquery, log error
-                util.log(
-                    "context:inter/init",
-                    "error",
-                    "Interactor could not initialise, jQuery not found!"
-                );
-
-                // and exit interactor
-                return;
-            }
-
-            // apply elements and styling
-            this.applyElements();
-            this.applyHandlers();
-            this.applyStyles();
-            this.applyContext();
-            this.applyHash();
-            
-            inited = true;
-        };
-            
-        // returns if an object is or is apart of a task element
-        Interactor.prototype.isTask = function (element) {
-            // get jquery object
-            if (!element instanceof $) {
-                element = $(element);
-            }
-            
-            element = element.closest("[id^=task_]");
-            
-            return (element.length) ? element : false;
-        };
-        
-        // get the wrapper task element from a component
-        Interactor.prototype.getTaskFromComponent = function (component) {
-            return component.closest("[id^=task_]");
-        };
-
-        // expand the currently active task or a specified task id
-        Interactor.prototype.openTask = function (localId) {
-            util.log(
-                "context:interactor",
-                "Opening task #" + localId + "..."
-            );
-            
-            if (typeof localId === "undefined") {
-                this.expandTaskDetails();
-                return;
-            }
-            
-            // get global id
-            this.findGlobalId(localId, function (task) {
-                // once found - click the task
-                task.trigger("click");
-            });
-        };
-
-        // close the currently expanded task
-        Interactor.prototype.closeTask = function () {
-            this.shrinkTaskDetails();
-        };
-
-        // expands the task details panel
-        Interactor.prototype.expandTaskDetails = function () {
-            if (!$(".panelDetail").is(":visible")) {
-                return;
-            }
-            
-            // check current status
-            if (status.interactor.taskDetailsExpanded) {
-                return;
-            }
-            
-            // show overlay
-            $(".kbs-overlay").show();
-            
-            // add expansion class
-            $(".taskDetails").hide().addClass("kbs-details-expand");
-            
-            // show elements
-            setTimeout(function () {
-                $(".taskDetails, .kbs-details-closed").fadeIn();
-            
-                // trigger a resize event
-                // so BugHerd can set the content height
-                $(window).trigger("resize");
-            }, 250);
-            
-            // set status
-            status.interactor.taskDetailsExpanded = true;
-        };
-
-        // shrinks the task details panel
-        Interactor.prototype.shrinkTaskDetails = function () {
-            var task = $(".taskDetails"),
-                overlay = $(".kbs-overlay"),
-                btn = $(".kbs-details-closed");
-            
-            if (!status.interactor.taskDetailsExpanded) {
-                return;
-            }
-            
-            // hide elements
-            task.removeClass("kbs-details-expand");
-            btn.fadeOut();
-            overlay.fadeOut();
-            
-            // set status
-            status.interactor.taskDetailsExpanded = false;
-        };
-            
-        // perform a task search
-        Interactor.prototype.searchForTask = function (localId, callback) {
-            var search = $(".VS-search-inner input"),
-                event = $.Event("keydown"),
-                clear = $("div.VS-icon:nth-child(4)"),
-                facet,
-                result;
-            
-            util.log(
-                "context:interactor",
-                "Searching for task #" + localId
-            );
-            
-            // down arrow
-            event.keyCode = 40;
-            
-            // focus and nav to id
-            search
-                .focus()
-                .trigger(event) // created
-                .trigger(event) // filter
-                .trigger(event); // id - bingo!
-            
-            // return key
-            event.keyCode = 13;
-            
-            // press enter key to select id
-            search.focus().trigger(event);
-            
-            // enter localId into input
-            facet = $(".search_facet_input");
-            facet
-                .val(localId)
-                .trigger("keydown");
-
-            setTimeout(function () {
-                // press enter
-                facet.trigger(event);
-            
-                setTimeout(function () {
-                    // callback with task
-                    callback($(".task"));
-                    
-                    // unfocus from search
-                    document.activeElement.blur();
-                    
-                    setTimeout(function () {
-                        // clear search field
-                        $("div.VS-icon:nth-child(4)").trigger("click");
-                    }, 1000);
-                }, 500);
-            });
-        };
-
-        // find a global task id from a local task id
-        Interactor.prototype.findGlobalId = function (localId, callback) {
-            // declarations
-            var tasks = $(".task-id, .taskID"),
-                child,
-                parent,
-                globalId,
-                errModal,
-                errMsg,
-                check = function (index) {
-                    if ($(this)[0].textContent === localId.toString()) {
-                        child = $(this);
-                    }
-                };
-
-            // get current task id if none passed
-            if (typeof localId === "undefined") {
-                localId = $(".local_task_id")[0].textContent;
-            }
-            
-            // find the right task
-            tasks.each(check);
-
-            // if nothing found - perform a task search (async!)
-            if (typeof child === "undefined") {
-                if (typeof callback === "undefined") {
-                    util.log(
-                        "context:interactor",
-                        "error",
-                        "Couldn't find global id for task #" + localId +
-                            ". Provide a callback function to allow " +
-                            "async task searches!"
-                    );
-                    return;
-                }
-                
-                // async search for task - calls callback with result
-                this.searchForTask(localId, function (task) {
-                    if (self.findLocalIdFromTask(task) === localId) {
-                        callback(task);
-                    } else {
-                        errMsg = "Couldn't find task #" + localId;
-                        
-                        util.log(
-                            "context:interactor",
-                            "error",
-                            errMsg
-                        );
-                        
-                        errModal = new Modal("small", {
-                            init: true,
-                            title: "Task search failed!",
-                            message: errMsg
-                        });
-                    }
-                });
-                
-                return;
-            }
-            
-            // if found without asyn search - get and return
-            parent = child.closest(".task");
-            globalId = parent[0].id.replace("task_", "");
-
-            // run callback with task/parent if defined
-            if (callback) {
-                callback(parent);
-            }
-            
-            return globalId;
-        };
-            
-        // find a local task id from a global task id
-        Interactor.prototype.findLocalId = function (globalId) {
-            $("#task_" + globalId).find(".task-id, .taskID").text();
-        };
-            
-            
-        // find a global task id from task element
-        Interactor.prototype.findGlobalIdFromTask = function (task) {
-            var parent = task.closest(".task"),
-                globalId = parent[0].id.replace("task_", "");
-            
-            return globalId;
-        };
-            
-        // find a local task id from task element
-        Interactor.prototype.findLocalIdFromTask = function (task) {
-            var parent = task.closest(".task"),
-                localId = task.find(".task-id, .taskID").text();
-            
-            return localId;
-        };
-
-        // return current hash
-        Interactor.prototype.getHash = function () {
-            return window.location.hash;
-        };
-            
-        // apply hash command
-        Interactor.prototype.parseHash = function () {
-            var hash = this.getHash(),
-                href = window.location.href,
-                hashId;
-            
-            util.log(
-                "context:hash",
-                "parsing new hash: " + hash
-            );
-
-            // prefixed
-            if (hash === "#open") {
-                // check if prefixed
-                if (href.indexOf("tasks/") !== -1) {
-                    hashId = parseInt(href.split("tasks/")[1], 10);
-
-                    // open
-                    if (hashId) {
-                        this.openTask(hashId);
-                    }
-                }
-            }
-
-            // suffixed
-            hashId = parseInt(hash.replace("#open", ""), 10);
-
-            if (hashId) {
-                this.openTask(hashId);
-            }
-        };
-
-        // append elements to bugherd ui
-        Interactor.prototype.applyElements = function () {
-            // declarations
-            var taskExpander,
-                taskContractor,
-                taskSearch;
-            
-            util.log(
-                "context:inter/init",
-                "+ appending elements to bugherd"
-            );
-
-            // task expander list element
-            taskExpander = new Node("li");
-            
-            // task expander anchor element
-            taskExpander.createChild("a")
-                .text("Search Task")
-                .on("click", function (event) {
-                    taskSearch = new Modal("searchTask", {
-                        init: true,
-                        proceed: function (localId) {
-                            if (!localId) {
-                                // return if no id passed
-                                return;
-                            }
-                            
-                            taskSearch.destroy();
-                            self.openTask(localId);
-                        }
-                    });
-                });
-            
-            // task contractor/close button
-            taskContractor = new Node("div", "kbs-details-closed");
-            taskContractor.createChild("i", "fa fa-times");
-            taskContractor.on("click", function (event) {
-                self.closeTask();
-            });
-            
-            // write
-            taskExpander.writeTo($(".nav.main-nav")[0]);
-            taskContractor.writeTo($("body")[0]);
-        };
-            
-        // apply event handlers
-        Interactor.prototype.applyHandlers = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying handlers to bugherd"
-            );
-            
-            // delegate clicks on app wrapper
-            $(".app-wrap").on("click", function (event) {
-                var target = $(event.target),
-                    task = self.isTask(target);
-                
-                if (task) {
-                    self.expandTaskDetails();
-                }
-            });
-        };
-
-        // apply new styling to bugherd ui
-        Interactor.prototype.applyStyles = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying styles to bugherd"
-            );
-
-            // add a margin to user nav to accompany console controls
-            $(".nav.user-menu").css("margin-right", "10px");
-        };
-            
-        // apply interactor logging context / output
-        Interactor.prototype.applyContext = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying interactor context"
-            );
-            util.log(
-                "context:interactor",
-                "info",
-                "Interactor log output..."
-            );
-        };
-            
-        // apply hash lookup and event listeners
-        Interactor.prototype.applyHash = function () {
-            util.log(
-                "context:inter/init",
-                "+ applying hash parser"
-            );
-            
-            var hash,
-                href = window.location.href,
-                hashId;
-            
-            util.log("context:hash", "info", "Hash events...");
-            
-            // open task if hash is prefixed
-            // or suffixed with a task
-            if (this.getHash()) {
-                setTimeout(function () {
-                    self.parseHash();
-                }, 500);
-            }
-            
-            // listening for hash events
-            $(window).on("hashchange", function (event) {
-                util.log(
-                    "context:hash",
-                    "hash changed: " + self.getHash()
-                );
-                
-                self.parseHash();
-            });
-            
-            if (this.getHash()) {
-                util.log("context:hash", "found hash: " + this.getHash());
-            }
-        };
-
-        return Interactor;
-    }
-);
 /*
 *   @type javascript
 *   @name configurator.js
@@ -2313,12 +3049,6 @@ define(
 */
 
 /*global define: true */
-
-/*
-*   TODO:
-*   + Find out why settings disabling logs via the configurator
-*     breaks the GUI console...
-*/
 
 define(
     'main/components/configurator',[
@@ -2333,8 +3063,15 @@ define(
         
         // configurator class
         function Configurator() {
+            // don't need multiple instances
+            if (self) {
+                return self;
+            }
+            
             self = this;
             this.modal = null;
+            this.launchModal = this.rLaunchModal.bind(this);
+            this.reloadModal = this.rReloadModal.bind(this);
         }
         
         // get user config object from cookie
@@ -2343,6 +3080,16 @@ define(
                 data = util.unserialise(cookie);
             
             return data || {};
+        };
+        
+        // get user config object string
+        Configurator.prototype.getUserCookie = function () {
+            return util.cookie.get("settings");
+        };
+        
+        // get formatted user config object string
+        Configurator.prototype.getFormattedUserCookie = function () {
+            return JSON.stringify(modded, null, 4);
         };
         
         // check for and load existing user config data
@@ -2355,6 +3102,8 @@ define(
                 modded = data;
                 util.merge(config, data, true);
                 return;
+            } else {
+                util.log("error", "no user data found!");
             }
         };
         
@@ -2374,9 +3123,20 @@ define(
         };
         
         // launch the configurator ui
-        Configurator.prototype.launchModal = function () {
+        Configurator.prototype.rLaunchModal = function () {
             // initialise the modal
-            self.modal = new Modal("userConfig", {init: true});
+            if (this.modal) {
+                this.modal.init();
+            } else {
+                this.modal = new Modal("user-config", {init: true});
+            }
+        };
+        
+        // reload the configurator ui
+        Configurator.prototype.rReloadModal = function () {
+            if (this.modal) {
+                this.modal.reload();
+            }
         };
 
         // finds a config setting from a selector string e.g. "gui/console/state"
@@ -2397,7 +3157,7 @@ define(
         };
 
         // set/create a config value
-        Configurator.prototype.set = function (selector, value) {
+        Configurator.prototype.set = function (selector, value, reload) {
             var segments = selector.split("/"),
                 len = segments.length,
                 got = config,
@@ -2405,6 +3165,8 @@ define(
                 tree = modded,
                 parent,
                 parentName;
+            
+            reload = reload || false;
 
             // if a simple selector
             if (len === 1) {
@@ -2419,6 +3181,11 @@ define(
                     "settings",
                     util.serialise(modded)
                 );
+                
+                // reload the modal
+                if (reload) {
+                    this.modal.reload(true);
+                }
                 
                 return config[selector];
             }
@@ -2438,7 +3205,7 @@ define(
                 
                 // build tree for merging with config
                 if (i !== len - 1) {
-                    tree[segments[i]] = {};
+                    tree[segments[i]] = tree[segments[i]] || {};
                     tree = tree[segments[i]];
                 } else {
                     tree[segments[i]] = value;
@@ -2457,6 +3224,11 @@ define(
                 util.serialise(modded)
             );
             
+            // reload the modal
+            if (reload) {
+                this.modal.reload(true);
+            }
+            
             return parent[segments[len - 1]];
         };
 
@@ -2469,6 +3241,7 @@ define(
             util.cookie.del("settings");
             
             // refresh page
+            location.hash = "settings";
             location.reload();
         };
 
@@ -2476,6 +3249,414 @@ define(
     }
 );
 
+/*
+*   @type javascript
+*   @name bugherd.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true */
+
+/*jslint nomen: true*/
+
+define(
+    'main/components/bugherd',[
+        'config',
+        'main/components/util',
+        'main/components/cache',
+        'main/components/status',
+        'main/components/repository',
+        'main/ui/node'
+    ],
+    function (config, util, cache, status, Repository, Node) {
+        
+        
+        // bugherd's global api
+        var repo = new Repository(),
+            bh = window.bugherd,
+            $ = window.jQuery,
+            interactor,
+            instance,
+            gui;
+        
+        /* Class Definitions
+        ------------------------------------------*/
+        // task api controller
+        function TaskController() {
+            this.api = bh.application.tasksCollection;
+            this.baseApi = instance;
+            this.setSeverityStyle = this.rSetSeverityStyle.bind(this);
+            this.setAllSeverityStyles = this.rSetAllSeverityStyles.bind(this);
+        }
+        
+        // bugherd api wrapper
+        function BugHerd() {
+            // return the instance if already exists
+            if (instance) {
+                return instance;
+            }
+            
+            // set instances
+            instance = this;
+            interactor = interactor || repo.get("interactor");
+            gui = gui || repo.get("gui");
+            
+            this.api = bh;
+            this.tasks = new TaskController();
+            this.init();
+        }
+        
+        /* TaskController Prototype
+        ------------------------------------------*/
+        TaskController.prototype.init = function () {
+            var self = this;
+            
+            
+            
+            // setup task event listeners
+            this.applyHandlers();
+            
+            // severity styling handling
+            if (config.gui.severityStyles) {
+                setTimeout(function () {
+                    self.setAllSeverityStyles();
+                }, 100);
+                bh.application.on("change", function () {
+                    setTimeout(self.setAllSeverityStyles, 100);
+                });
+            }
+        };
+        
+        // get task data by local id
+        TaskController.prototype.findModelByLocalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the local_task_id attribute
+            for (i; i < len; i += 1) {
+                if (tasks[i].attributes.local_task_id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // get task data by global id
+        TaskController.prototype.findModelByGlobalId = function (id) {
+            var tasks = this.baseApi.tasks(),
+                len = tasks.length,
+                i = 0;
+            
+            // loop through and check the global id
+            for (i; i < len; i += 1) {
+                if (tasks[i].id === id) {
+                    return tasks[i];
+                }
+            }
+        };
+        
+        // gets the browser info from a task
+        TaskController.prototype.getBrowserInfo = function (task, key) {
+            // catch invalid task types
+            if (!util.isObject(task) && !util.isNumber(task)) {
+                util.log("error", "Unable to get task from parameter of type " +
+                        typeof task);
+            }
+            
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findModelByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findModelByLocalId(task);
+                }
+            }
+            
+            return task.attributes.browser_info[key] ||
+                task.attributes.browser_info;
+        };
+        
+        // gets the user meta data from a task
+        TaskController.prototype.getMeta = function (task) {
+            // passed an id
+            if (util.isNumber(task)) {
+                // passed a global id
+                if (task > 1000000) {
+                    task = this.findModelByGlobalId(task);
+                } else {
+                    // passed a local id
+                    task = this.findModelByLocalId(task);
+                }
+            }
+            
+            return task.attributes.data.userMetaData;
+        };
+        
+        // gets an array of tasks with specified meta data
+        TaskController.prototype.findAllWithMeta = function (attr, value) {
+            return this.match(function (task) {
+                var meta = task.getData().userMetaData || {};
+                
+                return (
+                    meta[attr] === value ||
+                    util.contains(meta[attr], value)
+                ) ? true : false;
+            });
+        };
+        
+        // gets an array of tasks with specified browser data
+        TaskController.prototype.findAllWithClientData = function (attr, value) {
+            return this.match(function (task) {
+                var data = task.getBrowserData();
+                
+                return (
+                    data[attr] === value ||
+                    util.contains(data[attr], value)
+                ) ? true : false;
+            });
+        };
+        
+        // retrieves tasks that have a certain tag
+        TaskController.prototype.findAllWithTag = function (tag) {
+            return this.match(function (task) {
+                var tags = task.attributes.tag_names;
+                return (util.contains(tags, tag)) ? true : false;
+            });
+        };
+        
+        TaskController.prototype.match = function (matched) {
+            var tasks = this.api.models,
+                len = tasks.length,
+                results = [],
+                i = 0,
+                task;
+            
+            // check meta of tasks
+            for (i; i < len; i += 1) {
+                task = tasks[i];
+                if (matched(task)) {
+                    results.push(task);
+                }
+            }
+            
+            return results;
+        };
+        
+        // apply event handlers
+        TaskController.prototype.applyHandlers = function () {
+            // event logger
+            var
+                self = this,
+                bh = this.baseApi,
+                
+                // event logging
+                eventLog = function (task, type, msg) {
+                    // pull attributes
+                    var user = task.attributes.requester_name,
+                        id = task.attributes.local_task_id,
+                        
+                        // status
+                        prevStatusId = task._previousAttributes.status_id,
+                        statusId = task.attributes.status_id,
+                        prevStatus = bh.getStatusFromId(prevStatusId),
+                        status = bh.getStatusFromId(statusId),
+                        
+                        // severity
+                        severityId = task.attributes.priority_id,
+                        severity = bh.getPriorityFromId(severityId),
+                        
+                        message;
+
+                    // format message with values
+                    message = msg.replace("${user}", user);
+                    message = message.replace("${id}", id);
+                    message = message.replace("${prevStatus}", prevStatus);
+                    message = message.replace("${status}", status);
+                    message = message.replace("${severity}", severity);
+                    
+                    util.log(
+                        "context:bugherd",
+                        type,
+                        task,
+                        message
+                    );
+
+                    // set the recent task
+                    cache.RECENT_TASK = task;
+                };
+            
+            // task creation
+            this.on("add", function (event) {
+                eventLog(
+                    event,
+                    "okay",
+                    "Task '#${id}' created by '${user}'"
+                );
+            });
+            
+            // task deletion
+            this.on("remove", function (event) {
+                eventLog(
+                    event,
+                    "warn",
+                    "Task '#${id}' was deleted"
+                );
+                
+                // if task is expanded
+                if (status.interactor.taskDetailsExpanded) {
+                    // task is deleted task
+                    if (parseInt(interactor.activeTask, 10) === event.attributes.local_task_id) {
+                        interactor.closeTask();
+                    }
+                }
+            });
+            
+            // on task refresh
+            this.on("refresh", function (event) {
+                eventLog(
+                    event,
+                    "info",
+                    "Task '#${id}' refreshed"
+                );
+                
+                self.setSeverityStyle(event.attributes.id);
+            });
+            
+            // task status updates
+            this.on("change:status_id", function (event) {
+                eventLog(
+                    event,
+                    "info",
+                    "Task '#${id}' moved from " +
+                        "'${prevStatus}' to '${status}'"
+                );
+                
+                self.setSeverityStyle(event.attributes.id);
+            });
+            
+            // task severity updates
+            this.on("change:priority_id", function (event) {
+                eventLog(
+                    event,
+                    "info",
+                    "Task '#${id}' set to '${severity}'"
+                );
+                
+                self.setSeverityStyle(event.attributes.id);
+            });
+        };
+        
+        // apply a handler to a bugherd task event
+        TaskController.prototype.on = function (event, handler) {
+            this.api.on(event, handler);
+        };
+        
+        // apply a tasks severity style to its body
+        TaskController.prototype.rSetSeverityStyle = function (task) {
+            var severity;
+            
+            // create or retrieve a new Node instance for task
+            task = new Node(document.querySelector("#task_" + task));
+            severity = task.find(".task-severity");
+            
+            if (severity.length) {
+                severity = severity[0]
+                    .element
+                    .className
+                    .replace("task-severity", "")
+                    .replace(/\s/g, "");
+
+                task.addClass(severity);
+            }
+        };
+        
+        // apply severity styles to all tasks
+        TaskController.prototype.rSetAllSeverityStyles = function () {
+            var tasks = document.querySelectorAll(".task"),
+                len = tasks.length,
+                i = 0,
+                id;
+            
+            for (i; i < len; i += 1) {
+                id = tasks[i].id.replace("task_", "");
+                
+                if (id) {
+                    this.setSeverityStyle(id);
+                }
+            }
+        };
+        
+        /* BugHerd Prototype
+        ------------------------------------------*/
+        // init the bugherd api wrapper
+        BugHerd.prototype.init = function () {
+            this.tasks.init();
+            this.applyContext();
+            this.applyHandlers();
+        };
+        
+        // apply handlers/listeners
+        BugHerd.prototype.applyHandlers = function () {};
+        
+        // apply bugherd api logging context
+        BugHerd.prototype.applyContext = function () {
+            util.log(
+                "context:bugherd",
+                "buffer",
+                "log-buffer: BUGHERD-API"
+            );
+        };
+        
+        // apply a handler to bugherd taskCollection event
+        BugHerd.prototype.on = function (event, handler) {
+            bh.application.on(event, handler);
+        };
+        
+        // trigger a bugherd application event
+        BugHerd.prototype.trigger = function (event) {
+            bh.application.trigger(event);
+        };
+        
+        // returns status name from id
+        BugHerd.prototype.getStatusFromId = function (id) {
+            var status,
+                map = {
+                    "null": "feedback",
+                    "0": "backlog",
+                    "1": "todo",
+                    "2": "doing",
+                    // obviously 3 was set free
+                    "4": "done",
+                    "5": "archive"
+                };
+            
+            return map[id];
+        };
+        
+        // returns priority/severity name from id
+        BugHerd.prototype.getPriorityFromId = function (id) {
+            var priority,
+                map = {
+                    "0": "not set",
+                    "1": "critical",
+                    "2": "important",
+                    "3": "normal",
+                    "4": "minor"
+                };
+            
+            return map[id];
+        };
+        
+        // returns all tasks for the current project
+        BugHerd.prototype.getTasks = function () {
+            return bh.application.tasksCollection.models;
+        };
+        
+        return BugHerd;
+    }
+);
 /*
 *   @type javascript
 *   @name router.js
@@ -2487,10 +3668,21 @@ define(
 define('main/components/router',['config'], function (config) {
     
     
+    // configured routes
+    var
+        routes = {
+            "console/save": config.routes.console.save
+        },
+        url = window.KBS_BASE_URL;
+    
     return {
         // return a route to a component controller
         getRoute: function (component, fn) {
-            return window.KBS_BASE_URL + config.routes[component][fn];
+            if (typeof fn === "undefined") {
+                return url + routes[component];
+            }
+            
+            return url + config.routes[component][fn];
         }
     };
 });
@@ -2502,6 +3694,13 @@ define('main/components/router',['config'], function (config) {
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Possibly find a way to optimise the gui logs to use text appending
+*     instead of using new nodes for each log. Big performance hit when
+*     using the GUI console.
+*/
+
 define(
     'main/ui/console',[
         'config',
@@ -2511,8 +3710,8 @@ define(
         'main/components/status',
         'main/components/router',
         'main/components/cache',
-        'main/components/node',
         'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -2523,15 +3722,15 @@ define(
         status,
         router,
         cache,
-        Node,
         Configurator,
+        Node,
         Modal
     ) {
         
             
         // instance pointers
         var self, gui,
-            configurator;
+            configurator = new Configurator();
         
         // console constructor
         function Console(instance) {
@@ -2548,12 +3747,18 @@ define(
                 throw new Error("No GUI instance passed to Console");
             }
             
+            // tool nodes
+            this.tools = {};
+            
             // set gui and build the tree
             gui = instance;
             this.buildNodeTree();
             
             // log contexts
             this.setContexts();
+            
+            // log nodes
+            this.logs = [];
             
             // setup context clearance event
             events.subscribe("gui/contexts/clear", function (context) {
@@ -2576,7 +3781,7 @@ define(
             
             // set log context array
             this.contexts = {
-                def: self.wrapper.cons.out.element
+                def: self.wrapper.cons.out
             };
         };
         
@@ -2597,7 +3802,7 @@ define(
             }
             
             // declarations
-            var logContext;
+            var contextNode;
             
             // make sure not already defined
             if (this.contexts[context]) {
@@ -2606,17 +3811,17 @@ define(
             }
             
             if (util.isNode(element)) {
-                logContext = element.createChild("div", "kbs-log-context", context);
+                contextNode = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
-                element.appendChild(logContext.element);
+                contextNode = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
+                element.appendChild(contextNode.element);
             }
             
             // apply to global contexts
-            this.contexts[context] = logContext.element;
+            this.contexts[context] = contextNode;
             
-            return element;
+            return contextNode;
         };
             
         // clear/remove a logging context
@@ -2628,6 +3833,7 @@ define(
                 return;
             }
             
+            self.contexts[context] = null;
             delete self.contexts[context];
         };
         
@@ -2701,9 +3907,9 @@ define(
                     }
                 };
                 
-                objwrap.addChild(objexp.element);
+                objwrap.addChild(objexp);
                 objwrap.addChild(objtxt);
-                log.addChild(objwrap.element);
+                log.addChild(objwrap);
             }
             
             // check if test node within exec node
@@ -2716,16 +3922,18 @@ define(
             }
                 
             // write to context
-            context.appendChild(log.element);
+            context.addChild(log);
+            
+            // add to list of log nodes
+            self.logs.push(log);
             
             // create context with new log node
-            // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(doCreateContext, log);
             }
 
-            // refresh
-            self.refresh();
+            // scroll to log
+            self.scrollToElement(log.element);
         };
         
         // create toolbar widget
@@ -2744,7 +3952,15 @@ define(
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
+            // add to tools
+            this.tools[tool] = toolbar[tool];
+            
             return toolbar[tool];
+        };
+            
+        // remove a toolbar widget
+        Console.prototype.removeTool = function (tool) {
+            this.tools[tool].destroy();
         };
         
         // get toolbar widget icon from config
@@ -2764,11 +3980,25 @@ define(
             self.wrapper.addClass("kbs-closed");
         };
         
-        // refresh console
-        Console.prototype.refresh = function () {
-            // scroll to bottom of console
+        // scrolls to an element inside the console
+        Console.prototype.scrollToElement = function (element) {
+            // scroll to element in console
             var cons = self.wrapper.cons.element;
-            cons.scrollTop = cons.scrollHeight;
+            cons.scrollTop = element.offsetTop;
+        };
+            
+        // toggle object logs
+        Console.prototype.toggleObjectLogs = function () {
+            var objs = document.querySelectorAll(".kbs-object"),
+                displayed,
+                len = objs.length,
+                i = 0;
+
+            // hide the nodes
+            for (i; i < len; i += 1) {
+                displayed = objs[i].style.display !== "none";
+                objs[i].style.display = (displayed) ? "none" : "block";
+            }
         };
          
         // clear output
@@ -2776,16 +4006,19 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
+                logs = self.logs,
+                len = logs.length,
                 deltaTime,
-                count = 0;
+                count = 0,
+                i = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
-            while (out.firstChild) {
+            for (i; i < len; i += 1) {
+                logs[i].destroy();
                 count += 1;
-                out.removeChild(out.firstChild);
             }
 
             // reattach
@@ -2797,6 +4030,9 @@ define(
             
             // clear buffer
             cache.console.clearBuffer();
+            
+            // reset log count
+            cache.logCount = 0;
         };
         
         // save the output buffer to a text file on the local system
@@ -2812,7 +4048,7 @@ define(
             
             // setup request
             req = new Http({
-                url: router.getRoute("console", "save"),
+                url: router.getRoute("console/save"),
                 method: "POST",
                 send: true,
                 data: {
@@ -2832,40 +4068,66 @@ define(
         Console.prototype.destroy = function () {
             var
                 modalTitle = "Destroy the Console instance?",
-                
-                modalMsg = "Confirm destruction of the GUI Console? " +
-                "(irreversible until refresh).",
-                
-                modal = new Modal("destructConsole", {
+                modalMsg = "Confirm destruction of the GUI Console? ",
+                modal = new Modal("console-destruct", {
                     init: true,
                     confirm: function () {
-                        var parent = self.wrapper.parent(),
-                            child = self.wrapper.element;
-                        
-                        // destroy console node
-                        parent.removeChild(child);
-                        
-                        // set console status
-                        status.console = false;
-                        
-                        // clear the log buffer
-                        cache.console.clearBuffer();
-                        
-                        // destroy the modal
-                        modal.destroy();
+                        self.commitDestroy(modal, "hard");
                     },
                     cancel: function () {
-                        modal.destroy();
+                        modal.close();
                     }
                 });
+        };
+            
+        // committed destroy
+        Console.prototype.commitDestroy = function (modal, method) {
+            if (method === "hard") {
+                var parent = self.wrapper.cons.parent(),
+                    child = self.wrapper.cons.element;
+
+                // store in cache to allow same session
+                // restoration
+                cache.console.parent = parent;
+                cache.console.child = child;
+
+                // destroy console node
+                parent.removeChild(child);
+            }
+            
+            // set console status
+            status.console = false;
+
+            // clear the log buffer
+            cache.console.clearBuffer();
+            
+            // add disabled class to cons-box
+            self.wrapper.addClass("kbs-disabled");
+
+            // remove tool
+            self.removeTool("destroy");
+
+            // close the modal
+            if (modal) {
+                modal.close();
+            }
+            
+            // update configurator
+            configurator.set("gui/console/destroyed", true);
+        };
+            
+        // restore console after being destroyed
+        Console.prototype.restore = function () {
+            this.wrapper.removeClass("kbs-disabled");
         };
         
         // build the console
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
-                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
-                        "local" : "remote",
+                connection =
+                (window.KBS_BASE_URL.indexOf("localhost") !== -1)
+                ? "local" : "remote",
             
                 // console nodes
                 wrapper,
@@ -2899,58 +4161,101 @@ define(
                     " v" + config.version + " - " + connection);
             constitle.addChild(titlenode);
             
-            // toggle tool
-            this.createTool("toggle")
-                .element.onclick = function () {
-                    var closed = wrapper.hasClass("kbs-closed"),
-                        full = wrapper.hasClass("kbs-full");
+            // tools for console
+            if (config.logs.enabled) {
+                // console toggle state tool
+                this.createTool("menu").on(
+                    "click",
+                    function () {
+                        var closed = wrapper.hasClass("kbs-closed"),
+                            full = wrapper.hasClass("kbs-full");
 
-                    // if not closed and not full screen
-                    if (!closed && !full) {
-                        // make full screen
-                        wrapper.addClass("kbs-full");
-                    }
+                        // if not closed and not full screen
+                        if (!closed && !full) {
+                            // make full screen
+                            wrapper.addClass("kbs-full");
+                        }
 
-                    // if in full screen
-                    if (full) {
-                        // shrink
-                        wrapper.removeClass("kbs-full");
-                    }
+                        // if in full screen
+                        if (full) {
+                            // shrink
+                            wrapper.removeClass("kbs-full");
+                        }
 
-                    // if closed
-                    if (closed) {
-                        // open
-                        self.open();
+                        // if closed
+                        if (closed) {
+                            // open
+                            self.open();
+                        }
                     }
-                };
-            
-            // configurator tool
-            configurator = new Configurator();
-            this.createTool("settings")
-                .element.onclick = configurator.launchModal;
-            
-            // save tool - only on localhost base url's
-            if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
-                this.createTool("save")
-                    .element.onclick = self.save;
+                );
+                
+                // console toggle tool
+                this.createTool("toggle").on(
+                    "click",
+                    function () {
+                        var displayed = configurator.get(
+                            "gui/console/displayed"
+                        );
+                        
+                        wrapper.toggleClass("kbs-disabled");
+                        configurator.set(
+                            "gui/console/displayed",
+                            (!displayed) ? true : false
+                        );
+                    }
+                );
+                
+                // save tool - only on localhost base url's
+                if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
+                    this.createTool("save").on(
+                        "click",
+                        self.save
+                    );
+                }
+                
+                // benchmark tool
+                this.createTool("benchmark").on(
+                    "click",
+                    self.benchmark
+                );
+                
+                // toggle object log tool
+                this.createTool("toggleObjs").on(
+                    "click",
+                    self.toggleObjectLogs
+                );
+                
+                // console destructor tool
+                if (config.gui.console.allowDestruction) {
+                    this.createTool("destroy").on(
+                        "click",
+                        self.destroy
+                    );
+                }
+                
+                // clear tool
+                this.createTool("clear").on(
+                    "click",
+                    self.clear
+                );
             }
             
-            // benchmark tool
-            this.createTool("benchmark")
-                .element.onclick = self.benchmark;
+            // configurator tool
+            this.createTool("settings").on(
+                "click",
+                configurator.launchModal
+            );
             
-            // destroy tool
-            this.createTool("destroy")
-                .element.onclick = self.destroy;
-
-            // clear tool
-            this.createTool("clear")
-                .element.onclick = self.clear;
-
-            // close tool
-            this.createTool("close")
-                .element.onclick = self.close;
-
+            // if logs enabled, add a close tool
+            if (config.logs.enabled) {
+                // close tool
+                this.createTool("close").on(
+                    "click",
+                    self.close
+                );
+            }
+                
             // console
             wrapper.cons = cons =
                 wrapper.createChild("div", "kbs-cons");
@@ -2963,7 +4268,15 @@ define(
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
-
+            
+            if (config.gui.console.destroyed) {
+                this.commitDestroy(false, "hard");
+            }
+            
+            if (!config.gui.console.displayed) {
+                this.wrapper.addClass("kbs-disabled");
+            }
+                
             // return wrapper element
             return wrapper;
         };
@@ -2972,7 +4285,7 @@ define(
         Console.prototype.benchmark = function () {
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
-                amount = 10000,
+                amount = config.gui.console.benchmark.amount,
                 start = new Date().getTime(),
                 deltaTime,
                 deltaSpeed,
@@ -2988,8 +4301,8 @@ define(
             
             // log specified amount
             util.log("context:benchmark/output", "buffer", "benchmark output...");
-            while (i <= amount) {
-                util.log("context:benchmark/output", "debug", "log #" + i);
+            while (i < amount) {
+                util.log("context:benchmark/output", "debug", "log #" + (i + 1));
                 i += 1;
             }
 
@@ -3017,6 +4330,7 @@ define(
             // clear the benchmark context
             util.log.endContext();
             self.clearContext("benchmark");
+            self.clearContext("benchmark/output");
         };
         
         return Console;
@@ -3037,9 +4351,10 @@ define(
         'config',
         'main/components/util',
         'main/components/events',
+        'main/components/status',
         'main/components/counter',
         'main/components/configurator',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/console',
         'main/ui/modal'
     ],
@@ -3047,6 +4362,7 @@ define(
         config,
         util,
         events,
+        status,
         Counter,
         Configurator,
         Node,
@@ -3069,9 +4385,18 @@ define(
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
             
+            // setup logging context
+            this.applyContext();
+            
+            // modals api
+            this.setModalApi();
+            
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
+            
+            // overlay preservation flag
+            this.preserveOverlay = false;
 
             // init
             this.init();
@@ -3088,7 +4413,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("gui/loaded");
+                    events.publish("kbs/gui/loaded");
                 }),
 
                 // create link elements
@@ -3115,6 +4440,9 @@ define(
 
                     // run event listeners
                     self.runEventListeners();
+                    
+                    // attach wallpaper
+                    self.loadWallpaper();
 
                     // publish the loaded event
                     events.publish("kbs/loaded");
@@ -3128,7 +4456,7 @@ define(
                 }
 
                 // gui load event listener
-                events.subscribe("gui/loaded", publish);
+                events.subscribe("kbs/gui/loaded", publish);
             }
 
             // props
@@ -3190,6 +4518,18 @@ define(
             document.head.appendChild(themelink);
         };
             
+        // apply gui logging context
+        GUI.prototype.applyContext = function () {
+            // have to wait for gui loaded
+            events.subscribe("kbs/gui/loaded", function () {
+                util.log(
+                    "context:gui",
+                    "buffer",
+                    "log-buffer: GUI"
+                );
+            });
+        };
+            
         // return current theme name or theme name from url
         GUI.prototype.getThemeName = function (url) {
             var themelink = document.getElementById("kbs-theme-link"),
@@ -3237,6 +4577,32 @@ define(
             
             node.attr("href", "");
         };
+            
+        // load wallpaper
+        GUI.prototype.loadWallpaper = function (url) {
+            var el = new Node(document.getElementById("kanbanBoard"));
+            
+            url = url || config.gui.wallpaper;
+            url = "url('" + url + "')";
+            
+            el.css("background-image", url);
+        };
+            
+        // show overlay
+        GUI.prototype.showOverlay = function () {
+            if (!status.gui.overlay) {
+                self.tree.main.overlay.fadeIn();
+                status.gui.overlay = true;
+            }
+        };
+            
+        // hide overlay
+        GUI.prototype.hideOverlay = function () {
+            if (!status.interactor.taskDetailsExpanded && !self.preserveOverlay) {
+                self.tree.main.overlay.fadeOut();
+                status.gui.overlay = false;
+            }
+        };
 
         // build gui node tree
         GUI.prototype.buildNodeTree = function () {
@@ -3281,6 +4647,11 @@ define(
                 }
             };
         };
+            
+        // modal api / dynamic properties
+        GUI.prototype.setModalApi = function () {
+            this.modals = Modal.prototype.getController();
+        };
 
 
         // add a child node to the gui
@@ -3306,6 +4677,714 @@ define(
 );
     
 
+/*
+*   @type javascript
+*   @name interactor.js
+*   @copy Copyright 2015 Harry Phillips
+*/
+
+/*global define: true, MutationObserver: true */
+
+define(
+    'main/ui/interactor',[
+        'config',
+        'main/components/util',
+        'main/components/events',
+        'main/components/status',
+        'main/components/repository',
+        'main/components/configurator',
+        'main/ui/node',
+        'main/ui/modal'
+    ],
+    function (
+        config,
+        util,
+        events,
+        status,
+        Repository,
+        Configurator,
+        Node,
+        Modal
+    ) {
+        
+
+        // declarations
+        var $,
+            self,
+            inited = false,
+            configurator = new Configurator(),
+            repo = new Repository(),
+            bugherd,
+            gui;
+
+        // interactor constructor
+        function Interactor() {
+            util.log(
+                "context:inter/init",
+                "info",
+                "Initialising Interactor..."
+            );
+            
+            // set references
+            self = this;
+            gui = repo.get("gui");
+            
+            this.activeTask = null;
+            
+            // initialise
+            this.init();
+        }
+
+        // initialise the interactor
+        Interactor.prototype.init = function () {
+            if (inited) {
+                return;
+            }
+            
+            // check jquery
+            if (typeof window.jQuery !== "undefined") {
+                // get
+                $ = window.jQuery;
+            } else {
+                // no jquery, log error
+                util.log(
+                    "context:inter/init",
+                    "error",
+                    "Interactor could not initialise, jQuery not found!"
+                );
+
+                // and exit interactor
+                return;
+            }
+
+            // apply elements and styling
+            this.applyElements();
+            this.applyHandlers();
+            this.applyStyles();
+            this.applyContext();
+            this.applyHash();
+            
+            inited = true;
+        };
+            
+        // returns if an object is or is apart of a task element
+        Interactor.prototype.isTask = function (element) {
+            // get jquery object
+            if (!element instanceof $) {
+                element = $(element);
+            }
+            
+            element = element.closest("[id^=task_]");
+            
+            return (element.length) ? element : false;
+        };
+
+        // expand the currently active task or a specified task id
+        Interactor.prototype.openTask = function (localId) {
+            util.log(
+                "context:interactor",
+                "Opening task #" + localId + "..."
+            );
+            
+            this.activeTask = localId;
+            
+            if (typeof localId === "undefined") {
+                this.expandTaskDetails();
+                return;
+            }
+            
+            // get global id
+            this.findGlobalId(localId, function (task) {
+                // once found - click the task
+                setTimeout(function () {
+                    task.trigger("click");
+                }, 500);
+            });
+        };
+
+        // close the currently expanded task
+        Interactor.prototype.closeTask = function () {
+            this.shrinkTaskDetails();
+        };
+
+        // expands the task details panel
+        Interactor.prototype.expandTaskDetails = function () {
+            if (!$(".panelDetail").is(":visible")) {
+                return;
+            }
+            
+            // check current status
+            if (status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            this.activeTask = this.findLocalIdFromDetails();
+            util.log("context:interactor", "active task: #" + this.activeTask);
+            
+            // show overlay
+            $(".kbs-overlay").show();
+            
+            // add expansion class
+            $(".taskDetails").hide().addClass("kbs-details-expand");
+            
+            // show elements
+            setTimeout(function () {
+                $(".taskDetails, .kbs-details-closed").fadeIn();
+            
+                // trigger a resize event
+                // so BugHerd can set the content height
+                $(window).trigger("resize");
+            }, 250);
+            
+            // set status
+            status.interactor.taskDetailsExpanded = true;
+        };
+
+        // shrinks the task details panel
+        Interactor.prototype.shrinkTaskDetails = function () {
+            var task = $(".taskDetails"),
+                btn = $(".kbs-details-closed");
+            
+            if (!status.interactor.taskDetailsExpanded) {
+                return;
+            }
+            
+            this.activeTask = null;
+            
+            // set status
+            status.interactor.taskDetailsExpanded = false;
+            
+            // hide elements
+            task.removeClass("kbs-details-expand");
+            btn.fadeOut();
+            gui.hideOverlay();
+        };
+            
+        // perform a task search
+        Interactor.prototype.searchForTask = function (localId, callback) {
+            var search = $(".VS-search-inner input"),
+                event = $.Event("keydown"),
+                clear = $("div.VS-icon:nth-child(4)"),
+                facet,
+                result;
+            
+            util.log(
+                "context:interactor",
+                "Searching for task #" + localId
+            );
+            
+            // down arrow
+            event.keyCode = 40;
+            
+            // focus and nav to id
+            search
+                .focus()
+                .trigger(event) // created
+                .trigger(event) // filter
+                .trigger(event); // id - bingo!
+            
+            // return key
+            event.keyCode = 13;
+            
+            // press enter key to select id
+            search.focus().trigger(event);
+            
+            // enter localId into input
+            facet = $(".search_facet_input");
+            facet.val(localId)
+                .trigger("keydown");
+
+            setTimeout(function () {
+                // press enter
+                facet.trigger(event);
+            
+                setTimeout(function () {
+                    // callback with task
+                    callback($(".task"));
+                    
+                    // unfocus from search
+                    document.activeElement.blur();
+                    
+                    setTimeout(function () {
+                        // clear search field
+                        $("div.VS-icon:nth-child(4)").trigger("click");
+                        document.activeElement.blur();
+                    }, 1000);
+                }, 500);
+            });
+        };
+
+        // find a global task id from a local task id
+        Interactor.prototype.findGlobalId = function (localId, callback) {
+            // declarations
+            var tasks = $(".task-id, .taskID"),
+                child,
+                parent,
+                globalId,
+                errModal,
+                errMsg,
+                check = function (index) {
+                    if ($(this)[0].textContent === localId.toString()) {
+                        child = $(this);
+                    }
+                };
+
+            // get current task id if none passed
+            if (typeof localId === "undefined") {
+                localId = $(".local_task_id")[0].textContent;
+            }
+            
+            // find the right task
+            tasks.each(check);
+
+            // if nothing found - perform a task search (async!)
+            if (typeof child === "undefined") {
+                if (typeof callback === "undefined") {
+                    util.log(
+                        "context:interactor",
+                        "error",
+                        "Couldn't find global id for task #" + localId +
+                            ". Provide a callback function to allow " +
+                            "async task searches!"
+                    );
+                    return;
+                }
+                
+                // async search for task - calls callback with result
+                this.searchForTask(localId, function (task) {
+                    if (self.findLocalIdFromTask(task) === localId) {
+                        callback(task);
+                    } else {
+                        errMsg = "Couldn't find task #" + localId;
+                        
+                        util.log(
+                            "context:interactor",
+                            "error",
+                            errMsg
+                        );
+                        
+                        errModal = new Modal("task-not-found", {
+                            init: true,
+                            id: localId,
+                            confirm: function () {
+                                // close the err modal
+                                errModal.close();
+                                
+                                // re-open search task
+                                errModal
+                                    .getController()
+                                    .getModalByName("task-search")
+                                    .open();
+                            },
+                            cancel: function () {
+                                errModal.close();
+                            }
+                        });
+                    }
+                });
+                
+                return;
+            }
+            
+            // if found without asyn search - get and return
+            parent = child.closest(".task");
+            globalId = parent[0].id.replace("task_", "");
+
+            // run callback with task/parent if defined
+            if (callback) {
+                callback(parent);
+            }
+            
+            return globalId;
+        };
+            
+        // find a local task id from a global task id
+        Interactor.prototype.findLocalId = function (globalId) {
+            return $("#task_" + globalId).find(".task-id, .taskID").text();
+        };
+            
+            
+        // find a global task id from task element
+        Interactor.prototype.findGlobalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                globalId = parent[0].id.replace("task_", "");
+            
+            return globalId;
+        };
+            
+        // find a local task id from task element
+        Interactor.prototype.findLocalIdFromTask = function (task) {
+            var parent = task.closest(".task"),
+                localId = task.find(".task-id, .taskID").text();
+            
+            return localId;
+        };
+            
+        // find a local task id from task details
+        Interactor.prototype.findLocalIdFromDetails = function () {
+            var parent = $(".taskDetails"),
+                localId = parent.find(".local_task_id");
+            
+            return localId.text() || localId.val();
+        };
+        
+        // get the task element from an inner component
+        // note: only applies to board tasks
+        Interactor.prototype.findTaskFromComponent = function (component) {
+            var task = component.closest("[id^=task_]");
+            
+            // if not found - return false
+            if (!task.length) {
+                return false;
+            }
+            
+            return this.findLocalIdFromTask(task);
+        };
+            
+        // navigate the ui to a specified task board
+        Interactor.prototype.navigateTo = function (board) {
+            var nav = $("#nav-" + board.toLowerCase());
+            
+            // make sure is valid view
+            if (nav.length) {
+                nav.trigger("click");
+            } else {
+                util.log(
+                    "context:interactor",
+                    "error",
+                    "Failed to navigate to: '" + board + "'"
+                );
+            }
+        };
+            
+        // view a screenshot in a modal
+        Interactor.prototype.viewScreenshot = function (link) {
+            var bugherd = repo.get("bugherd"),
+                size = {},
+                winsize,
+                modal,
+                id;
+            
+            // get the task id from detail panel
+            id = parseInt(self.findLocalIdFromDetails(), 10);
+            
+            util.log(
+                "context:interactor",
+                "debug",
+                "Viewing screenshot for task #" + id
+            );
+            
+            modal = new Modal("view-screenshot", {
+                viewParams: {
+                    id: id,
+                    title: (link[0]
+                            .textContent
+                            .indexOf("screenshot") !== -1
+                           ) ? "Screenshot" : "Fix Result",
+                    url: link[0].href,
+                    width: size.x,
+                    height: size.y
+                }
+            });
+        };
+            
+        // hide all tasks with the following tag(s)
+        Interactor.prototype.hideTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithTag(tag),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following client data
+        Interactor.prototype.hideTasksWithClientData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithClientData(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // hide all tasks with the following meta data
+        Interactor.prototype.hideTasksWithMetaData = function (key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithMeta(key, value),
+                len = list.length,
+                i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + list[i].id)
+                    .style.display = "none";
+            }
+        };
+            
+        // show all tasks with the followings tag(s)
+        Interactor.prototype.showTasksWithTag = function (tag) {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                task,
+                id;
+            
+            // hide all tasks
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i].id)
+                    .style.display = "none";
+            }
+            
+            // show all tasks with the given tag
+            tasks = bugherd.tasks.findAllWithTag(tag);
+            len = tasks.length;
+            i = 0;
+            
+            for (i; i < len; i += 1) {
+                document.getElementById("task_" + tasks[i])
+                    .style.display = "block";
+            }
+        };
+        
+        // return current hash
+        Interactor.prototype.getHash = function () {
+            return window.location.hash;
+        };
+            
+        // apply hash command
+        Interactor.prototype.parseHash = function () {
+            var hash = this.getHash(),
+                href = window.location.href,
+                taskId;
+            
+            util.log(
+                "context:hash",
+                "parsing new hash: " + hash
+            );
+
+            // open task
+            if (hash === "#open") {
+                // get task id
+                if (href.indexOf("tasks/") !== -1) {
+                    taskId = parseInt(href.split("tasks/")[1], 10);
+                } else {
+                    taskId = parseInt(hash.replace("#open", ""), 10);
+                }
+            }
+            
+            // settings
+            if (hash === "#settings") {
+                configurator.launchModal();
+                location.hash = "";
+            }
+
+            if (taskId) {
+                this.openTask(taskId);
+            }
+        };
+
+        // append elements to bugherd ui
+        Interactor.prototype.applyElements = function () {
+            // declarations
+            var search,
+                filter,
+                detailClose,
+                taskSearch,
+                taskFilter,
+                nav;
+            
+            util.log(
+                "context:inter/init",
+                "+ appending elements to bugherd"
+            );
+
+            // task search list element
+            search = new Node("li");
+            
+            // task search anchor element
+            search.createChild("a")
+                .text("Search Task")
+                .on("click", function (event) {
+                    taskSearch = new Modal("task-search", {
+                        proceed: function (localId) {
+                            if (!localId) {
+                                // return if no id passed
+                                return;
+                            }
+                            
+                            taskSearch.close();
+                            self.openTask(localId);
+                        }
+                    });
+                });
+            
+           // task filter list element
+            filter = new Node("li");
+            
+            // task filter anchor element
+            filter.createChild("a")
+                .text("Filter")
+                .on("click", function (event) {
+                    taskFilter = new Modal("task-filter");
+                });
+            
+            // task details close button
+            detailClose = new Node("div", "kbs-details-closed");
+            detailClose.createChild("i", "fa fa-times");
+            detailClose.on("click", function (event) {
+                self.closeTask();
+            });
+            
+            // write
+            nav = $(".nav.main-nav")[0];
+            search.writeTo(nav);
+            filter.writeTo(nav);
+            detailClose.writeTo($("body")[0]);
+        };
+            
+        // apply event handlers
+        Interactor.prototype.applyHandlers = function () {
+            var appwrap = new Node(".app-wrap"),
+                body = new Node(document.body),
+                kanban = new Node("#kanbanBoard"),
+                move,
+                frame,
+                fc;
+            
+            util.log(
+                "context:inter/init",
+                "+ applying handlers to bugherd"
+            );
+            
+            // delegate clicks on app wrapper
+            appwrap.on("click", function (event) {
+                var target = $(event.target),
+                    task = self.isTask(target);
+                
+                // capture task clicks
+                if (task && config.interactor.expandOnclick) {
+                    self.expandTaskDetails();
+                    return;
+                }
+                
+                // capture screenshot clicks
+                if (target.hasClass("attachLink")) {
+                    // view screenshots only
+                    if (target.text().match(/(fix-result)|(view_screenshot)|(\.png)|(\.jpg)/)) {
+                        event.preventDefault();
+                        self.viewScreenshot(target);
+                    }
+                }
+            });
+            
+            // on document mouse move - apply parallax to wallpaper
+            // if there is one (experimental)
+            if (config.gui.wallpaper && config.gui.parallax.enabled) {
+                move = false;
+                frame = setInterval(function () {
+                    move = (move) ? false : true;
+                }, 32);
+                
+                body.on("mousemove", function (event) {
+                    fc = config.gui.parallax.factor;
+                    
+                    if (move) {
+                        var deltaX = -(event.pageX / fc),
+                            deltaY = -(event.pageY / fc);
+
+                        kanban.css(
+                            "background-position",
+                            deltaX + "px " + deltaY + "px"
+                        );
+                    }
+                });
+            }
+        };
+
+        // apply new styling to bugherd ui
+        Interactor.prototype.applyStyles = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying styles to bugherd"
+            );
+            
+            // apply wallpaper
+            $(".pane-center .pane-content").css("background-image", config.gui.wallpaper);
+
+            // add a margin to user nav to accompany console controls
+            $(".nav.user-menu").css("margin-right", "10px");
+            
+            // overhaul theme specifics
+            if (gui.getThemeName().indexOf("DOS") !== -1) {
+                // change VS search icon to use fa
+                $(".VS-icon-search").append("<i class=\"fa fa-search\"></i>");
+                $(".VS-icon-search").css("top", "8px");
+
+                // change VS cancel icon to use fa
+                $(".VS-icon-cancel").append("<i class=\"fa fa-times\"></i>");
+                $(".VS-icon-cancel").css("top", "8px");
+            }
+        };
+            
+        // apply interactor logging context / output
+        Interactor.prototype.applyContext = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying interactor context"
+            );
+            util.log(
+                "context:interactor",
+                "buffer",
+                "log-buffer: INTERACTOR"
+            );
+        };
+            
+        // apply hash lookup and event listeners
+        Interactor.prototype.applyHash = function () {
+            util.log(
+                "context:inter/init",
+                "+ applying hash parser"
+            );
+            
+            var hash,
+                href = window.location.href,
+                hashId;
+            
+            util.log("context:hash", "buffer", "log-buffer: HASH");
+            
+            // open task if hash is prefixed
+            // or suffixed with a task
+            if (this.getHash()) {
+                setTimeout(function () {
+                    self.parseHash();
+                }, 500);
+            }
+            
+            // listening for hash events
+            $(window).on("hashchange", function (event) {
+                util.log(
+                    "context:hash",
+                    "hash changed: " + self.getHash()
+                );
+                
+                self.parseHash();
+            });
+            
+            if (this.getHash()) {
+                util.log("context:hash", "found hash: " + this.getHash());
+            }
+        };
+
+        return Interactor;
+    }
+);
 /*
 *    @type javascript test
 *    @name main.test.js
@@ -3344,7 +5423,7 @@ define(
             );
 
             // run
-            require([window.KBS_BASE_URL + "test/" + test + ".test.js"]);
+            require([window.KBS_BASE_URL + "src/test/" + test + ".test.js"]);
         };
 
         // executes all tests in the configured modules array
@@ -3372,73 +5451,82 @@ define(
 
 /*
 *   TODO
-*   + Related to config, style/theme preference engine? Dynamic not preloaded?
-*
-*   + Add ability to set wallpapers (style/theme engine?)
-*
 *   + Add a comments interface/modal (with a spellchecker? Preview post?)
 *
-*   + A place for Kanban tools? Not attached to the console toolbar?
+*   + Monitor status of all components and defer kbs/loaded event until
+*     all components have finished initialising, more reliable than hard coding
+*     the event fire (maybe combine with the repository component?)
 *
-*   + Point base url to prodution cdn using source tag e.g
-*     https://cdn.rawgit.com/HarryPhillips/BugHerd-Kanban/v1.3.0/
+*   + Allow searching of tasks by meta data such as references, browser and
+*     version etc.
+*
+*   + Possibly add more info about the task to expanded details? Such as
+*     the last updated at and update by etc?
+*
+*   + Is it possible to add a setting to scale the entire KBS gui?
+*
+*   + Might want to add max length parameters for the console.
+*     Maybe as a config option?
+*/
+
+/*
+*   PROJECTS & PRACTICE
+*   + Re-write the issue reporter and possibly move away from BugHerd
+*     exclusivity, allowing interfaces between other parties
+*
+*   + Write a game in JavaScript
+*
+*   + Template loading system - parse shorthand templates to full HTML
+*     page.
+*
+*   + Separate the gui logging console from Kanban and make it a separate
+*     project. Expand upon it there.
 */
 
 define(
     'main/init',[
         'config',
         'main/components/util',
-        'main/ui/interactor',
         'main/components/events',
         'main/components/status',
         'main/components/cache',
+        'main/components/exception',
+        'main/components/repository',
         'main/components/http',
         'main/components/configurator',
+        'main/components/bugherd',
+        'main/ui/node',
         'main/ui/gui',
+        'main/ui/modal',
+        'main/ui/interactor',
         'test/main.test'
     ],
-    function (
+    function KanbanInitialise(
         config,
         util,
-        Interactor,
         events,
         status,
         cache,
-        http,
+        Exception,
+        Repository,
+        Http,
         Configurator,
+        BugHerd,
+        Node,
         GUI,
+        Modal,
+        Interactor,
         tests
     ) {
         
 
         // components
-        var kanban, end, gui, interactor, settings;
-
-        // get a new configurator and load data
-        settings = new Configurator();
-        settings.loadExisting();
+        var kanban, end, gui, interactor,
+            ehandle, settings, bugherd,
+            repo = new Repository();
             
-        // check if disabled
-        if (!config.enabled) {
-            return;
-        }
-
-        // subscribe to status updates
-        events.subscribe("kbs/status", function (data) {
-            status[data.component] = data.status;
-        });
-
-        // initialise gui first so log buffer is constructed
-        if (config.gui.enabled) {
-            gui = new GUI();
-        }
-
-        // initialise interactor
-        if (config.interactor.enabled) {
-            interactor = new Interactor();
-        }
-            
-        // execute kanban
+        /* end of init call
+        ------------------------------------------------------*/
         end = function () {
             // get performance delta
             window.KBS_DELTA_TIME =
@@ -3447,14 +5535,15 @@ define(
             // log
             util.log(
                 "okay",
-                kanban,
                 "Kanban initialised in " +
-                    window.KBS_DELTA_TIME
+                    window.KBS_DELTA_TIME +
+                    ". Approx. size: " + util.bytesFormat(util.sizeof(kanban))
             );
 
             // expose the api if in dev mode
             if (config.mode === "dev") {
                 window[config.appName] = kanban;
+                window[config.appName + "_REPO"] = repo;
             }
 
             // expose logging api to window.log
@@ -3473,6 +5562,70 @@ define(
                 tests.execAll();
             }
         };
+            
+        /* initialise
+        ------------------------------------------------------*/
+        // wait for kbs loaded event
+        events.subscribe("kbs/loaded", end);
+
+        // subscribe to status updates
+        events.subscribe("kbs/status", function (data) {
+            status[data.component] = data.status;
+        });
+            
+        // get a new configurator and load data
+        try {
+            settings = new Configurator();
+            settings.loadExisting();
+            repo.add("settings", settings);
+        } catch (configuratorException) {
+            ehandle = new Exception(
+                configuratorException,
+                "Configurator failed to initialise cleanly."
+            );
+        }
+
+        // check if disabled
+        if (!config.enabled) {
+            return;
+        }
+
+        // initialise gui first so log buffer is constructed
+        try {
+            if (config.gui.enabled) {
+                gui = new GUI();
+                repo.add("gui", gui);
+            }
+        } catch (guiException) {
+            ehandle = new Exception(
+                guiException,
+                "GUI failed to initialise cleanly."
+            );
+        }
+
+        // initialise interactor
+        try {
+            if (config.interactor.enabled) {
+                interactor = new Interactor();
+                repo.add("interactor", interactor);
+            }
+        } catch (interactorException) {
+            ehandle = new Exception(
+                interactorException,
+                "Interactor failed to initialise cleanly."
+            );
+        }
+            
+        // initialise the bugherd api wrapper
+        try {
+            bugherd = new BugHerd();
+            repo.add("bugherd", bugherd);
+        } catch (bugherdException) {
+            ehandle = new Exception(
+                bugherdException,
+                "BugHerd API failed to initialise cleanly."
+            );
+        }
 
         // kbs data/api object
         kanban = {
@@ -3482,14 +5635,20 @@ define(
             cache: cache,
             config: config,
             events: events,
-            http: http,
             util: util,
             gui: gui,
-            configurator: settings
+            configurator: settings,
+            Constructor: {
+                "Configurator": Configurator,
+                "Interactor": Interactor,
+                "GUI": GUI,
+                "BugHerd": BugHerd,
+                "Http": Http,
+                "Node": Node,
+                "Modal": Modal,
+                "Exception": Exception
+            }
         };
-
-        // wait for kbs loaded event
-        events.subscribe("kbs/loaded", end);
     }
 );
 

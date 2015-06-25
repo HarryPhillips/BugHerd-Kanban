@@ -9,7 +9,7 @@
 define(
     [
         'main/components/util',
-        'main/components/node'
+        'main/ui/node'
     ],
     function (
         util,
@@ -29,17 +29,48 @@ define(
                     setTimeout(function () {
                         verify.fadeOut("slow");
                     }, 1200);
-                };
+                },
+                i = 0,
+                len;
 
+            // title
+            if (type === "title") {
+                label = field.createChild("h5", "kbs-title")
+                    .text(text);
+                
+                return field;
+            }
+            
             // label
             label = field.createChild("span", "kbs-label")
                 .text(text);
 
             // input
-            input = field.createChild("input",
-                    "kbs-input-field kbs-input-" + type)
-                .attr("type", type)
-                .val(placeholder || "");
+            if (type !== "select") {
+                // new input field
+                input = field.createChild("input",
+                        "kbs-input-field kbs-input-" + type)
+                    .attr("type", type)
+                    .val(placeholder || "");
+            } else {
+                len = placeholder.length;
+                
+                // new select field
+                input = field.createChild("select",
+                        "kbs-input-field kbs-input-" + type);
+                
+                // add default option
+                input.createChild("option")
+                    .text("Please select...")
+                    .attr("default");
+                
+                // add select options
+                for (i; i < len; i += 1) {
+                    input.createChild("option")
+                        .text(placeholder[i].text)
+                        .attr("value", placeholder[i].value);
+                }
+            }
             
             // check or uncheck checkbox input
             if (type === "checkbox") {
@@ -49,9 +80,15 @@ define(
                 });
                 
                 input.element.checked = placeholder;
+            } else {
+                // submit changes to handler
+                input.on("change", function (event) {
+                    handler(input.val());
+                    showVerify();
+                });
             }
 
-            // submit
+            // manual submit
             if (type !== "checkbox") {
                 submit = field.createChild("span", "kbs-confirm")
                     .text("set")

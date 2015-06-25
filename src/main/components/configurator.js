@@ -19,8 +19,15 @@ define(
         
         // configurator class
         function Configurator() {
+            // don't need multiple instances
+            if (self) {
+                return self;
+            }
+            
             self = this;
             this.modal = null;
+            this.launchModal = this.rLaunchModal.bind(this);
+            this.reloadModal = this.rReloadModal.bind(this);
         }
         
         // get user config object from cookie
@@ -36,6 +43,11 @@ define(
             return util.cookie.get("settings");
         };
         
+        // get formatted user config object string
+        Configurator.prototype.getFormattedUserCookie = function () {
+            return JSON.stringify(modded, null, 4);
+        };
+        
         // check for and load existing user config data
         Configurator.prototype.loadExisting = function () {
             var data = this.getUserData(),
@@ -46,6 +58,8 @@ define(
                 modded = data;
                 util.merge(config, data, true);
                 return;
+            } else {
+                util.log("error", "no user data found!");
             }
         };
         
@@ -65,12 +79,19 @@ define(
         };
         
         // launch the configurator ui
-        Configurator.prototype.launchModal = function () {
+        Configurator.prototype.rLaunchModal = function () {
             // initialise the modal
-            if (self.modal) {
-                self.modal.init();
+            if (this.modal) {
+                this.modal.init();
             } else {
-                self.modal = new Modal("userConfig", {init: true});
+                this.modal = new Modal("user-config", {init: true});
+            }
+        };
+        
+        // reload the configurator ui
+        Configurator.prototype.rReloadModal = function () {
+            if (this.modal) {
+                this.modal.reload();
             }
         };
 
@@ -92,7 +113,7 @@ define(
         };
 
         // set/create a config value
-        Configurator.prototype.set = function (selector, value) {
+        Configurator.prototype.set = function (selector, value, reload) {
             var segments = selector.split("/"),
                 len = segments.length,
                 got = config,
@@ -100,6 +121,8 @@ define(
                 tree = modded,
                 parent,
                 parentName;
+            
+            reload = reload || false;
 
             // if a simple selector
             if (len === 1) {
@@ -114,6 +137,11 @@ define(
                     "settings",
                     util.serialise(modded)
                 );
+                
+                // reload the modal
+                if (reload) {
+                    this.modal.reload(true);
+                }
                 
                 return config[selector];
             }
@@ -152,6 +180,11 @@ define(
                 util.serialise(modded)
             );
             
+            // reload the modal
+            if (reload) {
+                this.modal.reload(true);
+            }
+            
             return parent[segments[len - 1]];
         };
 
@@ -164,6 +197,7 @@ define(
             util.cookie.del("settings");
             
             // refresh page
+            location.hash = "settings";
             location.reload();
         };
 

@@ -13,9 +13,10 @@ define(
         'config',
         'main/components/util',
         'main/components/events',
+        'main/components/status',
         'main/components/counter',
         'main/components/configurator',
-        'main/components/node',
+        'main/ui/node',
         'main/ui/console',
         'main/ui/modal'
     ],
@@ -23,6 +24,7 @@ define(
         config,
         util,
         events,
+        status,
         Counter,
         Configurator,
         Node,
@@ -45,12 +47,18 @@ define(
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
             
+            // setup logging context
+            this.applyContext();
+            
             // modals api
             this.setModalApi();
             
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
+            
+            // overlay preservation flag
+            this.preserveOverlay = false;
 
             // init
             this.init();
@@ -67,7 +75,7 @@ define(
             var
                 // loader
                 loader = new Counter((config.offline) ? 2 : 3, function () {
-                    events.publish("gui/loaded");
+                    events.publish("kbs/gui/loaded");
                 }),
 
                 // create link elements
@@ -110,7 +118,7 @@ define(
                 }
 
                 // gui load event listener
-                events.subscribe("gui/loaded", publish);
+                events.subscribe("kbs/gui/loaded", publish);
             }
 
             // props
@@ -172,6 +180,18 @@ define(
             document.head.appendChild(themelink);
         };
             
+        // apply gui logging context
+        GUI.prototype.applyContext = function () {
+            // have to wait for gui loaded
+            events.subscribe("kbs/gui/loaded", function () {
+                util.log(
+                    "context:gui",
+                    "buffer",
+                    "log-buffer: GUI"
+                );
+            });
+        };
+            
         // return current theme name or theme name from url
         GUI.prototype.getThemeName = function (url) {
             var themelink = document.getElementById("kbs-theme-link"),
@@ -228,6 +248,22 @@ define(
             url = "url('" + url + "')";
             
             el.css("background-image", url);
+        };
+            
+        // show overlay
+        GUI.prototype.showOverlay = function () {
+            if (!status.gui.overlay) {
+                self.tree.main.overlay.fadeIn();
+                status.gui.overlay = true;
+            }
+        };
+            
+        // hide overlay
+        GUI.prototype.hideOverlay = function () {
+            if (!status.interactor.taskDetailsExpanded && !self.preserveOverlay) {
+                self.tree.main.overlay.fadeOut();
+                status.gui.overlay = false;
+            }
         };
 
         // build gui node tree

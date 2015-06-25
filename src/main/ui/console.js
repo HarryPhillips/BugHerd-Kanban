@@ -6,6 +6,13 @@
 
 /*global define: true */
 
+/*
+*   TODO:
+*   + Possibly find a way to optimise the gui logs to use text appending
+*     instead of using new nodes for each log. Big performance hit when
+*     using the GUI console.
+*/
+
 define(
     [
         'config',
@@ -15,8 +22,8 @@ define(
         'main/components/status',
         'main/components/router',
         'main/components/cache',
-        'main/components/node',
         'main/components/configurator',
+        'main/ui/node',
         'main/ui/modal'
     ],
     function (
@@ -27,15 +34,15 @@ define(
         status,
         router,
         cache,
-        Node,
         Configurator,
+        Node,
         Modal
     ) {
         'use strict';
             
         // instance pointers
         var self, gui,
-            configurator;
+            configurator = new Configurator();
         
         // console constructor
         function Console(instance) {
@@ -52,12 +59,18 @@ define(
                 throw new Error("No GUI instance passed to Console");
             }
             
+            // tool nodes
+            this.tools = {};
+            
             // set gui and build the tree
             gui = instance;
             this.buildNodeTree();
             
             // log contexts
             this.setContexts();
+            
+            // log nodes
+            this.logs = [];
             
             // setup context clearance event
             events.subscribe("gui/contexts/clear", function (context) {
@@ -80,7 +93,7 @@ define(
             
             // set log context array
             this.contexts = {
-                def: self.wrapper.cons.out.element
+                def: self.wrapper.cons.out
             };
         };
         
@@ -101,7 +114,7 @@ define(
             }
             
             // declarations
-            var logContext;
+            var contextNode;
             
             // make sure not already defined
             if (this.contexts[context]) {
@@ -110,17 +123,17 @@ define(
             }
             
             if (util.isNode(element)) {
-                logContext = element.createChild("div", "kbs-log-context", context);
+                contextNode = element.createChild("div", "kbs-log-context", context);
             } else {
                 // manually append new Node
-                logContext = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
-                element.appendChild(logContext.element);
+                contextNode = new Node("div", "kbs-log-context", "kbs-ctx-" + context);
+                element.appendChild(contextNode.element);
             }
             
             // apply to global contexts
-            this.contexts[context] = logContext.element;
+            this.contexts[context] = contextNode;
             
-            return element;
+            return contextNode;
         };
             
         // clear/remove a logging context
@@ -132,6 +145,7 @@ define(
                 return;
             }
             
+            self.contexts[context] = null;
             delete self.contexts[context];
         };
         
@@ -205,9 +219,9 @@ define(
                     }
                 };
                 
-                objwrap.addChild(objexp.element);
+                objwrap.addChild(objexp);
                 objwrap.addChild(objtxt);
-                log.addChild(objwrap.element);
+                log.addChild(objwrap);
             }
             
             // check if test node within exec node
@@ -220,16 +234,18 @@ define(
             }
                 
             // write to context
-            context.appendChild(log.element);
+            context.addChild(log);
+            
+            // add to list of log nodes
+            self.logs.push(log);
             
             // create context with new log node
-            // if set to create
             if (doCreateContext) {
-                self.createContext(doCreateContext, log.element);
+                self.createContext(doCreateContext, log);
             }
 
-            // refresh
-            self.refresh();
+            // scroll to log
+            self.scrollToElement(log.element);
         };
         
         // create toolbar widget
@@ -248,7 +264,15 @@ define(
             );
             toolbar[tool].element.title = config.tooltips[tool] || "";
 
+            // add to tools
+            this.tools[tool] = toolbar[tool];
+            
             return toolbar[tool];
+        };
+            
+        // remove a toolbar widget
+        Console.prototype.removeTool = function (tool) {
+            this.tools[tool].destroy();
         };
         
         // get toolbar widget icon from config
@@ -268,11 +292,25 @@ define(
             self.wrapper.addClass("kbs-closed");
         };
         
-        // refresh console
-        Console.prototype.refresh = function () {
-            // scroll to bottom of console
+        // scrolls to an element inside the console
+        Console.prototype.scrollToElement = function (element) {
+            // scroll to element in console
             var cons = self.wrapper.cons.element;
-            cons.scrollTop = cons.scrollHeight;
+            cons.scrollTop = element.offsetTop;
+        };
+            
+        // toggle object logs
+        Console.prototype.toggleObjectLogs = function () {
+            var objs = document.querySelectorAll(".kbs-object"),
+                displayed,
+                len = objs.length,
+                i = 0;
+
+            // hide the nodes
+            for (i; i < len; i += 1) {
+                displayed = objs[i].style.display !== "none";
+                objs[i].style.display = (displayed) ? "none" : "block";
+            }
         };
          
         // clear output
@@ -280,16 +318,19 @@ define(
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
                 start = new Date().getTime(),
+                logs = self.logs,
+                len = logs.length,
                 deltaTime,
-                count = 0;
+                count = 0,
+                i = 0;
 
             // detach
             cons.removeChild(out);
 
             // remove all logs
-            while (out.firstChild) {
+            for (i; i < len; i += 1) {
+                logs[i].destroy();
                 count += 1;
-                out.removeChild(out.firstChild);
             }
 
             // reattach
@@ -301,6 +342,9 @@ define(
             
             // clear buffer
             cache.console.clearBuffer();
+            
+            // reset log count
+            cache.logCount = 0;
         };
         
         // save the output buffer to a text file on the local system
@@ -316,7 +360,7 @@ define(
             
             // setup request
             req = new Http({
-                url: router.getRoute("console", "save"),
+                url: router.getRoute("console/save"),
                 method: "POST",
                 send: true,
                 data: {
@@ -336,40 +380,66 @@ define(
         Console.prototype.destroy = function () {
             var
                 modalTitle = "Destroy the Console instance?",
-                
-                modalMsg = "Confirm destruction of the GUI Console? " +
-                "(irreversible until refresh).",
-                
-                modal = new Modal("destructConsole", {
+                modalMsg = "Confirm destruction of the GUI Console? ",
+                modal = new Modal("console-destruct", {
                     init: true,
                     confirm: function () {
-                        var parent = self.wrapper.parent(),
-                            child = self.wrapper.element;
-                        
-                        // destroy console node
-                        parent.removeChild(child);
-                        
-                        // set console status
-                        status.console = false;
-                        
-                        // clear the log buffer
-                        cache.console.clearBuffer();
-                        
-                        // destroy the modal
-                        modal.destroy();
+                        self.commitDestroy(modal, "hard");
                     },
                     cancel: function () {
-                        modal.destroy();
+                        modal.close();
                     }
                 });
+        };
+            
+        // committed destroy
+        Console.prototype.commitDestroy = function (modal, method) {
+            if (method === "hard") {
+                var parent = self.wrapper.cons.parent(),
+                    child = self.wrapper.cons.element;
+
+                // store in cache to allow same session
+                // restoration
+                cache.console.parent = parent;
+                cache.console.child = child;
+
+                // destroy console node
+                parent.removeChild(child);
+            }
+            
+            // set console status
+            status.console = false;
+
+            // clear the log buffer
+            cache.console.clearBuffer();
+            
+            // add disabled class to cons-box
+            self.wrapper.addClass("kbs-disabled");
+
+            // remove tool
+            self.removeTool("destroy");
+
+            // close the modal
+            if (modal) {
+                modal.close();
+            }
+            
+            // update configurator
+            configurator.set("gui/console/destroyed", true);
+        };
+            
+        // restore console after being destroyed
+        Console.prototype.restore = function () {
+            this.wrapper.removeClass("kbs-disabled");
         };
         
         // build the console
         Console.prototype.buildNodeTree = function () {
             // declarations
             var
-                connection = (window.KBS_BASE_URL.indexOf("localhost") !== -1) ?
-                        "local" : "remote",
+                connection =
+                (window.KBS_BASE_URL.indexOf("localhost") !== -1)
+                ? "local" : "remote",
             
                 // console nodes
                 wrapper,
@@ -406,8 +476,9 @@ define(
             // tools for console
             if (config.logs.enabled) {
                 // console toggle state tool
-                this.createTool("toggle")
-                    .element.onclick = function () {
+                this.createTool("menu").on(
+                    "click",
+                    function () {
                         var closed = wrapper.hasClass("kbs-closed"),
                             full = wrapper.hasClass("kbs-full");
 
@@ -428,7 +499,24 @@ define(
                             // open
                             self.open();
                         }
-                    };
+                    }
+                );
+                
+                // console toggle tool
+                this.createTool("toggle").on(
+                    "click",
+                    function () {
+                        var displayed = configurator.get(
+                            "gui/console/displayed"
+                        );
+                        
+                        wrapper.toggleClass("kbs-disabled");
+                        configurator.set(
+                            "gui/console/displayed",
+                            (!displayed) ? true : false
+                        );
+                    }
+                );
                 
                 // save tool - only on localhost base url's
                 if (window.KBS_BASE_URL.indexOf("localhost") !== -1) {
@@ -444,11 +532,19 @@ define(
                     self.benchmark
                 );
                 
-                // console destructor tool
-                this.createTool("destroy").on(
+                // toggle object log tool
+                this.createTool("toggleObjs").on(
                     "click",
-                    self.destroy
+                    self.toggleObjectLogs
                 );
+                
+                // console destructor tool
+                if (config.gui.console.allowDestruction) {
+                    this.createTool("destroy").on(
+                        "click",
+                        self.destroy
+                    );
+                }
                 
                 // clear tool
                 this.createTool("clear").on(
@@ -458,7 +554,6 @@ define(
             }
             
             // configurator tool
-            configurator = new Configurator();
             this.createTool("settings").on(
                 "click",
                 configurator.launchModal
@@ -485,7 +580,15 @@ define(
 
             // console output
             consout = cons.out = cons.createChild("div", "kbs-cons-out");
-
+            
+            if (config.gui.console.destroyed) {
+                this.commitDestroy(false, "hard");
+            }
+            
+            if (!config.gui.console.displayed) {
+                this.wrapper.addClass("kbs-disabled");
+            }
+                
             // return wrapper element
             return wrapper;
         };
@@ -494,7 +597,7 @@ define(
         Console.prototype.benchmark = function () {
             var cons = self.wrapper.cons.element,
                 out = self.wrapper.cons.out.element,
-                amount = 10000,
+                amount = config.gui.console.benchmark.amount,
                 start = new Date().getTime(),
                 deltaTime,
                 deltaSpeed,
@@ -510,8 +613,8 @@ define(
             
             // log specified amount
             util.log("context:benchmark/output", "buffer", "benchmark output...");
-            while (i <= amount) {
-                util.log("context:benchmark/output", "debug", "log #" + i);
+            while (i < amount) {
+                util.log("context:benchmark/output", "debug", "log #" + (i + 1));
                 i += 1;
             }
 
@@ -539,6 +642,7 @@ define(
             // clear the benchmark context
             util.log.endContext();
             self.clearContext("benchmark");
+            self.clearContext("benchmark/output");
         };
         
         return Console;
