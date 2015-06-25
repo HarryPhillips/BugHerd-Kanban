@@ -5,6 +5,7 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 + Enables you to quickly search for a task by id and bring it up in a full screen modal.
 + Flexible task filtering
 + Settings to make Kanban work best for you
++ Screenshot/Image viewer to make viewing image attachments easier
 + Console to monitor various BugHerd activities
 + (subjectively) better styling
 
