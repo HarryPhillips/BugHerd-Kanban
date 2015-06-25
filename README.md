@@ -7,13 +7,38 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 + Clearer task id's to hopefully mitigate human errors!
 
 ##### Expand the task details panel
-![Task Expanded](/img/readme/task-expanded.jpg?raw=true "Expanded Task")
+You can expand a task to fill up the screen, making it a bit easier to read tasks
+with large descriptions and large collections of metadata.
+![Task Expanded](/img/readme/task-expanded.png?raw=true "Expanded Task")
 
 ##### Responsive dashboard
-![Task Expanded](/img/readme/responsive.jpg?raw=true "Responsive")
+The Kanban Board is now somewhat responsive, you can now use BugHerd with a smaller
+window.
+![Responsive Kanban](/img/readme/responsive-dashboard.png?raw=true "Responsive")
+
+##### Debug Console & Status Logs
+In the upper right-hand corner is a small menu with a console attached, here you
+will find Kanban Settings and the debug console. The console will output miscellaneous
+events which occur as you use BugHerd.
+![GUI Console](/img/readme/gui-console.png?raw=true "GUI Console")
+
+##### Quick & Simple Task Search
+You can quickly and easily search the entire project for a task by ID.
+![Task Search](/img/readme/task-search.png?raw=true "Task Search")
+
+##### Flexible Task Filtering
+Using this menu you can filter tasks by data such as the user who raised the bug,
+the operating system used, the resolution and other meta data.
+![Task Filters](/img/readme/task-filters.png?raw=true "Task Filters")
+
+##### Styling Changes
+The extension loads in some additional CSS files which (subjectively) make BugHerd
+look a little better. Most notably the tasks are coloured depending on their
+severity, making them stand out.
+![Styling](/img/readme/severity-styles.png?raw=true "Styling")
 
 ## Installation
-For quick installation, head to releases and download the latest kanban.xpi from the latest release.
+For quick installation, head to releases and download the kanban.xpi from the latest release.
 
 There are two ways to install Kanban, hosting the source on your local server or
 using the rawgit links.
