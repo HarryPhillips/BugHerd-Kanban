@@ -99,7 +99,7 @@ define(function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.4.0-pre",
+        version: "1.4.0",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -107,7 +107,7 @@ define(function () {
         theme: "default",
         test: false,
         logs: {
-            enabled: false,
+            enabled: true,
             gui: true,
             contexts: true,
             contextFlag: "context:",
