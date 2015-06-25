@@ -3,7 +3,7 @@
     <Description about="urn:mozilla:install-manifest">
         <em:id>{d0f3b4b9-5d41-48bd-b193-f8f4da98109c}</em:id>
         <em:name>Kanban</em:name>
-        <em:version>1.3.0</em:version>
+        <em:version>1.4.0</em:version>
         <em:description>BugHerd Kanban extensions and improvements</em:description>
         <em:creator>Harry Phillips</em:creator>
         <em:homepageURL>https://github.com/HarryPhillips/Kanban</em:homepageURL>

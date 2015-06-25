@@ -99,7 +99,7 @@ define('config',[],function () {
     pointer = pointer || new Config({
         appName: "kbs",
         appFullname: "Kanban",
-        version: "1.4.0-pre",
+        version: "1.4.0",
         enabled: true,
         mode: "dev",
 //        offline: true,
@@ -107,7 +107,7 @@ define('config',[],function () {
         theme: "default",
         test: false,
         logs: {
-            enabled: false,
+            enabled: true,
             gui: true,
             contexts: true,
             contextFlag: "context:",
@@ -800,20 +800,21 @@ define(
         // returns true or the index
         Util.prototype.contains = function (host, target, strict) {
             var i = 0,
+                y = 0,
                 occs = [],
                 regex,
                 chk,
                 temp;
             
             // make sure target and host are defined
-            if (typeof host === "undefined" || host === "") {
-                // throw an error if host is undefined
+            if (typeof host === "undefined") {
+                // error if host is undefined
                 util.log("error", "Could not determine a contained value, " +
                                "haystack object is undefined!");
                 return false;
             }
             
-            if (typeof target === "undefined" || target === "") {
+            if (typeof target === "undefined") {
                 return false;
             }
             
@@ -831,46 +832,40 @@ define(
                 // regex will match whole word of target only
                 regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
 
-                // is host an array?
-                if (util.isArray(host)) {
-                   // add to occurences array
-                    while (i < host.length) {
-                        if (regex.test(host[i])) {
-                            occs.push(i);
-                        }
-                        i += 1;
-                    }
-
-                    if (!strict) {
-                        return true;
-                    } else {
-                        // return the index(es)
-                        return (occs.length === 0) ? false :
-                                (occs.length > 1) ? occs : occs[0];
-                    }
-                } else if (regex.test(host)) {
-                    return true;
-                }
-
-                return false;
+                return regex.test(host);
             };
 
             // default strict to false
             strict = strict || false;
-
-            // is target an array of targets?
-            if (util.isArray(target)) {
-                for (i = 0; i < target.length; i += 1) {
-                    temp = chk(host, target[i]);
+            
+            // host is array
+            if (util.isArray(host)) {
+                // recall with string
+                for (i = 0; i < host.length; i += 1) {
+                    temp = util.contains(host[i], target, strict);
+                    
+                    // matched
                     if (temp !== false) {
                         return temp;
                     }
                 }
             } else {
-                return chk(host, target);
+                // target is array
+                if (util.isArray(target)) {
+                    // recall with string
+                    for (i = 0; i < target.length; i += 1) {
+                        temp = util.contains(host, target[i], strict);
+                        
+                        // matched
+                        if (temp !== false) {
+                            return temp;
+                        }
+                    }
+                }
             }
             
-            return false;
+            // compare two strings
+            return chk(host, target);
         };
         
         // swap values in array at specified indexes
@@ -3311,8 +3306,6 @@ define(
         TaskController.prototype.init = function () {
             var self = this;
             
-            
-            
             // setup task event listeners
             this.applyHandlers();
             
@@ -3399,6 +3392,11 @@ define(
             return this.match(function (task) {
                 var meta = task.getData().userMetaData || {};
                 
+                // capture tasks without meta
+                if (!util.isDefined(meta[attr])) {
+                    return false;
+                }
+                
                 return (
                     meta[attr] === value ||
                     util.contains(meta[attr], value)
@@ -3409,7 +3407,12 @@ define(
         // gets an array of tasks with specified browser data
         TaskController.prototype.findAllWithClientData = function (attr, value) {
             return this.match(function (task) {
-                var data = task.getBrowserData();
+                var data = task.getBrowserData() || {};
+                
+                // capture tasks without client data
+                if (!util.isDefined(data[attr])) {
+                    return false;
+                }
                 
                 return (
                     data[attr] === value ||
@@ -3494,6 +3497,8 @@ define(
                     "okay",
                     "Task '#${id}' created by '${user}'"
                 );
+                
+                self.setAllSeverityStyles();
             });
             
             // task deletion
@@ -3511,6 +3516,8 @@ define(
                         interactor.closeTask();
                     }
                 }
+                
+                self.setAllSeverityStyles();
             });
             
             // on task refresh
@@ -3521,7 +3528,7 @@ define(
                     "Task '#${id}' refreshed"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
             
             // task status updates
@@ -3533,7 +3540,7 @@ define(
                         "'${prevStatus}' to '${status}'"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
             
             // task severity updates
@@ -3544,7 +3551,7 @@ define(
                     "Task '#${id}' set to '${severity}'"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
         };
         
@@ -5089,68 +5096,150 @@ define(
         };
             
         // hide all tasks with the following tag(s)
-        Interactor.prototype.hideTasksWithTag = function (tag) {
+        Interactor.prototype.onTasksWithTag = function (method, tag) {
             var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
                 list = bugherd.tasks.findAllWithTag(tag),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with tag
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             
         // hide all tasks with the following client data
-        Interactor.prototype.hideTasksWithClientData = function (key, value) {
+        Interactor.prototype.onTasksWithClientData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithClientData(key, value),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
                 document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                    .style.display = disp;
             }
         };
             
         // hide all tasks with the following meta data
-        Interactor.prototype.hideTasksWithMetaData = function (key, value) {
+        Interactor.prototype.onTasksWithMetaData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithMeta(key, value),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < list.length; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             
-        // show all tasks with the followings tag(s)
-        Interactor.prototype.showTasksWithTag = function (tag) {
+        // hides all tasks
+        Interactor.prototype.hideAllTasks = function () {
             var bugherd = repo.get("bugherd"),
                 tasks = bugherd.getTasks(),
                 len = tasks.length,
                 i = 0,
-                task,
-                id;
+                e;
             
             // hide all tasks
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + tasks[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "none";
+                }
             }
+        };
+        
+        // shows all tasks
+        Interactor.prototype.showAllTasks = function () {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                e;
             
-            // show all tasks with the given tag
-            tasks = bugherd.tasks.findAllWithTag(tag);
-            len = tasks.length;
-            i = 0;
-            
+            // hide all tasks
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + tasks[i])
-                    .style.display = "block";
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "block";
+                }
             }
+        };
+            
+        // reset any task filters
+        Interactor.prototype.resetAllFilters = function () {
+            this.showAllTasks();
+            $("div.head-actions:nth-child(1) > " +
+                "ul:nth-child(1) > li:nth-child(1) > " +
+                "ul:nth-child(3) > li:nth-child(1) > " +
+                "a:nth-child(1)").trigger("click");
+            
+            this.showAllTasks();
         };
         
         // return current hash
