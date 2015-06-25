@@ -304,20 +304,21 @@ define(
         // returns true or the index
         Util.prototype.contains = function (host, target, strict) {
             var i = 0,
+                y = 0,
                 occs = [],
                 regex,
                 chk,
                 temp;
             
             // make sure target and host are defined
-            if (typeof host === "undefined" || host === "") {
-                // throw an error if host is undefined
+            if (typeof host === "undefined") {
+                // error if host is undefined
                 util.log("error", "Could not determine a contained value, " +
                                "haystack object is undefined!");
                 return false;
             }
             
-            if (typeof target === "undefined" || target === "") {
+            if (typeof target === "undefined") {
                 return false;
             }
             
@@ -335,46 +336,40 @@ define(
                 // regex will match whole word of target only
                 regex = new RegExp("(\\W|^)" + target + "(\\W|$)");
 
-                // is host an array?
-                if (util.isArray(host)) {
-                   // add to occurences array
-                    while (i < host.length) {
-                        if (regex.test(host[i])) {
-                            occs.push(i);
-                        }
-                        i += 1;
-                    }
-
-                    if (!strict) {
-                        return true;
-                    } else {
-                        // return the index(es)
-                        return (occs.length === 0) ? false :
-                                (occs.length > 1) ? occs : occs[0];
-                    }
-                } else if (regex.test(host)) {
-                    return true;
-                }
-
-                return false;
+                return regex.test(host);
             };
 
             // default strict to false
             strict = strict || false;
-
-            // is target an array of targets?
-            if (util.isArray(target)) {
-                for (i = 0; i < target.length; i += 1) {
-                    temp = chk(host, target[i]);
+            
+            // host is array
+            if (util.isArray(host)) {
+                // recall with string
+                for (i = 0; i < host.length; i += 1) {
+                    temp = util.contains(host[i], target, strict);
+                    
+                    // matched
                     if (temp !== false) {
                         return temp;
                     }
                 }
             } else {
-                return chk(host, target);
+                // target is array
+                if (util.isArray(target)) {
+                    // recall with string
+                    for (i = 0; i < target.length; i += 1) {
+                        temp = util.contains(host, target[i], strict);
+                        
+                        // matched
+                        if (temp !== false) {
+                            return temp;
+                        }
+                    }
+                }
             }
             
-            return false;
+            // compare two strings
+            return chk(host, target);
         };
         
         // swap values in array at specified indexes

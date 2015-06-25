@@ -51,15 +51,20 @@ define(
                 
                 // formatted object
                 dataNode = node.createChild("pre");
-                dataNode.text(util.serialise(params.object));
                 
                 // reload data on open
                 modal.on("open", function () {
-                    dataNode.text(util.serialise(params.object), true);
+                    dataNode.addChild(
+                        document.createTextNode(
+                            JSON.stringify(params.object, null, 4)
+                        )
+                    );
                 });
                 
                 // destroy the modal when it's closed
                 modal.on("close", modal.destroy);
+                
+                util.log("context:gui", "debug", params.object, "Viewing object:");
                 
                 return node;
             });

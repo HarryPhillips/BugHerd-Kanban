@@ -80,9 +80,15 @@ define(
                 });
                 
                 input.element.checked = placeholder;
+            } else {
+                // submit changes to handler
+                input.on("change", function (event) {
+                    handler(input.val());
+                    showVerify();
+                });
             }
 
-            // submit
+            // manual submit
             if (type !== "checkbox") {
                 submit = field.createChild("span", "kbs-confirm")
                     .text("set")

@@ -32,6 +32,7 @@ define(
             bugherd = repo.get("bugherd"),
             interactor = repo.get("interactor"),
             filters = {
+                displayMethod: "show",
                 clientdata: {},
                 metadata: {}
             },
@@ -41,25 +42,31 @@ define(
         function one(args) {
             var node = new Node("div", "kbs-view"), gui = args[0], modal = args[1],
                 filterData,
-                reset, apply, show, hide, tags,
+                reset, apply, show, hide, list,
+                tags,
                 clientkey, clientvalue,
                 metakey, metavalue,
                 submit;
             
             // filter application
             function applyFilter() {
+                if (filters.displayMethod === "show") {
+                    // hide all tags before application
+                    interactor.hideAllTasks();
+                }
+                
                 // run tag filter
                 if (filters.tags) {
-                    interactor[
-                        filters.displayMethod + "TasksWithTag"
-                    ](filters.tags);
+                    interactor.onTasksWithTag(
+                        filters.displayMethod,
+                        filters.tags
+                    );
                 }
 
                 // run browser filter
                 if (filters.clientdata.key && filters.clientdata.value) {
-                    interactor[
-                        filters.displayMethod + "TasksWithClientData"
-                    ](
+                    interactor.onTasksWithClientData(
+                        filters.displayMethod,
                         filters.clientdata.key,
                         filters.clientdata.value
                     );
@@ -67,12 +74,25 @@ define(
 
                 // run meta filter
                 if (filters.metadata.key && filters.metadata.value) {
-                    interactor[
-                        filters.displayMethod + "TasksWithMetaData"
-                    ](
+                    interactor.onTasksWithMetaData(
+                        filters.displayMethod,
                         filters.metadata.key,
                         filters.metadata.value
                     );
+                }
+            }
+            
+            // uncheck methods
+            function uncheckMethods(exclusion) {
+                var methods = [hide, show, list],
+                    i = 0,
+                    len = methods.length;
+                
+                for (i; i < len; i += 1) {
+                    if (methods[i] !== exclusion) {
+                        methods[i].find(".kbs-input-field")[0]
+                            .element.checked = false;
+                    }
                 }
             }
             
@@ -92,13 +112,14 @@ define(
                 function (value) {
                     // set display method for the filter
                     filters.displayMethod = "show";
-                    
-                    // uncheck hide
-                    hide.find(".kbs-input-field")[0]
-                        .element.checked = false;
+                    uncheckMethods(show);
                 },
                 (filters.displayMethod === "show") ? true : false
             ));
+            
+            // default to show displayMethod
+            show.find(".kbs-input-field")[0]
+                .element.checked = true;
 
             // hide results
             hide = node.addChild(new Field(
@@ -107,12 +128,20 @@ define(
                 function (value) {
                     // set display method for the filter
                     filters.displayMethod = "hide";
-                    
-                    // uncheck show
-                    show.find(".kbs-input-field")[0]
-                        .element.checked = false;
+                    uncheckMethods(hide);
                 },
                 (filters.displayMethod === "hide") ? true : false
+            ));
+            
+            // list results
+            list = node.addChild(new Field(
+                "List:",
+                "checkbox",
+                function (value) {
+                    // set display method for the filter
+                    filters.displayMethod = "list";
+                    uncheckMethods(list);
+                }
             ));
             
             // tag title
@@ -232,9 +261,24 @@ define(
                 .text("reset")
                 .on("click", function () {
                     var sortLink = new Node(".sortLink");
-                    config.set("interactor/filters", {});
+                
+                    // reset filters
+                    filters = {
+                        displayMethod: "show",
+                        clientdata: {},
+                        metadata: {}
+                    };
+            
+                    // default to show displayMethod
+                    show.find(".kbs-input-field")[0]
+                        .element.checked = true;
+                
+                    // reload modal
                     modal.reload();
+                
+                    // reset displayed tasks and reset styles
                     sortLink.element.click();
+                    interactor.showAllTasks();
                     bugherd.tasks.setAllSeverityStyles();
                 });
             

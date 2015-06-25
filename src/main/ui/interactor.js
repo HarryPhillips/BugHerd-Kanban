@@ -410,68 +410,150 @@ define(
         };
             
         // hide all tasks with the following tag(s)
-        Interactor.prototype.hideTasksWithTag = function (tag) {
+        Interactor.prototype.onTasksWithTag = function (method, tag) {
             var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
                 list = bugherd.tasks.findAllWithTag(tag),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with tag
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             
         // hide all tasks with the following client data
-        Interactor.prototype.hideTasksWithClientData = function (key, value) {
+        Interactor.prototype.onTasksWithClientData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithClientData(key, value),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
                 document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                    .style.display = disp;
             }
         };
             
         // hide all tasks with the following meta data
-        Interactor.prototype.hideTasksWithMetaData = function (key, value) {
+        Interactor.prototype.onTasksWithMetaData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithMeta(key, value),
                 len = list.length,
-                i = 0;
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < list.length; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: "Filter Results:",
+                        object: list
+                    }
+                });
+            }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             
-        // show all tasks with the followings tag(s)
-        Interactor.prototype.showTasksWithTag = function (tag) {
+        // hides all tasks
+        Interactor.prototype.hideAllTasks = function () {
             var bugherd = repo.get("bugherd"),
                 tasks = bugherd.getTasks(),
                 len = tasks.length,
                 i = 0,
-                task,
-                id;
+                e;
             
             // hide all tasks
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + tasks[i].id)
-                    .style.display = "none";
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "none";
+                }
             }
+        };
+        
+        // shows all tasks
+        Interactor.prototype.showAllTasks = function () {
+            var bugherd = repo.get("bugherd"),
+                tasks = bugherd.getTasks(),
+                len = tasks.length,
+                i = 0,
+                e;
             
-            // show all tasks with the given tag
-            tasks = bugherd.tasks.findAllWithTag(tag);
-            len = tasks.length;
-            i = 0;
-            
+            // hide all tasks
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + tasks[i])
-                    .style.display = "block";
+                e = document.getElementById("task_" + tasks[i].id);
+                
+                if (e) {
+                    e.style.display = "block";
+                }
             }
+        };
+            
+        // reset any task filters
+        Interactor.prototype.resetAllFilters = function () {
+            this.showAllTasks();
+            $("div.head-actions:nth-child(1) > " +
+                "ul:nth-child(1) > li:nth-child(1) > " +
+                "ul:nth-child(3) > li:nth-child(1) > " +
+                "a:nth-child(1)").trigger("click");
+            
+            this.showAllTasks();
         };
         
         // return current hash

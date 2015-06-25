@@ -60,8 +60,6 @@ define(
         TaskController.prototype.init = function () {
             var self = this;
             
-            
-            
             // setup task event listeners
             this.applyHandlers();
             
@@ -148,6 +146,11 @@ define(
             return this.match(function (task) {
                 var meta = task.getData().userMetaData || {};
                 
+                // capture tasks without meta
+                if (!util.isDefined(meta[attr])) {
+                    return false;
+                }
+                
                 return (
                     meta[attr] === value ||
                     util.contains(meta[attr], value)
@@ -158,7 +161,12 @@ define(
         // gets an array of tasks with specified browser data
         TaskController.prototype.findAllWithClientData = function (attr, value) {
             return this.match(function (task) {
-                var data = task.getBrowserData();
+                var data = task.getBrowserData() || {};
+                
+                // capture tasks without client data
+                if (!util.isDefined(data[attr])) {
+                    return false;
+                }
                 
                 return (
                     data[attr] === value ||
@@ -243,6 +251,8 @@ define(
                     "okay",
                     "Task '#${id}' created by '${user}'"
                 );
+                
+                self.setAllSeverityStyles();
             });
             
             // task deletion
@@ -260,6 +270,8 @@ define(
                         interactor.closeTask();
                     }
                 }
+                
+                self.setAllSeverityStyles();
             });
             
             // on task refresh
@@ -270,7 +282,7 @@ define(
                     "Task '#${id}' refreshed"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
             
             // task status updates
@@ -282,7 +294,7 @@ define(
                         "'${prevStatus}' to '${status}'"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
             
             // task severity updates
@@ -293,7 +305,7 @@ define(
                     "Task '#${id}' set to '${severity}'"
                 );
                 
-                self.setSeverityStyle(event.attributes.id);
+                self.setAllSeverityStyles();
             });
         };
         

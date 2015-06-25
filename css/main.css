@@ -139,6 +139,11 @@
     margin-top: 0;
 }
 
+.kbs-modal.kbs-view-object pre {
+    max-height: 250px;
+    overflow: scroll;
+}
+
 .kbs-modal.kbs-console-destruct {
     width: 400px; height: 200px;
     margin-top: -100px;
