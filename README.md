@@ -3,8 +3,10 @@ A small Firefox extension to improve the BugHerd Kanban board. Add's a few featu
 + Made the BugHerd dashboard responsive down to about 450px.
 + Added the ability to expand the task details panel for easier reading/editing.
 + Enables you to quickly search for a task by id and bring it up in a full screen modal.
-+ Quickly share and open tasks straight from the URL using hashes. Example: http://www.bugherd.com/projects/12345#open123 or http://www.bugherd.com/projects/47756/tasks/123#open.
-+ Clearer task id's to hopefully mitigate human errors!
++ Flexible task filtering
++ Settings to make Kanban work best for you
++ Console to monitor various BugHerd activities
++ (subjectively) better styling
 
 ##### Expand the task details panel
 You can expand a task to fill up the screen, making it a bit easier to read tasks
@@ -19,7 +21,8 @@ window.
 ##### Debug Console & Status Logs
 In the upper right-hand corner is a small menu with a console attached, here you
 will find Kanban Settings and the debug console. The console will output miscellaneous
-events which occur as you use BugHerd.
+events which occur as you use BugHerd. The console will even log when tasks are
+moved, updated and deleted.
 ![GUI Console](/img/readme/gui-console.png?raw=true "GUI Console")
 
 ##### Quick & Simple Task Search
