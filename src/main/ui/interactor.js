@@ -470,8 +470,11 @@ define(
             }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = disp;
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             

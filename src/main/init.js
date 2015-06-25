@@ -14,16 +14,14 @@
 *     all components have finished initialising, more reliable than hard coding
 *     the event fire (maybe combine with the repository component?)
 *
-*   + Allow searching of tasks by meta data such as references, browser and
-*     version etc.
-*
 *   + Possibly add more info about the task to expanded details? Such as
 *     the last updated at and update by etc?
 *
-*   + Is it possible to add a setting to scale the entire KBS gui?
-*
 *   + Might want to add max length parameters for the console.
 *     Maybe as a config option?
+*
+*   + Add a badge to tasks with comments? Is there a way to show when new
+*     comments arrive?
 */
 
 /*

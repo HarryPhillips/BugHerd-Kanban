@@ -5,35 +5,6 @@
 */
 
 /*global define: true */
-
-/*
-*   TODO
-*   + Incorporate a config object to modify how modals react to
-*     multiple modals at once.
-*     (e.g. Auto-closing a modal on opening
-*     of another, moving modals around the screen to show more than
-*     one at a time perhaps?)
-*
-*   + Dynamic modal event handler attachment
-*   + Rewrite the modal queueing system (again!) as currently it doesn't
-*     scale too well.
-*
-*
-*   NOTES
-*   + Open and closing of a single modal should behave as normal.
-*
-*   + If a modal is opened and another modal is already open, the
-*     active modal needs to be pushed into the stack or hidden
-*     (depending on configured behaviour) and the requested modal
-*     opens as normal.
-*
-*   + If a stacked modal is clicked, it should be made the active modal
-*     and the previously active modal needs to be pushed to stack
-*
-*   + If a stacked modal's close button is clicked it should be removed
-*     from the stack without affecting other modals
-*/
-
 define(
     [
         'config',
