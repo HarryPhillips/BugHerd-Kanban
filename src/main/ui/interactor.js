@@ -429,7 +429,7 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
+                        message: list.length + " items:",
                         object: list
                     }
                 });
@@ -463,7 +463,7 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
+                        message: list.length + " items:",
                         object: list
                     }
                 });
@@ -497,7 +497,7 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
+                        message: list.length + " items:",
                         object: list
                     }
                 });
