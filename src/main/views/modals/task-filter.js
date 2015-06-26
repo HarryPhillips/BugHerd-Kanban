@@ -190,7 +190,8 @@ define(
                     {text: "OS", value: "os"},
                     {text: "Browser", value: "browser"},
                     {text: "Window Size", value: "window_size"},
-                    {text: "Resolution", value: "resolution"}
+                    {text: "Resolution", value: "resolution"},
+                    {text: "Requested By", value: "[attr]requester_name"}
                 ]
             ));
             

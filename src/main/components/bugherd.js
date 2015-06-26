@@ -158,6 +158,18 @@ define(
             });
         };
         
+        // gets an array of tasks with specified attribute
+        TaskController.prototype.findAllWithAttribute = function (attr, value) {
+            return this.match(function (task) {
+                var attrs = task.attributes;
+                
+                return (
+                    attrs[attr] === value ||
+                    util.contains(attrs[attr], value)
+                ) ? true : false;
+            });
+        };
+        
         // gets an array of tasks with specified browser data
         TaskController.prototype.findAllWithClientData = function (attr, value) {
             return this.match(function (task) {

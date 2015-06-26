@@ -409,7 +409,7 @@ define(
             });
         };
             
-        // hide all tasks with the following tag(s)
+        // perform action on tasks with tag
         Interactor.prototype.onTasksWithTag = function (method, tag) {
             var bugherd = repo.get("bugherd"),
                 tasks = bugherd.getTasks(),
@@ -430,7 +430,7 @@ define(
                 return new Modal("view-object", {
                     viewParams: {
                         message: list.length + " items:",
-                        object: list
+                        object: list.sort()
                     }
                 });
             }
@@ -444,8 +444,47 @@ define(
             }
         };
             
-        // hide all tasks with the following client data
+        // perform action on tasks with attributes
+        Interactor.prototype.onTasksWithAttribute = function (method, key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithAttribute(key, value),
+                len = list.length,
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: list.length + " items:",
+                        object: list.sort()
+                    }
+                });
+            }
+            
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
+            }
+        };
+            
+        // perform action on tasks with client data
         Interactor.prototype.onTasksWithClientData = function (method, key, value) {
+            // check for attribute flag - pass to attribute fn
+            if (key.indexOf("[attr]") !== -1) {
+                return this.onTasksWithAttribute(method, key.replace("[attr]", ""), value);
+            }
+            
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithClientData(key, value),
                 len = list.length,
@@ -464,7 +503,7 @@ define(
                 return new Modal("view-object", {
                     viewParams: {
                         message: list.length + " items:",
-                        object: list
+                        object: list.sort()
                     }
                 });
             }
@@ -478,7 +517,7 @@ define(
             }
         };
             
-        // hide all tasks with the following meta data
+        // perform action on tasks with meta data
         Interactor.prototype.onTasksWithMetaData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithMeta(key, value),
@@ -498,7 +537,7 @@ define(
                 return new Modal("view-object", {
                     viewParams: {
                         message: list.length + " items:",
-                        object: list
+                        object: list.sort()
                     }
                 });
             }
