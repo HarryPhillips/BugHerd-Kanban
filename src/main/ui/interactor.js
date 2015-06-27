@@ -104,6 +104,7 @@ define(
         Interactor.prototype.openTask = function (localId) {
             util.log(
                 "context:interactor",
+                "debug",
                 "Opening task #" + localId + "..."
             );
 
@@ -140,7 +141,11 @@ define(
             }
 
             this.activeTask = this.findLocalIdFromDetails();
-            util.log("context:interactor", "active task: #" + this.activeTask);
+            util.log(
+              "context:interactor",
+              "debug",
+              "active task: #" + this.activeTask
+            );
 
             // show overlay
             $(".kbs-overlay").show();
