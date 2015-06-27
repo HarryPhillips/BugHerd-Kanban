@@ -46,17 +46,17 @@ define(
 
             // pass our instance to Modal closure
             Modal.prototype.setInstance(this);
-            
+
             // setup logging context
             this.applyContext();
-            
+
             // modals api
             this.setModalApi();
-            
+
             // tree and console
             this.tree = this.buildNodeTree();
             this.console = new Console(this);
-            
+
             // overlay preservation flag
             this.preserveOverlay = false;
 
@@ -102,7 +102,7 @@ define(
 
                     // run event listeners
                     self.runEventListeners();
-                    
+
                     // attach wallpaper
                     self.loadWallpaper();
 
@@ -129,7 +129,7 @@ define(
             mainlink.href = mainurl;
             themelink.href = themeurl;
             falink.href = faurl;
-            
+
             themelink.id = "kbs-theme-link";
 
             // gui init log context
@@ -149,7 +149,7 @@ define(
             // theme css link events
             themelink.onload = function () {
                 var themename = self.getThemeName();
-                
+
                 util.log("context:gui/init", "+ theme '" + themename + "' loaded");
                 loader.count += 1;
             };
@@ -179,7 +179,7 @@ define(
             document.head.appendChild(mainlink);
             document.head.appendChild(themelink);
         };
-            
+
         // apply gui logging context
         GUI.prototype.applyContext = function () {
             // have to wait for gui loaded
@@ -191,65 +191,65 @@ define(
                 );
             });
         };
-            
+
         // return current theme name or theme name from url
         GUI.prototype.getThemeName = function (url) {
             var themelink = document.getElementById("kbs-theme-link"),
                 name = url || themelink.href;
-            
+
             name = name.replace(
                 window.KBS_BASE_URL +
                     "css/themes/",
                 ""
             );
-            
+
             name = name.replace(".css", "");
-            
+
             return name;
         };
-            
+
         // return to configured theme
         GUI.prototype.resetTheme = function () {
             self.loadTheme(config.theme || "theme");
         };
-            
+
         // set theme
         GUI.prototype.loadTheme = function (theme) {
             var themelink = document.getElementById("kbs-theme-link"),
                 node = new Node(themelink);
-            
+
             // remove .css if found
             theme = theme.replace(".css", "");
-            
+
             // set theme
             node.attr(
                 "href",
                 window.KBS_BASE_URL +
                     "css/themes/" + theme + ".css"
             );
-            
+
             // update config
             configurator.set("theme", theme);
         };
-            
+
         // remove current theme
         GUI.prototype.unloadTheme = function () {
             var themelink = document.getElementById("kbs-theme-link"),
                 node = new Node(themelink);
-            
+
             node.attr("href", "");
         };
-            
+
         // load wallpaper
         GUI.prototype.loadWallpaper = function (url) {
             var el = new Node(document.getElementById("kanbanBoard"));
-            
+
             url = url || config.gui.wallpaper;
             url = "url('" + url + "')";
-            
+
             el.css("background-image", url);
         };
-            
+
         // show overlay
         GUI.prototype.showOverlay = function () {
             if (!status.gui.overlay) {
@@ -257,7 +257,7 @@ define(
                 status.gui.overlay = true;
             }
         };
-            
+
         // hide overlay
         GUI.prototype.hideOverlay = function () {
             if (!status.interactor.taskDetailsExpanded && !self.preserveOverlay) {
@@ -281,7 +281,7 @@ define(
         // run event listeners
         GUI.prototype.runEventListeners = function () {
             util.log("context:gui/init", "+ running event listeners");
-            
+
             // handle log node of type 'exec' clicks
             var out = this.console.wrapper.cons.out.element,
                 current,
@@ -309,7 +309,7 @@ define(
                 }
             };
         };
-            
+
         // modal api / dynamic properties
         GUI.prototype.setModalApi = function () {
             this.modals = Modal.prototype.getController();
@@ -337,4 +337,3 @@ define(
         return GUI;
     }
 );
-    

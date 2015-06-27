@@ -8,12 +8,12 @@
 
 define(["main/components/util"], function (util) {
     "use strict";
-    
+
     function Exception(err, msg) {
         this.fileName = err.fileName;
         this.lineNumber = err.lineNumber;
         this.message = err.message;
-        
+
         util.log(
             "error",
             msg + " | Exception thrown in " +
@@ -22,6 +22,6 @@ define(["main/components/util"], function (util) {
                 err.message
         );
     }
-    
+
     return Exception;
 });

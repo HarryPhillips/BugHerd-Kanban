@@ -24,11 +24,11 @@ define(
         Modal
     ) {
         'use strict';
-        
+
         var
-            // configurator instance    
+            // configurator instance
             config = new Configurator(),
-        
+
             // create a new view
             view = new View(function (args) {
                 var node = new Node("div", "kbs-view"),
@@ -48,7 +48,7 @@ define(
                     },
                     config.get("interactor/expandOnclick")
                 ));
-                
+
                 // theme
                 node.addChild(new Field(
                     "Theme:",
@@ -56,13 +56,13 @@ define(
                     function (value) {
                         // set theme config
                         config.set("theme", value);
-                        
+
                         // set new theme to gui
                         gui.loadTheme(value);
                     },
                     config.get("theme")
                 ));
-                
+
                 // wallpaper
                 node.addChild(new Field(
                     "Wallpaper:",
@@ -70,13 +70,13 @@ define(
                     function (url) {
                         // set wallpaper config
                         config.set("gui/wallpaper", url);
-                        
+
                         // load the new wallpaper
                         gui.loadWallpaper(url);
                     },
                     config.get("gui/wallpaper")
                 ));
-                
+
                 // enable/disable parallax
                 if (config.get("gui/wallpaper")) {
                     // shown only if a wallpaper is present
@@ -89,7 +89,7 @@ define(
                         },
                         config.get("gui/parallax/enabled")
                     ));
-                    
+
                     if (config.get("gui/parallax/enabled")) {
                         node.addChild(new Field(
                             "Parallax Factor:",
@@ -101,7 +101,7 @@ define(
                         ));
                     }
                 }
-                
+
                 // enable/disable severity styles
                 node.addChild(new Field(
                     "Severity Styling",
@@ -111,7 +111,7 @@ define(
                     },
                     config.get("gui/severityStyles")
                 ));
-                
+
                 // console state
                 node.addChild(new Field(
                     "Menu State on Load:",
@@ -121,13 +121,13 @@ define(
                         if (value.indexOf("kbs-") === -1) {
                             value = "kbs-" + value;
                         }
-                        
+
                         // set console state
                         config.set("gui/console/state", value);
                     },
                     config.get("gui/console/state")
                 ));
-                
+
                 // console logs
                 node.addChild(new Field(
                     "Enable Logs:",
@@ -139,12 +139,12 @@ define(
                     },
                     config.get("logs/enabled")
                 ));
-                
+
                 // console log filter
                 if (config.get("logs/enabled")) {
                     // console log filter
                     defFilter = config.get("logs/filter");
-                    
+
                     // filter is array
                     if (util.isArray(defFilter)) {
                         defFilter = defFilter.join(", ");
@@ -154,25 +154,25 @@ define(
                     if (!defFilter) {
                         defFilter = "";
                     }
-                    
+
                     node.addChild(new Field(
                         "Log Filter:",
                         "text",
                         function (value) {
                             var i = 0,
                                 len;
-                            
+
                             // get array of filter values
                             value = value.replace(/\s/g, "");
                             value = value.split(",");
                             len = value.length;
-                            
+
                             // set filter
                             config.set("logs/filter", value);
                         },
                         defFilter
                     ));
-                    
+
                     // console object logs to buffer
                     node.addChild(new Field(
                         "Log Objects to Buffer:",
@@ -183,7 +183,7 @@ define(
                         config.get("logs/obj2buffer")
                     ));
                 }
-                
+
                 // app tests
                 node.addChild(new Field(
                     "Tests:",
@@ -194,14 +194,14 @@ define(
                     },
                     config.get("test")
                 ));
-                
+
                 // reset config button
                 node.createChild("span", "kbs-confirm")
                     .text("Reset Settings")
                     .on("click", function () {
                         config.reset();
                     });
-                
+
                 // show data button
                 node.createChild("span", "kbs-confirm")
                     .text("Show Data")

@@ -15,7 +15,7 @@ define(['main/components/util'], function (util) {
         if (!util.isArray(fn)) {
             fn = [fn];
         }
-        
+
         // attach renderer(s)
         this.renderers = fn;
     }
@@ -24,14 +24,14 @@ define(['main/components/util'], function (util) {
     View.prototype.draw = function (params, page) {
         // default page to 1
         page = (util.isDefined(page)) ? page : 1;
-        
+
         // assume literal page number
         // rather than an index number (page 1 === 0)
         page -= 1;
-        
+
         return this.render(params, page);
     };
-    
+
     // render a page from renderers
     View.prototype.render = function (params, page) {
         // make sure page is available
@@ -43,7 +43,7 @@ define(['main/components/util'], function (util) {
                 page = 0;
             }
         }
-        
+
         // return output from page renderer
         return this.renderers[page](params);
     };

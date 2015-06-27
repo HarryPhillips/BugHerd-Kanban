@@ -22,21 +22,21 @@ define(
                 modal = args[1],
                 input,
                 go;
-            
+
             // modal text
             node.title = "Search for a task";
             node.text("Enter a task id to search for:");
-            
+
             // components
             input = node.createChild("input", "kbs-input-field")
                 .attr("type", "number");
-            
+
             go = node.createChild("div", "kbs-continue")
                 .text("Go")
                 .on("click", function () {
                     modal.trigger("proceed", input.text());
                 });
-            
+
             return node;
         });
 

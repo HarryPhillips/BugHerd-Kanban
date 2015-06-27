@@ -16,7 +16,7 @@ define(
         Node
     ) {
         'use strict';
-        
+
         // field class
         function Field(text, type, handler, placeholder) {
             var field = new Node("div", "kbs-field"),
@@ -37,10 +37,10 @@ define(
             if (type === "title") {
                 label = field.createChild("h5", "kbs-title")
                     .text(text);
-                
+
                 return field;
             }
-            
+
             // label
             label = field.createChild("span", "kbs-label")
                 .text(text);
@@ -54,16 +54,16 @@ define(
                     .val(placeholder || "");
             } else {
                 len = placeholder.length;
-                
+
                 // new select field
                 input = field.createChild("select",
                         "kbs-input-field kbs-input-" + type);
-                
+
                 // add default option
                 input.createChild("option")
                     .text("Please select...")
                     .attr("default");
-                
+
                 // add select options
                 for (i; i < len; i += 1) {
                     input.createChild("option")
@@ -71,14 +71,14 @@ define(
                         .attr("value", placeholder[i].value);
                 }
             }
-            
+
             // check or uncheck checkbox input
             if (type === "checkbox") {
                 input.on("change", function (event) {
                     handler(event.target.checked);
                     showVerify();
                 });
-                
+
                 input.element.checked = placeholder;
             } else {
                 // submit changes to handler
@@ -106,7 +106,7 @@ define(
 
             return field;
         }
-        
+
         return Field;
     }
 );

@@ -24,11 +24,11 @@ define(
         Modal
     ) {
         'use strict';
-        
+
         var
-            // configurator instance    
+            // configurator instance
             config = new Configurator(),
-        
+
             // create a new view
             view = new View(function (args) {
                 var node = new Node("div", "kbs-view"),
@@ -39,19 +39,19 @@ define(
 
                 // modal title
                 node.title = "Object Inspector";
-                
+
                 // modal message
                 node.createChild("span", "kbs-message")
                     .text(params.message);
-                
+
                 // function to get object?
                 if (util.isFunction(params.object)) {
                     params.object = params.object();
                 }
-                
+
                 // formatted object
                 dataNode = node.createChild("pre");
-                
+
                 // reload data on open
                 modal.on("open", function () {
                     dataNode.addChild(
@@ -60,12 +60,12 @@ define(
                         )
                     );
                 });
-                
+
                 // destroy the modal when it's closed
                 modal.on("close", modal.destroy);
-                
+
                 util.log("context:gui", "debug", params.object, "Viewing object:");
-                
+
                 return node;
             });
 

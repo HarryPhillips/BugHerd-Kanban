@@ -2323,35 +2323,6 @@ define(
 */
 
 /*global define: true */
-
-/*
-*   TODO
-*   + Incorporate a config object to modify how modals react to
-*     multiple modals at once.
-*     (e.g. Auto-closing a modal on opening
-*     of another, moving modals around the screen to show more than
-*     one at a time perhaps?)
-*
-*   + Dynamic modal event handler attachment
-*   + Rewrite the modal queueing system (again!) as currently it doesn't
-*     scale too well.
-*
-*
-*   NOTES
-*   + Open and closing of a single modal should behave as normal.
-*
-*   + If a modal is opened and another modal is already open, the
-*     active modal needs to be pushed into the stack or hidden
-*     (depending on configured behaviour) and the requested modal
-*     opens as normal.
-*
-*   + If a stacked modal is clicked, it should be made the active modal
-*     and the previously active modal needs to be pushed to stack
-*
-*   + If a stacked modal's close button is clicked it should be removed
-*     from the stack without affecting other modals
-*/
-
 define(
     'main/ui/modal',[
         'config',
@@ -3400,6 +3371,18 @@ define(
                 return (
                     meta[attr] === value ||
                     util.contains(meta[attr], value)
+                ) ? true : false;
+            });
+        };
+        
+        // gets an array of tasks with specified attribute
+        TaskController.prototype.findAllWithAttribute = function (attr, value) {
+            return this.match(function (task) {
+                var attrs = task.attributes;
+                
+                return (
+                    attrs[attr] === value ||
+                    util.contains(attrs[attr], value)
                 ) ? true : false;
             });
         };
@@ -5095,7 +5078,7 @@ define(
             });
         };
             
-        // hide all tasks with the following tag(s)
+        // perform action on tasks with tag
         Interactor.prototype.onTasksWithTag = function (method, tag) {
             var bugherd = repo.get("bugherd"),
                 tasks = bugherd.getTasks(),
@@ -5115,8 +5098,8 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
-                        object: list
+                        message: list.length + " items:",
+                        object: list.sort()
                     }
                 });
             }
@@ -5130,8 +5113,47 @@ define(
             }
         };
             
-        // hide all tasks with the following client data
+        // perform action on tasks with attributes
+        Interactor.prototype.onTasksWithAttribute = function (method, key, value) {
+            var bugherd = repo.get("bugherd"),
+                list = bugherd.tasks.findAllWithAttribute(key, value),
+                len = list.length,
+                i = 0,
+                x = 0,
+                disp = (method === "show") ? "block" : "none",
+                e;
+            
+            // return list of tasks with data
+            if (method === "list") {
+                // return task id's
+                for (x; x < len; x += 1) {
+                    list[x] = list[x].attributes.local_task_id;
+                }
+                
+                return new Modal("view-object", {
+                    viewParams: {
+                        message: list.length + " items:",
+                        object: list.sort()
+                    }
+                });
+            }
+            
+            for (i; i < len; i += 1) {
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
+            }
+        };
+            
+        // perform action on tasks with client data
         Interactor.prototype.onTasksWithClientData = function (method, key, value) {
+            // check for attribute flag - pass to attribute fn
+            if (key.indexOf("[attr]") !== -1) {
+                return this.onTasksWithAttribute(method, key.replace("[attr]", ""), value);
+            }
+            
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithClientData(key, value),
                 len = list.length,
@@ -5149,19 +5171,22 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
-                        object: list
+                        message: list.length + " items:",
+                        object: list.sort()
                     }
                 });
             }
             
             for (i; i < len; i += 1) {
-                document.getElementById("task_" + list[i].id)
-                    .style.display = disp;
+                e = document.getElementById("task_" + list[i].id);
+                
+                if (e) {
+                    e.style.display = disp;
+                }
             }
         };
             
-        // hide all tasks with the following meta data
+        // perform action on tasks with meta data
         Interactor.prototype.onTasksWithMetaData = function (method, key, value) {
             var bugherd = repo.get("bugherd"),
                 list = bugherd.tasks.findAllWithMeta(key, value),
@@ -5180,8 +5205,8 @@ define(
                 
                 return new Modal("view-object", {
                     viewParams: {
-                        message: "Filter Results:",
-                        object: list
+                        message: list.length + " items:",
+                        object: list.sort()
                     }
                 });
             }
@@ -5546,16 +5571,14 @@ define(
 *     all components have finished initialising, more reliable than hard coding
 *     the event fire (maybe combine with the repository component?)
 *
-*   + Allow searching of tasks by meta data such as references, browser and
-*     version etc.
-*
 *   + Possibly add more info about the task to expanded details? Such as
 *     the last updated at and update by etc?
 *
-*   + Is it possible to add a setting to scale the entire KBS gui?
-*
 *   + Might want to add max length parameters for the console.
 *     Maybe as a config option?
+*
+*   + Add a badge to tasks with comments? Is there a way to show when new
+*     comments arrive?
 */
 
 /*

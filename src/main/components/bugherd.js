@@ -19,7 +19,7 @@ define(
     ],
     function (config, util, cache, status, Repository, Node) {
         'use strict';
-        
+
         // bugherd's global api
         var repo = new Repository(),
             bh = window.bugherd,
@@ -27,7 +27,7 @@ define(
             interactor,
             instance,
             gui;
-        
+
         /* Class Definitions
         ------------------------------------------*/
         // task api controller
@@ -37,32 +37,32 @@ define(
             this.setSeverityStyle = this.rSetSeverityStyle.bind(this);
             this.setAllSeverityStyles = this.rSetAllSeverityStyles.bind(this);
         }
-        
+
         // bugherd api wrapper
         function BugHerd() {
             // return the instance if already exists
             if (instance) {
                 return instance;
             }
-            
+
             // set instances
             instance = this;
             interactor = interactor || repo.get("interactor");
             gui = gui || repo.get("gui");
-            
+
             this.api = bh;
             this.tasks = new TaskController();
             this.init();
         }
-        
+
         /* TaskController Prototype
         ------------------------------------------*/
         TaskController.prototype.init = function () {
             var self = this;
-            
+
             // setup task event listeners
             this.applyHandlers();
-            
+
             // severity styling handling
             if (config.gui.severityStyles) {
                 setTimeout(function () {
@@ -73,13 +73,13 @@ define(
                 });
             }
         };
-        
+
         // get task data by local id
         TaskController.prototype.findModelByLocalId = function (id) {
             var tasks = this.baseApi.tasks(),
                 len = tasks.length,
                 i = 0;
-            
+
             // loop through and check the local_task_id attribute
             for (i; i < len; i += 1) {
                 if (tasks[i].attributes.local_task_id === id) {
@@ -87,13 +87,13 @@ define(
                 }
             }
         };
-        
+
         // get task data by global id
         TaskController.prototype.findModelByGlobalId = function (id) {
             var tasks = this.baseApi.tasks(),
                 len = tasks.length,
                 i = 0;
-            
+
             // loop through and check the global id
             for (i; i < len; i += 1) {
                 if (tasks[i].id === id) {
@@ -101,7 +101,7 @@ define(
                 }
             }
         };
-        
+
         // gets the browser info from a task
         TaskController.prototype.getBrowserInfo = function (task, key) {
             // catch invalid task types
@@ -109,7 +109,7 @@ define(
                 util.log("error", "Unable to get task from parameter of type " +
                         typeof task);
             }
-            
+
             // passed an id
             if (util.isNumber(task)) {
                 // passed a global id
@@ -120,11 +120,11 @@ define(
                     task = this.findModelByLocalId(task);
                 }
             }
-            
+
             return task.attributes.browser_info[key] ||
                 task.attributes.browser_info;
         };
-        
+
         // gets the user meta data from a task
         TaskController.prototype.getMeta = function (task) {
             // passed an id
@@ -137,56 +137,56 @@ define(
                     task = this.findModelByLocalId(task);
                 }
             }
-            
+
             return task.attributes.data.userMetaData;
         };
-        
+
         // gets an array of tasks with specified meta data
         TaskController.prototype.findAllWithMeta = function (attr, value) {
             return this.match(function (task) {
                 var meta = task.getData().userMetaData || {};
-                
+
                 // capture tasks without meta
                 if (!util.isDefined(meta[attr])) {
                     return false;
                 }
-                
+
                 return (
                     meta[attr] === value ||
                     util.contains(meta[attr], value)
                 ) ? true : false;
             });
         };
-        
+
         // gets an array of tasks with specified attribute
         TaskController.prototype.findAllWithAttribute = function (attr, value) {
             return this.match(function (task) {
                 var attrs = task.attributes;
-                
+
                 return (
                     attrs[attr] === value ||
                     util.contains(attrs[attr], value)
                 ) ? true : false;
             });
         };
-        
+
         // gets an array of tasks with specified browser data
         TaskController.prototype.findAllWithClientData = function (attr, value) {
             return this.match(function (task) {
                 var data = task.getBrowserData() || {};
-                
+
                 // capture tasks without client data
                 if (!util.isDefined(data[attr])) {
                     return false;
                 }
-                
+
                 return (
                     data[attr] === value ||
                     util.contains(data[attr], value)
                 ) ? true : false;
             });
         };
-        
+
         // retrieves tasks that have a certain tag
         TaskController.prototype.findAllWithTag = function (tag) {
             return this.match(function (task) {
@@ -194,14 +194,14 @@ define(
                 return (util.contains(tags, tag)) ? true : false;
             });
         };
-        
+
         TaskController.prototype.match = function (matched) {
             var tasks = this.api.models,
                 len = tasks.length,
                 results = [],
                 i = 0,
                 task;
-            
+
             // check meta of tasks
             for (i; i < len; i += 1) {
                 task = tasks[i];
@@ -209,33 +209,33 @@ define(
                     results.push(task);
                 }
             }
-            
+
             return results;
         };
-        
+
         // apply event handlers
         TaskController.prototype.applyHandlers = function () {
             // event logger
             var
                 self = this,
                 bh = this.baseApi,
-                
+
                 // event logging
                 eventLog = function (task, type, msg) {
                     // pull attributes
                     var user = task.attributes.requester_name,
                         id = task.attributes.local_task_id,
-                        
+
                         // status
                         prevStatusId = task._previousAttributes.status_id,
                         statusId = task.attributes.status_id,
                         prevStatus = bh.getStatusFromId(prevStatusId),
                         status = bh.getStatusFromId(statusId),
-                        
+
                         // severity
                         severityId = task.attributes.priority_id,
                         severity = bh.getPriorityFromId(severityId),
-                        
+
                         message;
 
                     // format message with values
@@ -244,7 +244,7 @@ define(
                     message = message.replace("${prevStatus}", prevStatus);
                     message = message.replace("${status}", status);
                     message = message.replace("${severity}", severity);
-                    
+
                     util.log(
                         "context:bugherd",
                         type,
@@ -255,7 +255,7 @@ define(
                     // set the recent task
                     cache.RECENT_TASK = task;
                 };
-            
+
             // task creation
             this.on("add", function (event) {
                 eventLog(
@@ -263,10 +263,10 @@ define(
                     "okay",
                     "Task '#${id}' created by '${user}'"
                 );
-                
+
                 self.setAllSeverityStyles();
             });
-            
+
             // task deletion
             this.on("remove", function (event) {
                 eventLog(
@@ -274,7 +274,7 @@ define(
                     "warn",
                     "Task '#${id}' was deleted"
                 );
-                
+
                 // if task is expanded
                 if (status.interactor.taskDetailsExpanded) {
                     // task is deleted task
@@ -282,10 +282,10 @@ define(
                         interactor.closeTask();
                     }
                 }
-                
+
                 self.setAllSeverityStyles();
             });
-            
+
             // on task refresh
             this.on("refresh", function (event) {
                 eventLog(
@@ -293,10 +293,10 @@ define(
                     "info",
                     "Task '#${id}' refreshed"
                 );
-                
+
                 self.setAllSeverityStyles();
             });
-            
+
             // task status updates
             this.on("change:status_id", function (event) {
                 eventLog(
@@ -305,10 +305,10 @@ define(
                     "Task '#${id}' moved from " +
                         "'${prevStatus}' to '${status}'"
                 );
-                
+
                 self.setAllSeverityStyles();
             });
-            
+
             // task severity updates
             this.on("change:priority_id", function (event) {
                 eventLog(
@@ -316,24 +316,24 @@ define(
                     "info",
                     "Task '#${id}' set to '${severity}'"
                 );
-                
+
                 self.setAllSeverityStyles();
             });
         };
-        
+
         // apply a handler to a bugherd task event
         TaskController.prototype.on = function (event, handler) {
             this.api.on(event, handler);
         };
-        
+
         // apply a tasks severity style to its body
         TaskController.prototype.rSetSeverityStyle = function (task) {
             var severity;
-            
+
             // create or retrieve a new Node instance for task
             task = new Node(document.querySelector("#task_" + task));
             severity = task.find(".task-severity");
-            
+
             if (severity.length) {
                 severity = severity[0]
                     .element
@@ -344,23 +344,23 @@ define(
                 task.addClass(severity);
             }
         };
-        
+
         // apply severity styles to all tasks
         TaskController.prototype.rSetAllSeverityStyles = function () {
             var tasks = document.querySelectorAll(".task"),
                 len = tasks.length,
                 i = 0,
                 id;
-            
+
             for (i; i < len; i += 1) {
                 id = tasks[i].id.replace("task_", "");
-                
+
                 if (id) {
                     this.setSeverityStyle(id);
                 }
             }
         };
-        
+
         /* BugHerd Prototype
         ------------------------------------------*/
         // init the bugherd api wrapper
@@ -369,10 +369,10 @@ define(
             this.applyContext();
             this.applyHandlers();
         };
-        
+
         // apply handlers/listeners
         BugHerd.prototype.applyHandlers = function () {};
-        
+
         // apply bugherd api logging context
         BugHerd.prototype.applyContext = function () {
             util.log(
@@ -381,17 +381,17 @@ define(
                 "log-buffer: BUGHERD-API"
             );
         };
-        
+
         // apply a handler to bugherd taskCollection event
         BugHerd.prototype.on = function (event, handler) {
             bh.application.on(event, handler);
         };
-        
+
         // trigger a bugherd application event
         BugHerd.prototype.trigger = function (event) {
             bh.application.trigger(event);
         };
-        
+
         // returns status name from id
         BugHerd.prototype.getStatusFromId = function (id) {
             var status,
@@ -404,10 +404,10 @@ define(
                     "4": "done",
                     "5": "archive"
                 };
-            
+
             return map[id];
         };
-        
+
         // returns priority/severity name from id
         BugHerd.prototype.getPriorityFromId = function (id) {
             var priority,
@@ -418,15 +418,15 @@ define(
                     "3": "normal",
                     "4": "minor"
                 };
-            
+
             return map[id];
         };
-        
+
         // returns all tasks for the current project
         BugHerd.prototype.getTasks = function () {
             return bh.application.tasksCollection.models;
         };
-        
+
         return BugHerd;
     }
 );

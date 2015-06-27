@@ -8,24 +8,24 @@
 
 define(function () {
     'use strict';
-    
+
     // self references the instantiated config class
     // pointer references the config object
     var self, pointer;
-    
+
     // config class
     function Config(obj) {
         // set reference to this instance
         self = this;
-        
+
         this.defaultObj = clone(obj);
         this.defaultObj.reset = this.reset;
         obj.reset = this.reset;
-        
+
         this.obj = obj;
         pointer = this.obj;
     }
-    
+
     // set config to default values
     Config.prototype.reset = function () {
         // iterate and check each property
@@ -37,13 +37,13 @@ define(function () {
                     // this is a new prop - unset it
                     delete self.obj[i];
                 }
-                
+
                 // set to default
                 self.obj[i] = self.defaultObj[i];
             }
         }
     };
-    
+
     // internal cloning function
     function clone(obj) {
         var copy,
@@ -94,7 +94,7 @@ define(function () {
             return copy;
         }
     }
-    
+
     // construct the config instance once only
     pointer = pointer || new Config({
         appName: "kbs",
@@ -186,7 +186,7 @@ define(function () {
             toggleObjs: "Toggle object logs"
         }
     }).obj;
-    
+
     // return the instance
     return pointer;
 });

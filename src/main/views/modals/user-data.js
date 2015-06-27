@@ -24,11 +24,11 @@ define(
         Modal
     ) {
         'use strict';
-        
+
         var
-            // configurator instance    
+            // configurator instance
             config = new Configurator(),
-        
+
             // create a new view
             view = new View(function (args) {
                 var node = new Node("div", "kbs-view"),
@@ -38,20 +38,20 @@ define(
 
                 // modal title
                 node.title = "Raw User Config Data";
-                
+
                 // modal message
                 node.createChild("span", "kbs-message")
                     .text("User configuration settings in JSON format:");
-                
+
                 // formatted cookie string
                 dataNode = node.createChild("pre")
                     .text(config.getFormattedUserCookie());
-                
+
                 // reload data on open
                 modal.on("open", function () {
                     dataNode.text(config.getFormattedUserCookie(), true);
                 });
-                
+
                 return node;
             });
 

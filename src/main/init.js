@@ -79,7 +79,7 @@ define(
         var kanban, end, gui, interactor,
             ehandle, settings, bugherd,
             repo = new Repository();
-            
+
         /* end of init call
         ------------------------------------------------------*/
         end = function () {
@@ -117,7 +117,7 @@ define(
                 tests.execAll();
             }
         };
-            
+
         /* initialise
         ------------------------------------------------------*/
         // wait for kbs loaded event
@@ -127,7 +127,7 @@ define(
         events.subscribe("kbs/status", function (data) {
             status[data.component] = data.status;
         });
-            
+
         // get a new configurator and load data
         try {
             settings = new Configurator();
@@ -170,7 +170,7 @@ define(
                 "Interactor failed to initialise cleanly."
             );
         }
-            
+
         // initialise the bugherd api wrapper
         try {
             bugherd = new BugHerd();

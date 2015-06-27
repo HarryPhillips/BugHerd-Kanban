@@ -8,13 +8,13 @@
 
 define(['main/components/buffer'], function (Buffer) {
     'use strict';
-    
+
     // cache object
     var cache = {
         app: new Buffer(),
         console: new Buffer(),
         logCount: 0
     };
-    
+
     return cache;
 });
