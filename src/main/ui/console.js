@@ -193,6 +193,15 @@ define(
 
             // write object to log node
             if (args.obj) {
+                // apply length limit to object string
+                if (args.obj.length > config.gui.console.maxObjectLength) {
+                    args.obj = args.obj.slice(0, -(util.diff(
+                        args.obj.length,
+                        config.gui.console.maxObjectLength - 3
+                    )));
+                    args.obj += "...";
+                }
+                
                 objtxt = document.createTextNode(args.obj);
 
                 // object node expansion

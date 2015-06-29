@@ -90,6 +90,7 @@ define(
             // log
             util.log(
                 "okay",
+                kanban,
                 "Kanban initialised in " +
                     window.KBS_DELTA_TIME +
                     ". Approx. size: " + util.bytesFormat(util.sizeof(kanban))

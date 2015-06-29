@@ -39,6 +39,7 @@ define({
             allowDestruction: false,
             destroyed: false,
             displayed: true,
+            maxObjectLength: 8192,
             icons: {
                 menu: "bars",
                 toggle: "terminal",
