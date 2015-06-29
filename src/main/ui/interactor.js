@@ -142,9 +142,9 @@ define(
 
             this.activeTask = this.findLocalIdFromDetails();
             util.log(
-              "context:interactor",
-              "debug",
-              "active task: #" + this.activeTask
+                "context:interactor",
+                "debug",
+                "active task: #" + this.activeTask
             );
 
             // show overlay
