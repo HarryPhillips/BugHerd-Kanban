@@ -104,7 +104,7 @@ define(
 
                 // enable/disable severity styles
                 node.addChild(new Field(
-                    "Severity Styling",
+                    "Severity Styling:",
                     "checkbox",
                     function (value) {
                         config.set("gui/severityStyles", value);
