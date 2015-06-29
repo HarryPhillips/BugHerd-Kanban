@@ -25,6 +25,7 @@ define(
             }
 
             self = this;
+            this.def = util.clone(config);
             this.modal = null;
             this.launchModal = this.rLaunchModal.bind(this);
             this.reloadModal = this.rReloadModal.bind(this);
@@ -190,8 +191,21 @@ define(
 
         // reset config to default state
         Configurator.prototype.reset = function () {
+            var i;
+            
             // reset config object
-            config.reset();
+            for (i in config) {
+                if (config.hasOwnProperty(i)) {
+                    // is a default prop?
+                    if (!self.def[i]) {
+                        // this is a new prop - unset it
+                        delete config[i];
+                    }
+                    
+                    // set to default
+                    config[i] = self.def[i];
+                }
+            }
 
             // delete user settings cookie
             util.cookie.del("settings");
