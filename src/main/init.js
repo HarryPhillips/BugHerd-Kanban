@@ -17,9 +17,6 @@
 *   + Possibly add more info about the task to expanded details? Such as
 *     the last updated at and update by etc?
 *
-*   + Might want to add max length parameters for the console.
-*     Maybe as a config option?
-*
 *   + Add a badge to tasks with comments? Is there a way to show when new
 *     comments arrive?
 *
@@ -59,6 +56,7 @@ define(
         'main/ui/gui',
         'main/ui/modal',
         'main/ui/interactor',
+        'main/ui/notifications',
         'test/main.test'
     ],
     function KanbanInitialise(
@@ -76,6 +74,7 @@ define(
         GUI,
         Modal,
         Interactor,
+        Notifications,
         tests
     ) {
         'use strict';
@@ -83,6 +82,7 @@ define(
         // components
         var kanban, end, gui, interactor,
             ehandle, settings, bugherd,
+            notifications,
             repo = new Repository();
 
         /* end of init call
@@ -187,11 +187,23 @@ define(
                 "BugHerd API failed to initialise cleanly."
             );
         }
+            
+        // initialise notifications
+        try {
+            notifications = new Notifications();
+            repo.add("notifications", notifications);
+        } catch (notifException) {
+            ehandle = new Exception(
+                notifException,
+                "Notifications failed initialise cleanly."
+            );
+        }
 
         // kbs data/api object
         kanban = {
             version: config.version,
             interactor: interactor,
+            notificattions: notifications,
             status: status,
             cache: cache,
             config: config,
@@ -200,14 +212,14 @@ define(
             gui: gui,
             configurator: settings,
             Constructor: {
-                "Configurator": Configurator,
-                "Interactor": Interactor,
-                "GUI": GUI,
-                "BugHerd": BugHerd,
-                "Http": Http,
-                "Node": Node,
-                "Modal": Modal,
-                "Exception": Exception
+                Configurator: Configurator,
+                Interactor: Interactor,
+                GUI: GUI,
+                BugHerd: BugHerd,
+                Http: Http,
+                Node: Node,
+                Modal: Modal,
+                Exception: Exception
             }
         };
     }
