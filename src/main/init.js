@@ -22,6 +22,11 @@
 *
 *   + Add a badge to tasks with comments? Is there a way to show when new
 *     comments arrive?
+*
+*   + Somewhat related to above, a possibility to have a notifications system
+*     would be great. Maybe go as far as to allow tasks to be "followed".
+*
+*   + Add a general notification for tasks that are marked as "TYPE: To Discuss"
 */
 
 /*
