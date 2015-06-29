@@ -44,7 +44,7 @@ define(
             }
         };
 
-        // amend zeros to a number until a length is met
+        // prepend zeros to a number until a length is met
         Util.prototype.zerofy = function (num, len) {
             while (num.toString().length < (len || 2)) {
                 num = '0' + num;
@@ -53,7 +53,7 @@ define(
             return num;
         };
 
-        // amend spaces to a string/number until a length is met
+        // prepend spaces to a string/number until a length is met
         Util.prototype.spacify = function (str, len) {
             if (typeof str !== "string") {
                 str = str.toString();
@@ -63,6 +63,19 @@ define(
                 str = " " + str;
             }
 
+            return str;
+        };
+            
+        // prepend a specified character to a string/number until a length is met
+        Util.prototype.prepend = function (char, str, len) {
+            if (typeof str !== "string") {
+                str = str.toString();
+            }
+            
+            while (str.length < len) {
+                str = char + str;
+            }
+            
             return str;
         };
 
