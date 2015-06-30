@@ -220,11 +220,12 @@ define(
                 [
                     {text: "Selection", value: "Selection"},
                     {text: "User", value: "User"},
-                    {text: "Reference", value: "Reference"},
-                    {text: "Version", value: "Version"},
+                    {text: "Client Reference", value: "Client"},
+                    {text: "Policy Reference", value: "Reference"},
+                    {text: "Xipe Version", value: "Version"},
                     {text: "Report Time", value: "Report Time"},
                     {text: "Render Time", value: "Render Time"},
-                    {text: "Attach. Size", value: "Attach. Size"}
+                    {text: "Attachment Size", value: "Attach. Size"}
                 ]
             ));
 

@@ -66,7 +66,7 @@ define(
                     if (guides.hasOwnProperty(i)) {
                         bounds = img.getBounds(i);
 
-                        //set x axis guides
+                        // set x axis guides
                         if (i.match(/(left)|(right)/)) {
                             offset = wrap.getBounds("left");
                             guides[i].css(

@@ -8,12 +8,14 @@
 define(
     [
         "config",
-        "main/components/util"
+        "main/components/util",
+        "main/components/repository"
     ],
-    function (config, util) {
+    function (config, util, Repository) {
         "use strict";
         
-        var inited = false;
+        var inited = false,
+            repo = new Repository();
         
         // notifications class
         function Notifications() {
@@ -42,6 +44,15 @@ define(
 
             inited = true;
         };
+        
+        // follow a task
+        Notifications.prototype.follow = function (id) {};
+        
+        // unfollow a task
+        Notifications.prototype.unfollow = function (id) {};
+        
+        // add a notification badge to a task
+        Notifications.prototype.setupNotifsForTask = function (id) {};
         
         // notification element application
         Notifications.prototype.applyElements = function () {};
