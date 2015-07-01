@@ -274,6 +274,11 @@ define(
                     "child is not of type Node or HTMLElement."
             );
         };
+        
+        // alias for add child
+        Node.prototype.appendChild = function (element) {
+            this.addChild(element);
+        };
 
         // create and add child to node
         Node.prototype.createChild = function (type, classes, id) {
