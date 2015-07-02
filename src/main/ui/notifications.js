@@ -38,15 +38,19 @@ define(
             // apply elements and styling
             this.applyElements();
             this.applyHandlers();
-            this.applyStyles();
             this.applyContext();
-            this.applyHash();
 
             inited = true;
         };
         
         // follow a task
-        Notifications.prototype.follow = function (id) {};
+        Notifications.prototype.follow = function (id) {
+            // attach an on update handler via bugherd api
+            // ->
+            
+            // on update - update badges on task and notif centre
+            // ->
+        };
         
         // unfollow a task
         Notifications.prototype.unfollow = function (id) {};
@@ -55,10 +59,23 @@ define(
         Notifications.prototype.setupNotifsForTask = function (id) {};
         
         // notification element application
-        Notifications.prototype.applyElements = function () {};
+        Notifications.prototype.applyElements = function () {
+            // add a notification centre
+            // ->
+            
+            // add a badge which tells the user how many tasks
+            // are in need of attention
+            // ->
+            
+            // add a follow/unfollow button to all tasks
+            // ->
+        };
         
         // notifications handler application
-        Notifications.prototype.applyHandlers = function () {};
+        Notifications.prototype.applyHandlers = function () {
+            // on clicking of a follow/unfollow button
+            // ->
+        };
         
         // notifications logging context
         Notifications.prototype.applyContext = function () {
