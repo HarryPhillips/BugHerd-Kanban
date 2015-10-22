@@ -103,7 +103,7 @@ define(
             var time = input || new Date(),
 
                 year = util.zerofy(time.getFullYear(), 4),
-                month = util.zerofy(time.getMonth(), 2),
+                month = util.zerofy(time.getMonth() + 1, 2),
                 date = util.zerofy(time.getDate(), 2);
 
             return year + "-" + month + "-" + date;
