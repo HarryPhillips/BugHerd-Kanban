@@ -47,11 +47,21 @@ define(
 
             // input
             if (type !== "select") {
-                // new input field
-                input = field.createChild("input",
-                        "kbs-input-field kbs-input-" + type)
-                    .attr("type", type)
-                    .val(placeholder || "");
+                if (type !== "static") {
+                    // new input field
+                    input = field.createChild("input",
+                            "kbs-input-field kbs-input-" + type)
+                        .attr("type", type)
+                        .val(placeholder || "");
+                } else {
+                    // no handlers for statics
+                    placeholder = handler;
+                    handler = null;
+
+                    // new static field
+                    input = field.createChild("span", "kbs-input-field kbs-input-static")
+                        .text(placeholder || "");
+                }
             } else {
                 len = placeholder.length;
 
@@ -89,7 +99,7 @@ define(
             }
 
             // manual submit
-            if (type !== "checkbox") {
+            if (type !== "checkbox" && type !== "static") {
                 submit = field.createChild("span", "kbs-confirm")
                     .text("set")
                     .on("click", function () {

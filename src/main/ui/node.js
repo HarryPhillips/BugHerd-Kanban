@@ -426,9 +426,13 @@ define(
             var i = 0,
                 len = this.children.length;
 
+            // destroy node instances
             for (i; i < len; i += 1) {
                 this.children[i].destroy();
             }
+
+            // then clear inner html
+            this.element.innerHTML = "";
         };
 
         // clone node instance and return

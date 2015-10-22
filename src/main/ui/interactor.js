@@ -367,6 +367,12 @@ define(
             return this.findLocalIdFromTask(task);
         };
 
+        // find and return a task model by local id
+        Interactor.prototype.findModel = function (id) {
+            var bugherd = repo.get("bugherd");
+            return bugherd.tasks.findModelByLocalId(id);
+        };
+
         // navigate the ui to a specified task board
         Interactor.prototype.navigateTo = function (board) {
             var nav = $("#nav-" + board.toLowerCase());
@@ -410,6 +416,19 @@ define(
                     url: link[0].href,
                     width: size.x,
                     height: size.y
+                }
+            });
+        };
+
+        // view stats for a task
+        Interactor.prototype.viewStats = function (id) {
+            id = id || null;
+
+            var bugherd = repo.get("bugherd");
+
+            taskStats = new Modal("task-stats", {
+                viewParams: {
+                    object: bugherd.tasks.findModelByLocalId(104)
                 }
             });
         };
@@ -648,6 +667,7 @@ define(
                 detailClose,
                 taskSearch,
                 taskFilter,
+                stats,
                 nav;
 
             util.log(
@@ -685,6 +705,16 @@ define(
                     taskFilter = new Modal("task-filter");
                 });
 
+            // task tstas list element
+            stats = new Node("li");
+
+            // task stats anchor element
+            stats.createChild("a")
+                .text("Stats")
+                .on("click", function (event) {
+                    self.viewStats();
+                });
+
             // task details close button
             detailClose = new Node("div", "kbs-details-closed");
             detailClose.createChild("i", "fa fa-times");
@@ -696,6 +726,7 @@ define(
             nav = $(".nav.main-nav")[0];
             search.writeTo(nav);
             filter.writeTo(nav);
+            stats.writeTo(nav);
             detailClose.writeTo($("body")[0]);
         };
 
