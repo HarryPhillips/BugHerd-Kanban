@@ -405,6 +405,7 @@ define(
             this.init = this.rInit.bind(this);
             this.open = this.rOpen.bind(this);
             this.close = this.rClose.bind(this);
+            this.clear = this.rClear.bind(this);
             this.destroy = this.rDestroy.bind(this);
 
             // set modal event handlers
@@ -533,6 +534,11 @@ define(
             this.node.show();
         };
 
+        // set modal title
+        Modal.prototype.setTitle = function (text) {
+            this.node.find(".kbs-modal-title")[0].text(text, true);
+        };
+
         // handler/listener application for modal
         Modal.prototype.applyHandlers = function () {
             var
@@ -653,6 +659,12 @@ define(
 
             // publish
             this.trigger("close", this);
+        };
+
+        // clears the modal content
+        Modal.prototype.rClear = function () {
+            var content = this.node.find(".kbs-modal-content")[0];
+            content.clear();
         };
 
         // destroys a modal instance
