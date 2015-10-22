@@ -65,35 +65,42 @@ define(
 
             return str;
         };
-            
+
         // prepend a specified character to a string/number until a length is met
         Util.prototype.prepend = function (char, str, len) {
             if (typeof str !== "string") {
                 str = str.toString();
             }
-            
+
             while (str.length < len) {
                 str = char + str;
             }
-            
+
             return str;
         };
 
         // returns current time as formatted string
-        Util.prototype.ftime = function () {
-            var time = new Date(),
+        Util.prototype.ftime = function (input , milliseconds) {
+            var time = input || new Date(),
 
                 hours = util.zerofy(time.getHours()),
                 minutes = util.zerofy(time.getMinutes()),
                 seconds = util.zerofy(time.getSeconds()),
-                millis = util.zerofy(time.getMilliseconds(), 3);
+                millis = util.zerofy(time.getMilliseconds(), 3),
 
-            return hours + ":" + minutes + ":" + seconds + "." + millis;
+                string = hours + ":" + minutes + ":" + seconds;
+
+            // add milliseconds if not disabled
+            if (milliseconds !== false) {
+                string += "." + millis;
+            }
+
+            return string;
         };
 
         // returns current date as formatted string
-        Util.prototype.fdate = function () {
-            var time = new Date(),
+        Util.prototype.fdate = function (input) {
+            var time = input || new Date(),
 
                 year = util.zerofy(time.getFullYear(), 4),
                 month = util.zerofy(time.getMonth(), 2),
