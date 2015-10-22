@@ -20,7 +20,7 @@
     transition: all 0.3s;
 }
 
-/* main gui wrapper 
+/* main gui wrapper
 ------------------------------------------------------------------------------*/
 [class*='kbs-'] {
     box-sizing: border-box;
@@ -31,7 +31,7 @@
     font-size: 18px;
 }
 
-/* gui overlay 
+/* gui overlay
 ------------------------------------------------------------------------------*/
 .kbs-overlay {
     position: fixed;
@@ -87,7 +87,7 @@
     line-height: 1.7em;
     text-align: center;
     cursor: pointer;
-    
+
     -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
     -moz-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
     -o-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
@@ -105,6 +105,10 @@
     padding: 10px;
     font-size: 14px;
     text-align: left;
+}
+
+.kbs-view {
+    overflow: auto;
 }
 
 .kbs-modal-shield {
@@ -139,7 +143,8 @@
     margin-top: 0;
 }
 
-.kbs-modal.kbs-view-object pre {
+.kbs-modal.kbs-view-object pre,
+.kbs-modal.kbs-task-stats pre {
     max-height: 250px;
     overflow: scroll;
 }
@@ -204,6 +209,34 @@
     margin-top: -350px;
 }
 
+.kbs-modal.kbs-task-stats {
+    width: 600px; height: 350px;
+    margin-top: -175px;
+    margin-left: -300px;
+    margin-right: -100px;
+}
+
+.kbs-modal.kbs-task-stats .search {
+    margin-top: 70px;
+}
+
+.kbs-modal.kbs-task-stats .error {
+    color: #cf5757;
+}
+
+.kbs-modal.kbs-task-stats .kbs-modal-content {
+    text-align: center;
+}
+
+.kbs-modal.kbs-task-stats .kbs-field {
+    min-height: auto;
+}
+
+.kbs-modal.kbs-task-stats pre {
+    margin: 0;
+    max-height: ;
+}
+
 .kbs-confirm,
 .kbs-cancel {
     width: 100px; height: 30px;
@@ -258,7 +291,7 @@
     transform: scale(0.75);
 }
 
-/* gui console wrapper 
+/* gui console wrapper
 ------------------------------------------------------------------------------*/
 .kbs-cons-box {
     position: fixed;
@@ -309,7 +342,7 @@
     width: 30px; height: 30px;
 }
 
-/* console toolbar 
+/* console toolbar
 ------------------------------------------------------------------------------*/
 .kbs-cons-toolbar {
     position: relative;
@@ -338,7 +371,7 @@
     line-height: 1.6em;
     text-align: center;
     cursor: pointer;
-    
+
     -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
     -moz-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
     -o-transition: background-color 0.3s, color 0.3s, border 0.3s 0.1s;
@@ -500,6 +533,7 @@
 .kbs-field .kbs-label {
     width: 200px;
     padding: 5px 8px;
+    font-weight: 600;
 }
 
 /* input field */
@@ -513,6 +547,11 @@
 /* select */
 .kbs-field .kbs-input-select {
     width: 206px;
+}
+
+/* static */
+.kbs-field .kbs-input-static {
+    padding-top: 5px;
 }
 
 /* submit/confirm */
@@ -656,7 +695,7 @@
     z-index: 2147483645;
     display: none;
     cursor: pointer;
-    
+
     -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
     -moz-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
     -o-transition: background-color 0.3s, color 0.3s, border 0.3s, border-radius 0.3s;
@@ -729,7 +768,7 @@
 @media (max-width:1100px) {
     /* hide the left side pane */
     #settingsBar { display: none; }
-    
+
     /* stretch task board to left side */
     #tasks { left: 0px; }
 }
@@ -741,11 +780,11 @@
         left: 50%;
         margin-left: -410px;
     }
-    
+
     /* position close btn */
     .kbs-details-closed {
         left: 50%;
-        
+
         /* (kbs-detail:width / 2) - (btn:width / 2) */
         margin-left: 395px;
     }
@@ -754,15 +793,15 @@
 @media (max-width:940px) {
     /* maximise task board */
     #tasks { right: 0px; }
-    
+
     /* minify details pane */
     .pane.pane-right { width: 0px; }
-    
+
     /* shrink new task btn wrapper */
     #header .pane-right {
         width: auto;
     }
-    
+
     /* shrink new task btn */
     .button-newIssue {
         width: auto !important;
@@ -776,12 +815,12 @@
     .nav.main-nav li:nth-child(4){
         display: none;
     }
-    
+
     /* remove new task button */
     #header .pane-right  {
         display: none;
     }
-    
+
     /* make console fill larger space */
     .kbs-cons-box.kbs-open {
         width: 80%;
@@ -795,11 +834,11 @@
     .searchbarHolder {
         display: none;
     }
-    
+
     .head-actions {
         right: initial;
     }
-    
+
     .user-menu {
         display: none !important;
     }
@@ -810,7 +849,7 @@
     #header .pane-left {
         display: none;
     }
-    
+
     /* relocate head actions */
     #header .pane-center {
         left: 10px;
