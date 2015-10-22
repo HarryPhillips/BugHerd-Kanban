@@ -107,10 +107,6 @@
     text-align: left;
 }
 
-.kbs-view {
-    overflow: auto;
-}
-
 .kbs-modal-shield {
     background-color: rgba(0, 0, 0, 0.5);
     position: absolute;
@@ -214,6 +210,10 @@
     margin-top: -175px;
     margin-left: -300px;
     margin-right: -100px;
+}
+
+.kbs-modal.kbs-task-stats .kbs-view {
+    overflow: auto;
 }
 
 .kbs-modal.kbs-task-stats .search {
