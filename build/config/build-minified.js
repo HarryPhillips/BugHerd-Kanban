@@ -10,7 +10,7 @@
     removeCombined: true,
     findNestedDependencies: true,
     uglify2: {
-        mangle: true
+        mangle: false
     },
     optimize: "uglify2"
 })
