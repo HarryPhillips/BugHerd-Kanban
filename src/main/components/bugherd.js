@@ -76,9 +76,12 @@ define(
 
         // get task data by local id
         TaskController.prototype.findModelByLocalId = function (id) {
-            var tasks = this.baseApi.tasks(),
+            var tasks = this.baseApi.getTasks(),
                 len = tasks.length,
                 i = 0;
+
+            // convert id to integer
+            id = parseInt(id, 10);
 
             // loop through and check the local_task_id attribute
             for (i; i < len; i += 1) {
