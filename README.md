@@ -1,3 +1,6 @@
+# NOTICE
+This add-on is now currently unsupported, Firefox now prohibits unsigned add-ons and I'm not currently able to rewrite BugHerd-Kanban to use the Firefox Add-On SDK. I will look into rewriting this in the future (possibly under a different name and repo), especially now that Bugherd themselves have updated their app with some of the features from this add-on.
+
 # Kanban
 A small Firefox extension to improve the BugHerd Kanban board. Add's a few features such as:
 + Made the BugHerd dashboard responsive down to about 450px.
